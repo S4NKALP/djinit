@@ -1,12 +1,12 @@
 """
-Deployment files generator for djinit
+Deployment file generator for djinit.
 Handles creation of Justfile, Procfile, and deployment-related files.
 """
 
-from scr.utils import change_cwd, create_file_with_content
+from src.utils import change_cwd, create_file_with_content
 
 
-class DeploymentFileGenerator:
+class DeploymentConfigGenerator:
     def __init__(self, project_root: str, project_name: str):
         self.project_root = project_root
         self.project_name = project_name
@@ -208,7 +208,6 @@ release: python manage.py migrate --noinput && python manage.py collectstatic --
             return result
 
     def create_gunicorn_config(self) -> bool:
-        """Create a gunicorn configuration file."""
         with change_cwd(self.project_root):
             gunicorn_config_content = f"""# Gunicorn configuration file for {self.project_name}
 # Usage: gunicorn -c gunicorn_config.py {self.project_name}.wsgi:application
@@ -257,7 +256,6 @@ tmp_upload_dir = None
             return result
 
     def create_runtime_txt(self, python_version: str = "3.13") -> bool:
-        """Create runtime.txt file for specifying Python version."""
         with change_cwd(self.project_root):
             runtime_content = f"""python-{python_version}
 """
@@ -270,7 +268,6 @@ tmp_upload_dir = None
             return result
 
     def create_nixpacks_toml(self) -> bool:
-        """Create nixpacks.toml for Nixpacks deployment configuration."""
         with change_cwd(self.project_root):
             nixpacks_content = f"""# Nixpacks configuration for {self.project_name}
 # Used by Railway, Render, and other platforms that support Nixpacks
