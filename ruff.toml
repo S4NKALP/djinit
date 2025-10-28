@@ -1,0 +1,29 @@
+# Ruff configuration for djinit
+
+line-length = 120
+target-version = "py38"
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "E731",  # do not assign a lambda expression
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]  # imported but unused
+
+[format]
+docstring-code-format = true
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
