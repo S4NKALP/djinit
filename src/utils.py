@@ -15,9 +15,7 @@ def format_file(filename: str) -> None:
     subprocess.run(["ruff", "format", filename], check=False, capture_output=True)
 
 
-def create_file_with_content(
-    filename: str, content: str, success_message: str, should_format: bool = False
-) -> bool:
+def create_file_with_content(filename: str, content: str, success_message: str, should_format: bool = False) -> bool:
     """
     Create a file with content, optionally format it, and print success message.
 

@@ -3,6 +3,7 @@ Deployment file generator for djinit.
 Handles creation of Justfile, Procfile, and deployment-related files.
 """
 
+from src.scripts.template_engine import template_engine
 from src.utils import change_cwd, create_file_with_content
 
 
@@ -13,162 +14,8 @@ class DeploymentConfigGenerator:
 
     def create_justfile(self) -> bool:
         with change_cwd(self.project_root):
-            justfile_content = f"""# Justfile for {self.project_name}
-# Task runner for Django development
-# Install just: https://github.com/casey/just
-
-# Default task: show available commands
-default:
-    @just --list
-
-# Run development server
-dev:
-    uv run python manage.py runserver
-
-# Run development server with custom host and port
-dev-server HOST="0.0.0.0" PORT="8000":
-    uv run python manage.py runserver {{{{HOST}}}}:{{{{PORT}}}}
-
-# Create migrations for all apps
-makemigrations:
-    uv run python manage.py makemigrations
-
-# Create migrations for specific app
-makemigrations-app APP:
-    uv run python manage.py makemigrations {{{{APP}}}}
-
-# Run all migrations
-migrate:
-    uv run python manage.py migrate
-
-# Reset database (delete all migrations)
-reset-db:
-    uv run python manage.py flush --noinput
-    uv run python manage.py migrate
-
-# Create superuser
-createsuperuser:
-    uv run python manage.py createsuperuser
-
-# Collect static files
-collectstatic:
-    uv run python manage.py collectstatic --noinput
-
-# Run Django shell
-shell:
-    uv run python manage.py shell
-
-# Run Django shell plus (IPython)
-shell-plus:
-    uv run python manage.py shell_plus
-
-# Run tests
-test:
-    uv run python manage.py test
-
-# Run tests with coverage
-test-coverage:
-    uv run pytest --cov=. --cov-report=html --cov-report=term
-
-# Lint code with ruff
-lint:
-    uv run ruff check .
-
-# Format code with ruff
-format:
-    uv run ruff format .
-
-# Lint and format code
-style:
-    uv run ruff check .
-    uv run ruff format .
-
-# Check security issues
-check:
-    uv run python manage.py check
-
-# Check security issues (production settings)
-check-deploy:
-    uv run python manage.py check --deploy
-
-# Show all database migrations status
-showmigrations:
-    uv run python manage.py showmigrations
-
-# Sync dependencies (uv equivalent of pip freeze)
-requirements:
-    uv pip compile
-
-# Run all linting and checks
-ci:
-    uv run ruff check .
-    uv run ruff format --check .
-    uv run python manage.py check
-
-# Start interactive shell
-shell-ipython:
-    uv run python manage.py shell_plus
-
-# Clear all cache
-clear-cache:
-    uv run python manage.py clear_cache
-
-# Show Django version
-version:
-    uv run python manage.py version
-
-# Run database shell
-dbshell:
-    uv run python manage.py dbshell
-
-# Start production server with gunicorn
-server:
-    uv run gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:8000
-
-# Start production server with gunicorn workers
-server-prod WORKERS="4":
-    uv run gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:8000 --workers {{{{WORKERS}}}}
-
-# Start production server with gunicorn and reload on file changes
-server-watch:
-    uv run gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:8000 --reload
-
-# Clean Python cache files
-clean:
-    find . -type d -name "__pycache__" -exec rm -rf {{}} +
-    find . -type f -name "*.pyc" -delete
-    find . -type f -name "*.pyo" -delete
-    find . -type f -name ".coverage" -delete
-    find . -type d -name "*.egg-info" -exec rm -rf {{}} +
-    rm -rf htmlcov/
-    rm -rf .pytest_cache/
-
-# Setup project for development (using uv)
-setup:
-    uv sync
-    uv run python manage.py migrate
-    uv run python manage.py createsuperuser
-
-# Complete setup including static files
-setup-complete:
-    uv sync
-    uv run python manage.py migrate
-    uv run python manage.py collectstatic --noinput
-    uv run python manage.py createsuperuser
-
-# Install a new package
-install PACKAGE:
-    uv add {{{{PACKAGE}}}}
-
-# Install a dev package
-install-dev PACKAGE:
-    uv add --dev {{{{PACKAGE}}}}
-
-# Remove a package
-remove PACKAGE:
-    uv remove {{{{PACKAGE}}}}
-"""
-
+            context = {"project_name": self.project_name}
+            justfile_content = template_engine.render_template("justfile.j2", context)
             result = create_file_with_content(
                 "justfile",
                 justfile_content,
@@ -178,28 +25,8 @@ remove PACKAGE:
 
     def create_procfile(self) -> bool:
         with change_cwd(self.project_root):
-            procfile_content = f"""# Procfile for {self.project_name}
-# Used for deploying to PaaS platforms like Heroku, Railway, Render, etc.
-
-# Web server process (using Gunicorn)
-# Adjust workers based on your needs: (2 x CPU cores) + 1
-web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile - --log-level info
-
-# Alternative web server configurations (uncomment to use):
-# web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120
-# web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --worker-class gevent --worker-connections 1000 --timeout 120
-
-# Release task (runs migrations before deployment)
-release: python manage.py migrate --noinput && python manage.py collectstatic --noinput
-
-# Uncomment below to run scheduled tasks (if using Celery)
-# worker: celery -A {self.project_name} worker --loglevel=info
-# beat: celery -A {self.project_name} beat --loglevel=info
-
-# Development server (for local testing with Foreman/Overmind)
-# web: python manage.py runserver 0.0.0.0:$PORT
-"""
-
+            context = {"project_name": self.project_name}
+            procfile_content = template_engine.render_template("procfile.j2", context)
             result = create_file_with_content(
                 "Procfile",
                 procfile_content,
@@ -257,8 +84,8 @@ tmp_upload_dir = None
 
     def create_runtime_txt(self, python_version: str = "3.13") -> bool:
         with change_cwd(self.project_root):
-            runtime_content = f"""python-{python_version}
-"""
+            context = {"python_version": python_version}
+            runtime_content = template_engine.render_template("runtime_txt.j2", context)
             runtime_file = "runtime.txt"
             result = create_file_with_content(
                 runtime_file,

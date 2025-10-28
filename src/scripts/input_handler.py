@@ -31,6 +31,8 @@ class ProjectMetadata:
     package_name: str
     use_github_actions: bool = False
     use_gitlab_ci: bool = False
+    nested_apps: bool = False
+    nested_dir: str | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary format."""
@@ -38,6 +40,8 @@ class ProjectMetadata:
             "package_name": self.package_name,
             "use_github_actions": self.use_github_actions,
             "use_gitlab_ci": self.use_gitlab_ci,
+            "nested_apps": self.nested_apps,
+            "nested_dir": self.nested_dir,
         }
 
 
@@ -109,23 +113,24 @@ class InputCollector:
         try:
             console.print(f"[{UIColors.HIGHLIGHT}]App Names[/{UIColors.HIGHLIGHT}]")
             console.print(
-                f"[{UIColors.MUTED}]Enter app names separated by commas or press Enter to add one at a time[/{UIColors.MUTED}]"
+                f"[{UIColors.MUTED}]Enter app names separated by commas (no interactive prompts)[/{UIColors.MUTED}]"
             )
             console.print(f"[{UIColors.MUTED}]Example: users, products, orders[/{UIColors.MUTED}]")
 
             user_input = console.input(
-                f"[{UIColors.HIGHLIGHT}]Enter app names (comma-separated or one at a time):[/{UIColors.HIGHLIGHT}] "
+                f"[{UIColors.HIGHLIGHT}]Enter app names (comma-separated or single):[/{UIColors.HIGHLIGHT}] "
             )
 
-            # Empty input - prompt for single app
+            # Empty input - re-prompt (no interactive flow)
             if not user_input.strip():
-                return self._get_apps_interactive()
+                UIFormatter.print_error("At least one app name is required")
+                return self.get_app_names()
 
             # Comma-separated input
             if "," in user_input:
                 return self._parse_comma_separated_apps(user_input)
 
-            # Single app with option to add more
+            # Single app (no additional prompts)
             return self._get_apps_starting_with(user_input.strip())
 
         except KeyboardInterrupt:
@@ -162,33 +167,16 @@ class InputCollector:
             UIFormatter.print_error(error_msg)
             return self.get_app_names()
 
-        app_names = [first_app]
-        app_names.extend(self._prompt_for_additional_apps())
-        return app_names
+        return [first_app]
 
     def _get_apps_interactive(self) -> list[str]:
-        app_name = self.get_validated_input("Enter at least one app name", validate_app_name, "app name")
-        app_names = [app_name]
-        app_names.extend(self._prompt_for_additional_apps())
-        return app_names
+        """Deprecated: interactive flow disabled. Kept for compatibility."""
+        UIFormatter.print_warning("Interactive app addition is disabled. Please enter names comma-separated.")
+        return self.get_app_names()
 
     def _prompt_for_additional_apps(self) -> list[str]:
-        additional_apps = []
-
-        while True:
-            console.print(f"[{UIColors.HIGHLIGHT}]Add another app? (y/N):[/{UIColors.HIGHLIGHT}] ", end="")
-            sys.stdout.flush()
-
-            response = self.char_reader.get_char()
-            console.print(response.upper())
-
-            if response != "y":
-                break
-
-            next_app = self.get_validated_input("Enter next app name", validate_app_name, "app name")
-            additional_apps.append(next_app)
-
-        return additional_apps
+        """Deprecated: interactive flow disabled. Always returns empty list."""
+        return []
 
     def get_cicd_choice(self) -> Tuple[bool, bool]:
         UIFormatter.print_separator()
@@ -216,6 +204,30 @@ class InputCollector:
             return False, True
         else:  # Default to none for any unrecognized input
             return False, False
+
+    def get_nested_apps_config(self) -> Tuple[bool, str | None]:
+        """Ask whether to create nested Django apps and get directory name if yes."""
+        UIFormatter.print_separator()
+        console.print(f"\n[{UIColors.INFO}]Apps Layout[/{UIColors.INFO}]\n")
+        console.print(f"[{UIColors.MUTED}]Do you want to place apps inside a package directory (e.g., 'apps/')?[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.MUTED}]If yes, we'll create that directory as a Python package and generate apps inside it.[/{UIColors.MUTED}]")
+        console.print()
+
+        console.print(f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}] ", end="")
+        sys.stdout.flush()
+        choice = self.char_reader.get_char()
+        console.print(choice.upper())
+
+        if choice != "y":
+            return False, None
+
+        # Ask for directory name
+        dir_name = self.get_validated_input(
+            "Enter directory name for apps package (e.g., apps)",
+            validate_project_name,
+            "apps package name",
+        )
+        return True, dir_name
 
 
 class CharReader:
@@ -271,6 +283,14 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     project_dir = collector.get_validated_input(
         "Enter project directory name", validate_project_name, "project directory name"
     )
+    
+    # Check if directory exists and ask for alternative
+    while os.path.exists(project_dir):
+        UIFormatter.print_error(f"Directory '{project_dir}' already exists.")
+        UIFormatter.print_info("Please choose a different project directory name.")
+        project_dir = collector.get_validated_input(
+            "Enter project directory name", validate_project_name, "project directory name"
+        )
     console.print()
 
     console.print(f"[{UIColors.HIGHLIGHT}]Django Project Name[/{UIColors.HIGHLIGHT}]")
@@ -285,7 +305,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     console.print()
     UIFormatter.print_separator()
     console.print(f"\n[{UIColors.INFO}]Step 2: Django Apps[/{UIColors.INFO}]\n")
-
+    nested, nested_dir = collector.get_nested_apps_config()
     app_names = collector.get_app_names()
     console.print()
 
@@ -293,7 +313,13 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     use_github, use_gitlab = collector.get_cicd_choice()
 
     # Create metadata
-    metadata = ProjectMetadata(package_name=project_dir, use_github_actions=use_github, use_gitlab_ci=use_gitlab)
+    metadata = ProjectMetadata(
+        package_name=project_dir,
+        use_github_actions=use_github,
+        use_gitlab_ci=use_gitlab,
+        nested_apps=nested,
+        nested_dir=nested_dir,
+    )
 
     console.print()
 

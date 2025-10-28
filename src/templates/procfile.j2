@@ -1,0 +1,20 @@
+# Procfile for {{ project_name }}
+# Used for deploying to PaaS platforms like Heroku, Railway, Render, etc.
+
+# Web server process (using Gunicorn)
+# Adjust workers based on your needs: (2 x CPU cores) + 1
+web: gunicorn {{ project_name }}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile - --log-level info
+
+# Alternative web server configurations (uncomment to use):
+# web: gunicorn {{ project_name }}.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120
+# web: gunicorn {{ project_name }}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --worker-class gevent --worker-connections 1000 --timeout 120
+
+# Release task (runs migrations before deployment)
+release: python manage.py migrate --noinput && python manage.py collectstatic --noinput
+
+# Uncomment below to run scheduled tasks (if using Celery)
+# worker: celery -A {{ project_name }} worker --loglevel=info
+# beat: celery -A {{ project_name }} beat --loglevel=info
+
+# Development server (for local testing with Foreman/Overmind)
+# web: python manage.py runserver 0.0.0.0:$PORT

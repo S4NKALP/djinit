@@ -9,10 +9,10 @@ from typing import Callable, List, Tuple
 from src.scripts.cicd_config_generator import CICDConfigGenerator
 from src.scripts.console_ui import UIFormatter
 from src.scripts.deployment_files_generator import DeploymentConfigGenerator
+from src.scripts.files import FileManager
+from src.scripts.project import ProjectManager
 from src.scripts.secretkey_generator import generate_secret_command
-from src.templates.files import FileManager
-from src.templates.project import ProjectManager
-from src.templates.settings import SettingsManager
+from src.scripts.settings import SettingsManager
 
 
 class Cli:
@@ -25,9 +25,9 @@ class Cli:
         self.project_root = os.path.join(os.getcwd(), project_dir)
 
         # Initialize managers
-        self.project_manager = ProjectManager(project_dir, project_name, app_names)
-        self.settings_manager = SettingsManager(self.project_root, project_name, app_names)
-        self.file_manager = FileManager(self.project_root, project_name, app_names)
+        self.project_manager = ProjectManager(project_dir, project_name, app_names, metadata)
+        self.settings_manager = SettingsManager(self.project_root, project_name, app_names, metadata)
+        self.file_manager = FileManager(self.project_root, project_name, app_names, metadata)
         self.deployment_manager = DeploymentConfigGenerator(self.project_root, project_name)
         self.cicd_manager = CICDConfigGenerator(self.project_root, project_name)
 
