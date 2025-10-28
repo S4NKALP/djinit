@@ -1,5 +1,5 @@
 """
-App management for Django project setup.
+App management for djinit.
 Handles creation of Django apps and updating settings.
 """
 
