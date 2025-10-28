@@ -1,5 +1,5 @@
 """
-Console UI utilities for Django project setup.
+Console UI utilities for djinit.
 Provides enhanced styling, formatting, and user interface components.
 """
 
