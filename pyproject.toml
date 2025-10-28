@@ -1,0 +1,27 @@
+[project]
+name = "djinit"
+version = "0.1.0"
+description = "A CLI tool to setup Django project"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+{ name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" }
+]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: Django",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "click>=8.3.0",
+    "rich>=14.2.0",
+    "ruff>=0.14.2",
+]
+
+[project.url]
+Homepage = "https://github.com/S4NKALP/djinit"
+
+# [porject.scripts]
+# djinit = "src.generator:main"
