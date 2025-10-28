@@ -6,47 +6,47 @@ Handles validation of project names, app names, and other user inputs.
 import keyword
 import re
 import sys
-from typing import Tuple
+from typing import Any, Callable, Tuple
 
-# Names that conflict with Django's strcuture
+# Names that conflict with Django's structure
 DJANGO_RESERVED = {"django", "test", "site-packages", "admin"}
 
 # Common Python builtin modules
 PYTHON_BUILTINS = set(sys.builtin_module_names)
 
-NAME_PATTERYN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
+NAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 
-def _validate_name(name:str, name_type: str = "name") -> Tuple[bool, str]:
-    if not name or not name.strip()
-        return False, f"{name_type.capitalize()} cannot be empty"
 
-    name = name.strip()
+def _validate_name(name: str, name_type: str = "name") -> Tuple[bool, str]:
+    validation_rules: list[Tuple[Callable[[str], Any], str]] = [
+        (lambda n: bool(n and n.strip()), f"{name_type.capitalize()} cannot be empty"),
+        (lambda n: len(n.strip()) >= 2, f"{name_type.capitalize()} must be at least 2 characters long"),
+        (lambda n: len(n.strip()) <= 50, f"{name_type.capitalize()} must be less than 50 characters"),
+        (
+            lambda n: NAME_PATTERN.match(n.strip()),
+            f"{name_type.capitalize()} must start with a letter and contain only letters, numbers, and underscores",
+        ),
+        (
+            lambda n: not keyword.iskeyword(n.strip()),
+            f"'{n.strip()}' is a Python keyword. Please choose a different name",
+        ),
+        (
+            lambda n: n.strip().lower() not in PYTHON_BUILTINS,
+            f"'{n.strip()}' conflicts with Python builtin module. Choose a different name",
+        ),
+        (lambda n: not n.strip().startswith("_"), f"{name_type.capitalize()} should not start with underscore"),
+    ]
 
-    if len(name) < 2:
-        return False, f"{name_type.capitalize()} must be at least 2 characters long"
-
-    if len(name) > 50:
-        return False, f"{name_type.capitalize()} must be less than 50 characters"
-
-    if not NAME_PATTERYN.match(name):
-        return(
-            False,
-            f"{name_type.capitalize()} must start with a letter and contain only letters, numbers, and underscores"
-        )
-
-    if keyword.iskeyword(name):
-        return False, f"'{name}' is a Python keyword, Please choose a different name."
-
-    if name.lower() in PYTHON_BUILTINS:
-        return False, f"'{name}', conflicts with Python builtin module. Chooose a different name."
-
-    if name.startswith("_"):
-        return False, f"{name_type.capitalize()} should not start with underscore"
+    for rule, error_message in validation_rules:
+        if not rule(name):
+            return False, error_message
 
     return True, ""
 
+
 def validate_project_name(name: str) -> Tuple[bool, str]:
-    return _validate_name(name, "project_name")
+    return _validate_name(name, "project name")
+
 
 def validate_app_name(name: str) -> Tuple[bool, str]:
     return _validate_name(name, "app name")
