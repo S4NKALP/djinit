@@ -28,11 +28,11 @@ def _validate_name(name: str, name_type: str = "name") -> Tuple[bool, str]:
         ),
         (
             lambda n: not keyword.iskeyword(n.strip()),
-            f"'{n.strip()}' is a Python keyword. Please choose a different name",
+            f"'{name.strip()}' is a Python keyword. Please choose a different name",
         ),
         (
             lambda n: n.strip().lower() not in PYTHON_BUILTINS,
-            f"'{n.strip()}' conflicts with Python builtin module. Choose a different name",
+            f"'{name.strip()}' conflicts with Python builtin module. Choose a different name",
         ),
         (lambda n: not n.strip().startswith("_"), f"{name_type.capitalize()} should not start with underscore"),
     ]
