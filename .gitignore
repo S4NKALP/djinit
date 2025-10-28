@@ -173,3 +173,5 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+djinit.egg-info/
+djinit.egg-info/*
