@@ -18,6 +18,7 @@ class CiCDConfigGenerator:
             os.makedirs(github_dir, exist_ok=True)
 
         workflow_content = f"""name: Django CI
+
 on:
   push:
     branches: [ main, develop ]
@@ -126,3 +127,155 @@ jobs:
     - name: Run security check
       run: uv run python manage.py check --deploy
 """
+
+        workflow_file = os.path.join(github_dir, "ci.yml")
+        create_file_with_content(
+            workflow_file,
+            workflow_content,
+            f"Created Github Actions workflow ({workflow_file})",
+        )
+        return True
+
+    def create_gitlab_ci(self) -> bool:
+        with change_cwd(self.project_root):
+            gitlab_ci_content = f"""# GitLab CI/CD configuration for {self.project_name}
+
+stages:
+  - test
+  - lint
+  - security
+
+variables:
+  POSTGRES_DB: test_db
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/test_db"
+
+# Use Docker-in-Docker
+services:
+  - postgres:15
+
+before_script:
+  - python --version
+  - pip install uv
+  - uv sync
+
+# Lint stage
+lint:
+  stage: lint
+  image: python:3.13
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+  only:
+    - branches
+    - merge_requests
+
+# Test stage
+test:
+  stage: test
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+# Multiple Python versions
+test:python310:
+  stage: test
+  image: python:3.10
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python311:
+  stage: test
+  image: python:3.11
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python312:
+  stage: test
+  image: python:3.12
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python313:
+  stage: test
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+# Security check
+security:
+  stage: security
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {self.project_name}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check --deploy
+    - uv run python manage.py validate_templates
+  only:
+    - main
+    - develop
+"""
+            config_file = ".gitlab_ci_content"
+            create_file_with_content(
+                config_file,
+                gitlab_ci_content,
+                f"Created GitLab CI configuration ({config_file})",
+            )
+            return True
