@@ -175,3 +175,123 @@ remove PACKAGE:
                 "Created justfile with Django development tasks",
             )
             return result
+
+    def create_procfile(self) -> bool:
+        with change_cwd(self.project_root):
+            procfile_content = f"""# Procfile for {self.project_name}
+# Used for deploying to PaaS platforms like Heroku, Railway, Render, etc.
+
+# Web server process (using Gunicorn)
+# Adjust workers based on your needs: (2 x CPU cores) + 1
+web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile - --log-level info
+
+# Alternative web server configurations (uncomment to use):
+# web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120
+# web: gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --worker-class gevent --worker-connections 1000 --timeout 120
+
+# Release task (runs migrations before deployment)
+release: python manage.py migrate --noinput && python manage.py collectstatic --noinput
+
+# Uncomment below to run scheduled tasks (if using Celery)
+# worker: celery -A {self.project_name} worker --loglevel=info
+# beat: celery -A {self.project_name} beat --loglevel=info
+
+# Development server (for local testing with Foreman/Overmind)
+# web: python manage.py runserver 0.0.0.0:$PORT
+"""
+
+            result = create_file_with_content(
+                "Procfile",
+                procfile_content,
+                "Created Procfile with Gunicorn configuration",
+            )
+            return result
+
+    def create_gunicorn_config(self) -> bool:
+        """Create a gunicorn configuration file."""
+        with change_cwd(self.project_root):
+            gunicorn_config_content = f"""# Gunicorn configuration file for {self.project_name}
+# Usage: gunicorn -c gunicorn_config.py {self.project_name}.wsgi:application
+
+import multiprocessing
+
+# Server socket
+bind = "0.0.0.0:8000"
+backlog = 2048
+
+# Worker processes
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_class = "sync"
+worker_connections = 1000
+timeout = 120
+keepalive = 5
+
+# Logging
+accesslog = "-"
+errorlog = "-"
+loglevel = "info"
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+# Process naming
+proc_name = "{self.project_name}"
+
+# Server mechanics
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None
+tmp_upload_dir = None
+
+# SSL (uncomment and configure if needed)
+# keyfile = "/path/to/key.pem"
+# certfile = "/path/to/cert.pem"
+"""
+
+            config_file = "gunicorn_config.py"
+            result = create_file_with_content(
+                config_file,
+                gunicorn_config_content,
+                f"Created {config_file} with Gunicorn configuration",
+            )
+            return result
+
+    def create_runtime_txt(self, python_version: str = "3.13") -> bool:
+        """Create runtime.txt file for specifying Python version."""
+        with change_cwd(self.project_root):
+            runtime_content = f"""python-{python_version}
+"""
+            runtime_file = "runtime.txt"
+            result = create_file_with_content(
+                runtime_file,
+                runtime_content,
+                f"Created {runtime_file} with Python version specification",
+            )
+            return result
+
+    def create_nixpacks_toml(self) -> bool:
+        """Create nixpacks.toml for Nixpacks deployment configuration."""
+        with change_cwd(self.project_root):
+            nixpacks_content = f"""# Nixpacks configuration for {self.project_name}
+# Used by Railway, Render, and other platforms that support Nixpacks
+
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["python manage.py collectstatic --noinput"]
+
+[start]
+cmd = "gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT"
+"""
+
+            config_file = "nixpacks.toml"
+            result = create_file_with_content(
+                config_file,
+                nixpacks_content,
+                f"Created {config_file} for Nixpacks deployment",
+            )
+            return result
