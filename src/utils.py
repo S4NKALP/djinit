@@ -1,11 +1,13 @@
 """
-Shared file utility functions.
-Contains common file operations used across multiple managers.
+Shared utility functions.
+Contains common operations used across multiple managers.
 """
 
+import os
 import subprocess
+from contextlib import contextmanager
 
-from src.scripts.console import UIFormatter
+from src.scripts.console_ui import UIFormatter
 
 
 def format_file(filename: str) -> None:
@@ -36,3 +38,17 @@ def create_file_with_content(
 
     UIFormatter.print_success(success_message)
     return True
+
+
+@contextmanager
+def change_cwd(path: str):
+    """Temporarily change the current working directory.
+
+    Ensures the original directory is restored even if an exception occurs.
+    """
+    original_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(original_cwd)
