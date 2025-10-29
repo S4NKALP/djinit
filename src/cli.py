@@ -42,6 +42,8 @@ class Cli:
             ("Configuring production settings", self.settings_manager.update_production_settings),
             ("Creating utility files", self._create_utility_files),
             ("Setting up app URLs", self.file_manager.create_app_urls),
+            ("Creating app serializers", self.file_manager.create_app_serializers),
+            ("Creating app routes", self.file_manager.create_app_routes),
             ("Configuring comprehensive URLs", self.file_manager.update_project_urls),
             ("Updating WSGI configuration", self.file_manager.update_wsgi_file),
             ("Updating ASGI configuration", self.file_manager.update_asgi_file),

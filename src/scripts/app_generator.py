@@ -8,6 +8,8 @@ import subprocess
 from typing import Optional
 
 from src.scripts.console_ui import UIFormatter
+from src.scripts.template_engine import template_engine
+from src.utils import create_file_with_content
 
 
 class AppManager:
@@ -31,6 +33,9 @@ class AppManager:
             return False
 
         if not self._add_to_installed_apps():
+            return False
+
+        if not self._create_additional_files():
             return False
 
         UIFormatter.print_success(f"Django app '{self.app_name}' created and configured successfully!")
@@ -116,3 +121,30 @@ class AppManager:
             return settings_path
 
         return None
+
+    def _create_additional_files(self) -> bool:
+        """Create additional files for the app (serializers.py, routes.py)."""
+        app_path = os.path.join(self.current_dir, self.app_name)
+        
+        # Create serializers.py
+        context = {"app_name": self.app_name}
+        serializers_content = template_engine.render_template("serializers.j2", context)
+        if not create_file_with_content(
+            os.path.join(app_path, "serializers.py"),
+            serializers_content,
+            f"Created {self.app_name}/serializers.py",
+            should_format=True,
+        ):
+            return False
+
+        # Create routes.py
+        routes_content = template_engine.render_template("routes.j2", context)
+        if not create_file_with_content(
+            os.path.join(app_path, "routes.py"),
+            routes_content,
+            f"Created {self.app_name}/routes.py",
+            should_format=True,
+        ):
+            return False
+
+        return True

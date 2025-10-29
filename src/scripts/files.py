@@ -90,6 +90,44 @@ class FileManager:
                 )
         return True
 
+    def create_app_serializers(self) -> bool:
+        """Create serializers.py file for each app."""
+        apps_base_dir = self.project_root
+        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
+            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
+
+        for app_name in self.app_names:
+            app_path = os.path.join(apps_base_dir, app_name)
+            with change_cwd(app_path):
+                context = {"app_name": app_name}
+                serializers_content = template_engine.render_template("serializers.j2", context)
+                create_file_with_content(
+                    "serializers.py",
+                    serializers_content,
+                    f"Created {app_name}/serializers.py",
+                    should_format=True,
+                )
+        return True
+
+    def create_app_routes(self) -> bool:
+        """Create routes.py file for each app."""
+        apps_base_dir = self.project_root
+        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
+            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
+
+        for app_name in self.app_names:
+            app_path = os.path.join(apps_base_dir, app_name)
+            with change_cwd(app_path):
+                context = {"app_name": app_name}
+                routes_content = template_engine.render_template("routes.j2", context)
+                create_file_with_content(
+                    "routes.py",
+                    routes_content,
+                    f"Created {app_name}/routes.py",
+                    should_format=True,
+                )
+        return True
+
     def update_project_urls(self) -> bool:
         with change_cwd(self.project_configs):
             nested = bool(self.metadata.get("nested_apps"))
