@@ -39,5 +39,5 @@ dependencies = [
 Homepage = "https://github.com/S4NKALP/djinit"
 
 [project.scripts]
-djinit = "src.generator:main"
-dj = "src.generator:main"
+djinit = "djinit.generator:main"
+dj = "djinit.generator:main"

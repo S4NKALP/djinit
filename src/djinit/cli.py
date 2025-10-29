@@ -6,13 +6,13 @@ Coordinates between different managers to create a complete Django project.
 import os
 from typing import Callable, List, Tuple
 
-from src.scripts.cicd_config_generator import CICDConfigGenerator
-from src.scripts.console_ui import UIFormatter
-from src.scripts.deployment_files_generator import DeploymentConfigGenerator
-from src.scripts.files import FileManager
-from src.scripts.project import ProjectManager
-from src.scripts.secretkey_generator import generate_secret_command
-from src.scripts.settings import SettingsManager
+from djinit.scripts.cicd_config_generator import CICDConfigGenerator
+from djinit.scripts.console_ui import UIFormatter
+from djinit.scripts.deployment_files_generator import DeploymentConfigGenerator
+from djinit.scripts.files import FileManager
+from djinit.scripts.project import ProjectManager
+from djinit.scripts.secretkey_generator import generate_secret_command
+from djinit.scripts.settings import SettingsManager
 
 
 class Cli:

@@ -7,7 +7,7 @@ import os
 import subprocess
 from contextlib import contextmanager
 
-from src.scripts.console_ui import UIFormatter
+from djinit.scripts.console_ui import UIFormatter
 
 
 def format_file(filename: str) -> None:

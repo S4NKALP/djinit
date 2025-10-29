@@ -6,8 +6,8 @@ Handles different commands like secret key generation and app creation.
 import argparse
 import sys
 
-from src.scripts.console_ui import UIColors, UIFormatter, console
-from src.scripts.name_validator import validate_app_name
+from djinit.scripts.console_ui import UIColors, UIFormatter, console
+from djinit.scripts.name_validator import validate_app_name
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -43,7 +43,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def handle_secret_command(args: argparse.Namespace) -> None:
-    from src.scripts.secretkey_generator import display_secret_keys, generate_multiple_keys
+    from djinit.scripts.secretkey_generator import display_secret_keys, generate_multiple_keys
 
     # Generate keys
     keys = generate_multiple_keys(args.count, args.length)
@@ -70,7 +70,7 @@ def handle_secret_command(args: argparse.Namespace) -> None:
 
 
 def handle_app_command(args: argparse.Namespace) -> None:
-    from src.scripts.app_generator import AppManager
+    from djinit.scripts.app_generator import AppManager
 
     # Display welcome message
     UIFormatter.print_info("")

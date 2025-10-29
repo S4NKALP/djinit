@@ -5,8 +5,8 @@ Handles creation of Github Actions and GitLab CI onfigurations
 
 import os
 
-from src.scripts.template_engine import template_engine
-from src.utils import change_cwd, create_file_with_content
+from djinit.scripts.template_engine import template_engine
+from djinit.utils import change_cwd, create_file_with_content
 
 
 class CICDConfigGenerator:

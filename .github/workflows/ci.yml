@@ -39,7 +39,7 @@ jobs:
 
     - name: Test CLI import
       run: |
-        python -c "from src.generator import main; print('Import successful')"
+        python -c "from djinit.generator import main; print('Import successful')"
 
     - name: Test console script entry point
       run: |

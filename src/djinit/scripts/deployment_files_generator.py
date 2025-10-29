@@ -3,8 +3,8 @@ Deployment file generator for djinit.
 Handles creation of Justfile, Procfile, and deployment-related files.
 """
 
-from src.scripts.template_engine import template_engine
-from src.utils import change_cwd, create_file_with_content
+from djinit.scripts.template_engine import template_engine
+from djinit.utils import change_cwd, create_file_with_content
 
 
 class DeploymentConfigGenerator:

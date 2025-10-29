@@ -8,8 +8,8 @@ import os
 import subprocess
 import sys
 
-from src.scripts.console_ui import UIFormatter
-from src.utils import change_cwd
+from djinit.scripts.console_ui import UIFormatter
+from djinit.utils import change_cwd
 
 
 class ProjectManager:

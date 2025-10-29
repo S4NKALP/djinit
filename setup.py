@@ -9,16 +9,22 @@ setup(
     author="Sankalp Tharu",
     author_email="sankalptharu50028@gmail.com",
     url="https://github.com/S4NKALP/djinit",
-    packages=find_packages(include=["src", "src.*"]),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
         "ruff>=0.14.2",
         "click>=8.3.0",
         "rich>=14.2.0",
         "jinja2>=3.1.0",
-        # "django<=5.2.7",
+        "django>=4.2,<6.0",
     ],
-    entry_points={"console_scripts": ["djinit=src.generator:main"]},
+    entry_points={
+        "console_scripts": [
+            "djinit=djinit.generator:main",
+            "dj=djinit.generator:main",
+        ]
+    },
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",

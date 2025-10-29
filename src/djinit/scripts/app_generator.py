@@ -7,9 +7,9 @@ import os
 import subprocess
 from typing import Optional
 
-from src.scripts.console_ui import UIFormatter
-from src.scripts.template_engine import template_engine
-from src.utils import change_cwd, create_file_with_content
+from djinit.scripts.console_ui import UIFormatter
+from djinit.scripts.template_engine import template_engine
+from djinit.utils import change_cwd, create_file_with_content
 
 
 class AppManager:

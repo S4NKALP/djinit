@@ -5,10 +5,10 @@ Handles creation and configuration of Django settings files.
 
 import os
 
-from src.scripts.console_ui import UIFormatter
-from src.scripts.secretkey_generator import generate_secret_key
-from src.scripts.template_engine import template_engine
-from src.utils import change_cwd, create_file_with_content
+from djinit.scripts.console_ui import UIFormatter
+from djinit.scripts.secretkey_generator import generate_secret_key
+from djinit.scripts.template_engine import template_engine
+from djinit.utils import change_cwd, create_file_with_content
 
 
 class SettingsManager:

@@ -12,7 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from src.scripts.console_ui import UIColors
+from djinit.scripts.console_ui import UIColors
 
 console = Console()
 

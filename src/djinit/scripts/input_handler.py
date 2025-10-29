@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Tuple
 
-from src.scripts.console_ui import UIColors, UIFormatter, console
-from src.scripts.name_validator import validate_app_name, validate_project_name
+from djinit.scripts.console_ui import UIColors, UIFormatter, console
+from djinit.scripts.name_validator import validate_app_name, validate_project_name
 
 
 class CICDOption(Enum):
