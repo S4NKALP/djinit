@@ -3,22 +3,23 @@ Console UI utilities for djinit.
 Provides enhanced styling, formatting, and user interface components.
 """
 
-from typing import List, Optional, Dict, Any
+from contextlib import contextmanager
+from typing import Any, Dict, List, Optional
+
+from rich import box
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import (
+    BarColumn,
     Progress,
     SpinnerColumn,
-    BarColumn,
     TaskProgressColumn,
     TextColumn,
     TimeRemainingColumn,
 )
 from rich.syntax import Syntax
-from rich.text import Text
-from rich.panel import Panel
 from rich.table import Table
-from rich import box
-from contextlib import contextmanager
+from rich.text import Text
 
 console = Console()
 
@@ -65,37 +66,25 @@ class UIFormatter:
 
     @staticmethod
     def print_success(message: str, icon: str = Icons.SUCCESS):
-        console.print(
-            f"[{UIColors.SUCCESS}]{icon}[/{UIColors.SUCCESS}] [bold]{message}[/bold]"
-        )
+        console.print(f"[{UIColors.SUCCESS}]{icon}[/{UIColors.SUCCESS}] [bold]{message}[/bold]")
 
     @staticmethod
-    def print_error(
-        message: str, icon: str = Icons.ERROR, details: Optional[str] = None
-    ):
+    def print_error(message: str, icon: str = Icons.ERROR, details: Optional[str] = None):
         """Print error message with optional details"""
-        console.print(
-            f"[{UIColors.ERROR}]{icon}[/{UIColors.ERROR}] [bold]{message}[/bold]"
-        )
+        console.print(f"[{UIColors.ERROR}]{icon}[/{UIColors.ERROR}] [bold]{message}[/bold]")
         if details:
             console.print(f"   [dim]{details}[/dim]")
 
     @staticmethod
     def print_warning(message: str, icon: str = Icons.WARNING):
-        console.print(
-            f"[{UIColors.WARNING}]{icon}[/{UIColors.WARNING}] [bold]{message}[/bold]"
-        )
+        console.print(f"[{UIColors.WARNING}]{icon}[/{UIColors.WARNING}] [bold]{message}[/bold]")
 
     @staticmethod
     def print_info(message: str, icon: str = Icons.INFO):
-        console.print(
-            f"[{UIColors.INFO}]{icon}[/{UIColors.INFO}] [bold]{message}[/bold]"
-        )
+        console.print(f"[{UIColors.INFO}]{icon}[/{UIColors.INFO}] [bold]{message}[/bold]")
 
     @staticmethod
-    def print_step(
-        step_number: int, total_steps: int, description: str, icon: str = ""
-    ):
+    def print_step(step_number: int, total_steps: int, description: str, icon: str = ""):
         """Print step information with enhanced progress indicator"""
         icon_str = f"{icon} " if icon else ""
         percentage = int((step_number / total_steps) * 100)
@@ -116,9 +105,7 @@ class UIFormatter:
         )
 
     @staticmethod
-    def create_live_progress(
-        description: str = "Setup Progress", total_steps: int = 100
-    ):
+    def create_live_progress(description: str = "Setup Progress", total_steps: int = 100):
         """Create a live progress display that updates in place"""
         progress = Progress(
             SpinnerColumn(),
@@ -152,10 +139,8 @@ class UIFormatter:
     @staticmethod
     def print_feature_list(features: List[str], icon: str = Icons.STAR):
         """Print a styled feature list with custom icons"""
-        for i, feature in enumerate(features, 1):
-            console.print(
-                f"[{UIColors.ACCENT}]  {icon}[/{UIColors.ACCENT}] [bold]{feature}[/bold]"
-            )
+        for _i, feature in enumerate(features, 1):
+            console.print(f"[{UIColors.ACCENT}]  {icon}[/{UIColors.ACCENT}] [bold]{feature}[/bold]")
 
     @staticmethod
     def print_numbered_list(items: List[str], start: int = 1):
@@ -166,9 +151,7 @@ class UIFormatter:
             console.print(f"   [dim]{prefix}[/dim] [dim]{i}.[/dim] {item}")
 
     @staticmethod
-    def print_tree_item(
-        text: str, is_last: bool = False, indent: int = 0, icon: str = ""
-    ):
+    def print_tree_item(text: str, is_last: bool = False, indent: int = 0, icon: str = ""):
         """Print a tree-style item"""
         prefix = "└─" if is_last else "├─"
         icon_str = f"{icon} " if icon else ""
@@ -183,15 +166,11 @@ class UIFormatter:
         line_numbers: bool = True,
     ):
         """Print code with syntax highlighting and customization"""
-        syntax = Syntax(
-            code, language, theme=theme, line_numbers=line_numbers, word_wrap=True
-        )
+        syntax = Syntax(code, language, theme=theme, line_numbers=line_numbers, word_wrap=True)
         console.print(syntax)
 
     @staticmethod
-    def print_panel(
-        content: str, title: str = "", style: str = "cyan", border_style: str = "blue"
-    ):
+    def print_panel(content: str, title: str = "", style: str = "cyan", border_style: str = "blue"):
         """Print content in a styled panel"""
         panel = Panel(
             content,
@@ -208,9 +187,7 @@ class UIFormatter:
         if not data:
             return
 
-        table = Table(
-            title=title, box=box.ROUNDED, show_header=True, header_style="bold cyan"
-        )
+        table = Table(title=title, box=box.ROUNDED, show_header=True, header_style="bold cyan")
 
         # Add columns from first row
         for key in data[0].keys():
@@ -245,9 +222,7 @@ class UIFormatter:
             style=UIColors.MUTED,
         )
         welcome_text.append("  Repository: ", style=UIColors.MUTED)
-        welcome_text.append(
-            "https://github.com/S4NKALP/djinit\n", style="blue underline"
-        )
+        welcome_text.append("https://github.com/S4NKALP/djinit\n", style="blue underline")
         welcome_text.append("  License: MIT\n", style=UIColors.MUTED)
 
         return welcome_text
@@ -266,63 +241,39 @@ class UIFormatter:
         if success:
             # Success header
             console.print(f"[bold green]{'═' * 70}[/bold green]")
-            console.print(
-                f"[bold green]{f'{Icons.PARTY} SETUP COMPLETE! {Icons.PARTY}'.center(70)}[/bold green]"
-            )
+            console.print(f"[bold green]{f'{Icons.PARTY} SETUP COMPLETE! {Icons.PARTY}'.center(70)}[/bold green]")
             console.print(f"[bold green]{'═' * 70}[/bold green]\n")
 
             # Duration if provided
             if duration:
-                console.print(
-                    f"[dim]{Icons.CLOCK} Completed in {duration:.2f} seconds[/dim]\n"
-                )
+                console.print(f"[dim]{Icons.CLOCK} Completed in {duration:.2f} seconds[/dim]\n")
 
             # Project details
             console.print(f"[bold cyan]{Icons.TARGET} Project Details:[/bold cyan]")
             console.print("   [dim]│[/dim]")
-            console.print(
-                f"   [dim]├─[/dim] [bold]Directory:[/bold] [white]{project_dir}[/white]"
-            )
-            console.print(
-                f"   [dim]├─[/dim] [bold]Project:[/bold] [white]{project_name}[/white]"
-            )
-            console.print(
-                f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]"
-            )
+            console.print(f"   [dim]├─[/dim] [bold]Directory:[/bold] [white]{project_dir}[/white]")
+            console.print(f"   [dim]├─[/dim] [bold]Project:[/bold] [white]{project_name}[/white]")
+            console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
             console.print()
 
             # Next steps
             console.print(f"[bold cyan]{Icons.ROCKET} Next Steps:[/bold cyan]")
             console.print("   [dim]│[/dim]")
+            console.print("   [dim]├─[/dim] [dim]1.[/dim] Navigate to your project directory")
+            console.print("   [dim]├─[/dim] [dim]2.[/dim] Set environment variables in .env file")
+            console.print("   [dim]├─[/dim] [dim]3.[/dim] Run migrations: [cyan]python manage.py migrate[/cyan]")
             console.print(
-                f"   [dim]├─[/dim] [dim]1.[/dim] Navigate to your project directory"
+                "   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]python manage.py createsuperuser[/cyan]"
             )
-            console.print(
-                f"   [dim]├─[/dim] [dim]2.[/dim] Set environment variables in .env file"
-            )
-            console.print(
-                f"   [dim]├─[/dim] [dim]3.[/dim] Run migrations: [cyan]python manage.py migrate[/cyan]"
-            )
-            console.print(
-                f"   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]python manage.py createsuperuser[/cyan]"
-            )
-            console.print(
-                f"   [dim]└─[/dim] [dim]5.[/dim] Start server: [cyan]python manage.py runserver[/cyan]"
-            )
+            console.print("   [dim]└─[/dim] [dim]5.[/dim] Start server: [cyan]python manage.py runserver[/cyan]")
             console.print()
 
             # Useful URLs
             console.print(f"[bold cyan]{Icons.LINK} Useful URLs:[/bold cyan]")
             console.print("   [dim]│[/dim]")
-            console.print(
-                f"   [dim]├─[/dim] Admin: [blue]http://localhost:8000/admin/[/blue]"
-            )
-            console.print(
-                f"   [dim]├─[/dim] API Docs: [blue]http://localhost:8000/docs/[/blue]"
-            )
-            console.print(
-                f"   [dim]└─[/dim] API Schema: [blue]http://localhost:8000/schema/[/blue]"
-            )
+            console.print("   [dim]├─[/dim] Admin: [blue]http://localhost:8000/admin/[/blue]")
+            console.print("   [dim]├─[/dim] API Docs: [blue]http://localhost:8000/docs/[/blue]")
+            console.print("   [dim]└─[/dim] API Schema: [blue]http://localhost:8000/schema/[/blue]")
             console.print()
 
             console.print(f"[bold green]{'═' * 70}[/bold green]\n")
@@ -336,22 +287,18 @@ class UIFormatter:
             console.print("[red]The setup process encountered an error.[/red]\n")
 
             # Troubleshooting
-            console.print(
-                f"[bold yellow]{Icons.MAGNIFIER} Troubleshooting Tips:[/bold yellow]"
-            )
+            console.print(f"[bold yellow]{Icons.MAGNIFIER} Troubleshooting Tips:[/bold yellow]")
             console.print("   [dim]│[/dim]")
-            console.print(f"   [dim]├─[/dim] Check the error messages above")
-            console.print(f"   [dim]├─[/dim] Ensure you have write permissions")
-            console.print(f"   [dim]├─[/dim] Verify Django is installed correctly")
-            console.print(f"   [dim]└─[/dim] Try running with elevated permissions")
+            console.print("   [dim]├─[/dim] Check the error messages above")
+            console.print("   [dim]├─[/dim] Ensure you have write permissions")
+            console.print("   [dim]├─[/dim] Verify Django is installed correctly")
+            console.print("   [dim]└─[/dim] Try running with elevated permissions")
             console.print()
 
             console.print(f"[bold red]{'═' * 70}[/bold red]\n")
 
     @staticmethod
-    def create_progress_display(
-        description: str = "Processing", total_steps: int = 100
-    ):
+    def create_progress_display(description: str = "Processing", total_steps: int = 100):
         """Create a comprehensive live progress display"""
         progress = Progress(
             SpinnerColumn(),
@@ -374,11 +321,7 @@ class UIFormatter:
     def confirm(prompt: str, default: bool = True) -> bool:
         """Display a confirmation prompt"""
         default_str = "Y/n" if default else "y/N"
-        response = (
-            console.input(f"[bold cyan]?[/bold cyan] {prompt} [{default_str}]: ")
-            .strip()
-            .lower()
-        )
+        response = console.input(f"[bold cyan]?[/bold cyan] {prompt} [{default_str}]: ").strip().lower()
 
         if not response:
             return default

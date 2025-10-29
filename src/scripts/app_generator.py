@@ -5,7 +5,6 @@ Handles creation of Django apps and updating settings.
 
 import os
 import subprocess
-import sys
 from typing import Optional
 
 from src.scripts.console_ui import UIFormatter
@@ -54,23 +53,18 @@ class AppManager:
     def _create_django_app(self) -> bool:
         # Detect project structure
         is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        
+
         # manage.py is always in the project root (current_dir), not in the project directory
         manage_py_path = os.path.join(self.current_dir, "manage.py")
         if not os.path.exists(manage_py_path):
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
-        
+
         # Create app in the correct location
         with change_cwd(apps_base_dir):
             UIFormatter.print_info(f"Creating app '{self.app_name}' in directory: {os.getcwd()}")
-            
-            result = subprocess.run(
-                ["django-admin", "startapp", self.app_name], 
-                capture_output=True, 
-                text=True, 
-                check=True
-            )
+
+            subprocess.run(["django-admin", "startapp", self.app_name], capture_output=True, text=True, check=True)
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         return True
@@ -93,20 +87,20 @@ class AppManager:
 
         # Detect project structure to determine the correct app module path
         is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        
+
         # Determine the correct module path for the app
         if is_nested and nested_dir:
             app_module_path = f"{nested_dir}.{self.app_name}"
         else:
             app_module_path = self.app_name
-        
+
         UIFormatter.print_info(f"App module path: {app_module_path}")
 
         # Check if app is already in USER_DEFINED_APPS section specifically
         lines = content.split("\n")
         in_user_apps = False
         app_already_exists = False
-        
+
         for line in lines:
             if "USER_DEFINED_APPS" in line and "=" in line:
                 in_user_apps = True
@@ -197,7 +191,7 @@ class AppManager:
         # Step 2: try to infer nested_dir from USER_DEFINED_APPS in base.py
         try:
             if settings_base_path and os.path.exists(settings_base_path):
-                with open(settings_base_path, "r") as f:
+                with open(settings_base_path) as f:
                     base_content = f.read()
                 # Find lines inside USER_DEFINED_APPS and extract first dotted app
                 in_user_apps = False
@@ -209,7 +203,7 @@ class AppManager:
                         break
                     if in_user_apps:
                         line_stripped = line.strip().strip(",")
-                        if line_stripped.startswith("\"") or line_stripped.startswith("'"):
+                        if line_stripped.startswith('"') or line_stripped.startswith("'"):
                             app_label = line_stripped.strip("\"'")
                             if "." in app_label:
                                 prefix = app_label.split(".", 1)[0]
@@ -243,7 +237,7 @@ class AppManager:
         # Detect project structure to get correct app path
         is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
         app_path = os.path.join(apps_base_dir, self.app_name)
-        
+
         # Create serializers.py
         context = {"app_name": self.app_name}
         serializers_content = template_engine.render_template("serializers.j2", context)

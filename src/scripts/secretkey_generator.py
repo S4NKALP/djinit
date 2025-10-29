@@ -27,9 +27,7 @@ def generate_multiple_keys(count: int = 3, length: int = 50) -> list[str]:
 
 
 def display_secret_keys(keys: list[str]) -> None:
-    table = Table(
-        title="🔐 Django Secret Keys", show_header=True, header_style="bold blue"
-    )
+    table = Table(title="🔐 Django Secret Keys", show_header=True, header_style="bold blue")
     table.add_column("Environment", style="cyan", no_wrap=True)
     table.add_column("Secret Key", style="dim")
 
