@@ -1,10 +1,15 @@
 # djinit
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2-0C4B33?logo=django&logoColor=white" alt="Django">
-  <img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python">
-  <a href="https://github.com/S4NKALP/djinit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
-</p>
+<div align="center">
+
+> PyPI did not allow the original name, so the package is released as **djinitx**
+
+<img src="https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white" alt="PyPI">
+<img src="https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2-0C4B33?logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python">
+<a href="https://github.com/S4NKALP/djinit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+
+</div>
 
 A fast, interactive CLI to bootstrap a modern, production‑ready Django project in minutes — featuring split settings, DRF and JWT integration, OpenAPI docs, CORS, static file handling via WhiteNoise, Postgres‑friendly configuration, CI/CD templates, deployment helpers, and battle‑tested defaults that deliver a polished developer experience out of the box.
 
@@ -19,24 +24,24 @@ A fast, interactive CLI to bootstrap a modern, production‑ready Django project
 
 ---
 
-## Demo
-
-![djinit demo](docs/demo.gif)
-
-Tip: If the GIF doesn't load, open `docs/demo.gif` or view it on the repository page.
-
 ## Installation
 
 Using pipx (recommended):
 
 ```bash
-pipx install git+https://github.com/S4NKALP/djinit
+pipx install djinitx
 ```
 
-Using pip (user space):
+Using pip:
 
 ```bash
-pip install --user git+https://github.com/S4NKALP/djinit
+pip install djinitx
+```
+
+Using uv:
+
+```bash
+uv tool install djinitx
 ```
 
 From source:
