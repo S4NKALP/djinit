@@ -19,24 +19,23 @@ class CICDConfigGenerator:
             github_dir = os.path.join(self.project_root, ".github", "workflows")
             os.makedirs(github_dir, exist_ok=True)
 
-        context = {"project_name": self.project_name}
-        workflow_content = template_engine.render_template("github_actions_ci.j2", context)
-        workflow_file = os.path.join(github_dir, "ci.yml")
-        create_file_with_content(
-            workflow_file,
-            workflow_content,
-            f"Created Github Actions workflow ({workflow_file})",
-        )
+            context = {"project_name": self.project_name}
+            workflow_content = template_engine.render_template("github_actions_ci.j2", context)
+            workflow_file = os.path.join(github_dir, "ci.yml")
+            create_file_with_content(
+                workflow_file,
+                workflow_content,
+                f"Created Github Actions workflow ({workflow_file})",
+            )
         return True
 
     def create_gitlab_ci(self) -> bool:
         with change_cwd(self.project_root):
             context = {"project_name": self.project_name}
             gitlab_ci_content = template_engine.render_template("gitlab_ci.j2", context)
-            config_file = ".gitlab-ci.yml"
             create_file_with_content(
-                config_file,
+                ".gitlab-ci.yml",
                 gitlab_ci_content,
-                f"Created GitLab CI configuration ({config_file})",
+                f"Created GitLab CI configuration (.gitlab-ci.yml)",
             )
-            return True
+        return True

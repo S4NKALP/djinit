@@ -72,60 +72,43 @@ class FileManager:
                 "Created pyproject.toml file for uv",
             )
 
-    def create_app_urls(self) -> bool:
-        apps_base_dir = self.project_root
+    def _get_apps_base_dir(self) -> str:
+        """Get the base directory for apps based on project structure."""
         if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
-            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
+            return os.path.join(self.project_root, self.metadata.get("nested_dir"))
+        return self.project_root
 
+    def _create_app_file(self, apps_base_dir: str, app_name: str, template_name: str, filename: str) -> None:
+        """Helper method to create app files."""
+        app_path = os.path.join(apps_base_dir, app_name)
+        with change_cwd(app_path):
+            context = {"app_name": app_name}
+            content = template_engine.render_template(template_name, context)
+            create_file_with_content(
+                filename,
+                content,
+                f"Created {app_name}/{filename}",
+                should_format=True,
+            )
+
+    def create_app_urls(self) -> bool:
+        apps_base_dir = self._get_apps_base_dir()
         for app_name in self.app_names:
-            app_path = os.path.join(apps_base_dir, app_name)
-            with change_cwd(app_path):
-                context = {"app_name": app_name}
-                urls_content = template_engine.render_template("app_urls.j2", context)
-                create_file_with_content(
-                    "urls.py",
-                    urls_content,
-                    f"Created {app_name}/urls.py",
-                    should_format=True,
-                )
+            self._create_app_file(apps_base_dir, app_name, "app_urls.j2", "urls.py")
         return True
 
     def create_app_serializers(self) -> bool:
         """Create serializers.py file for each app."""
-        apps_base_dir = self.project_root
-        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
-            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
-
+        apps_base_dir = self._get_apps_base_dir()
         for app_name in self.app_names:
-            app_path = os.path.join(apps_base_dir, app_name)
-            with change_cwd(app_path):
-                context = {"app_name": app_name}
-                serializers_content = template_engine.render_template("serializers.j2", context)
-                create_file_with_content(
-                    "serializers.py",
-                    serializers_content,
-                    f"Created {app_name}/serializers.py",
-                    should_format=True,
-                )
+            self._create_app_file(apps_base_dir, app_name, "serializers.j2", "serializers.py")
         return True
 
     def create_app_routes(self) -> bool:
         """Create routes.py file for each app."""
-        apps_base_dir = self.project_root
-        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
-            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
-
+        apps_base_dir = self._get_apps_base_dir()
         for app_name in self.app_names:
-            app_path = os.path.join(apps_base_dir, app_name)
-            with change_cwd(app_path):
-                context = {"app_name": app_name}
-                routes_content = template_engine.render_template("routes.j2", context)
-                create_file_with_content(
-                    "routes.py",
-                    routes_content,
-                    f"Created {app_name}/routes.py",
-                    should_format=True,
-                )
+            self._create_app_file(apps_base_dir, app_name, "routes.j2", "routes.py")
         return True
 
     def update_project_urls(self) -> bool:

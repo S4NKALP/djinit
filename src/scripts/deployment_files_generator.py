@@ -16,23 +16,23 @@ class DeploymentConfigGenerator:
         with change_cwd(self.project_root):
             context = {"project_name": self.project_name}
             justfile_content = template_engine.render_template("justfile.j2", context)
-            result = create_file_with_content(
+            create_file_with_content(
                 "justfile",
                 justfile_content,
                 "Created justfile with Django development tasks",
             )
-            return result
+        return True
 
     def create_procfile(self) -> bool:
         with change_cwd(self.project_root):
             context = {"project_name": self.project_name}
             procfile_content = template_engine.render_template("procfile.j2", context)
-            result = create_file_with_content(
+            create_file_with_content(
                 "Procfile",
                 procfile_content,
                 "Created Procfile with Gunicorn configuration",
             )
-            return result
+        return True
 
     def create_gunicorn_config(self) -> bool:
         with change_cwd(self.project_root):
@@ -74,25 +74,23 @@ tmp_upload_dir = None
 # certfile = "/path/to/cert.pem"
 """
 
-            config_file = "gunicorn_config.py"
-            result = create_file_with_content(
-                config_file,
+            create_file_with_content(
+                "gunicorn_config.py",
                 gunicorn_config_content,
-                f"Created {config_file} with Gunicorn configuration",
+                f"Created gunicorn_config.py with Gunicorn configuration",
             )
-            return result
+        return True
 
     def create_runtime_txt(self, python_version: str = "3.13") -> bool:
         with change_cwd(self.project_root):
             context = {"python_version": python_version}
             runtime_content = template_engine.render_template("runtime_txt.j2", context)
-            runtime_file = "runtime.txt"
-            result = create_file_with_content(
-                runtime_file,
+            create_file_with_content(
+                "runtime.txt",
                 runtime_content,
-                f"Created {runtime_file} with Python version specification",
+                f"Created runtime.txt with Python version specification",
             )
-            return result
+        return True
 
     def create_nixpacks_toml(self) -> bool:
         with change_cwd(self.project_root):
@@ -112,10 +110,9 @@ cmds = ["python manage.py collectstatic --noinput"]
 cmd = "gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT"
 """
 
-            config_file = "nixpacks.toml"
-            result = create_file_with_content(
-                config_file,
+            create_file_with_content(
+                "nixpacks.toml",
                 nixpacks_content,
-                f"Created {config_file} for Nixpacks deployment",
+                f"Created nixpacks.toml for Nixpacks deployment",
             )
-            return result
+        return True

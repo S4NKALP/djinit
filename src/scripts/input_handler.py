@@ -112,35 +112,27 @@ class InputCollector:
             console.print(f"[{UIColors.MUTED}]Please try again ({attempt}/{self.MAX_ATTEMPTS}).[/{UIColors.MUTED}]")
 
     def get_app_names(self) -> list[str]:
-        try:
-            console.print(f"[{UIColors.HIGHLIGHT}]App Names[/{UIColors.HIGHLIGHT}]")
-            console.print(
-                f"[{UIColors.MUTED}]Enter app names separated by commas (no interactive prompts)[/{UIColors.MUTED}]"
-            )
-            console.print(f"[{UIColors.MUTED}]Example: users, products, orders[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.HIGHLIGHT}]App Names[/{UIColors.HIGHLIGHT}]")
+        console.print(
+            f"[{UIColors.MUTED}]Enter app names separated by commas (no interactive prompts)[/{UIColors.MUTED}]"
+        )
+        console.print(f"[{UIColors.MUTED}]Example: users, products, orders[/{UIColors.MUTED}]")
 
-            user_input = console.input(
-                f"[{UIColors.HIGHLIGHT}]Enter app names (comma-separated or single):[/{UIColors.HIGHLIGHT}] "
-            )
+        user_input = console.input(
+            f"[{UIColors.HIGHLIGHT}]Enter app names (comma-separated or single):[/{UIColors.HIGHLIGHT}] "
+        )
 
-            # Empty input - re-prompt (no interactive flow)
-            if not user_input.strip():
-                UIFormatter.print_error("At least one app name is required")
-                return self.get_app_names()
+        # Empty input - re-prompt (no interactive flow)
+        if not user_input.strip():
+            UIFormatter.print_error("At least one app name is required")
+            return self.get_app_names()
 
-            # Comma-separated input
-            if "," in user_input:
-                return self._parse_comma_separated_apps(user_input)
+        # Comma-separated input
+        if "," in user_input:
+            return self._parse_comma_separated_apps(user_input)
 
-            # Single app (no additional prompts)
-            return self._get_apps_starting_with(user_input.strip())
-
-        except KeyboardInterrupt:
-            UIFormatter.print_info("\nSetup cancelled by user.")
-            sys.exit(0)
-        except Exception as e:
-            UIFormatter.print_error(f"Unexpected error: {str(e)}")
-            return self.get_app_names()  # Retry
+        # Single app (no additional prompts)
+        return self._get_apps_starting_with(user_input.strip())
 
     def _parse_comma_separated_apps(self, user_input: str) -> list[str]:
         app_list = [app.strip() for app in user_input.split(",")]

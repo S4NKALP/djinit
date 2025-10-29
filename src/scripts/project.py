@@ -51,20 +51,16 @@ class ProjectManager:
         with change_cwd(apps_base_dir):
             # Create each app
             for app_name in self.app_names:
-                try:
-                    subprocess.run(
-                        [
-                            sys.executable,
-                            os.path.join(self.project_root, "manage.py"),
-                            "startapp",
-                            app_name,
-                        ],
-                        check=True,
-                    )
-                    UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
-                except subprocess.CalledProcessError as e:
-                    UIFormatter.print_error(f"Failed to create app '{app_name}': {e}")
-                    return False
+                subprocess.run(
+                    [
+                        sys.executable,
+                        os.path.join(self.project_root, "manage.py"),
+                        "startapp",
+                        app_name,
+                    ],
+                    check=True,
+                )
+                UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
 
         return True
 
@@ -106,11 +102,11 @@ class ProjectManager:
 
         missing_files = [file_path for file_path in required_files if not os.path.exists(file_path)]
 
-        if missing_files:
-            UIFormatter.print_error("Project structure validation failed:")
-            for file_path in missing_files:
-                UIFormatter.print_error(f"  Missing: {file_path}")
-            return False
+        if not missing_files:
+            UIFormatter.print_success("Project structure validation passed")
+            return True
 
-        UIFormatter.print_success("Project structure validation passed")
-        return True
+        UIFormatter.print_error("Project structure validation failed:")
+        for file_path in missing_files:
+            UIFormatter.print_error(f"  Missing: {file_path}")
+        return False

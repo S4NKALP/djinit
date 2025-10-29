@@ -50,12 +50,8 @@ def generate_secret_command():
     instructions.append("2. Add it to your .env file:\n")
     instructions.append("   SECRET_KEY=your_secret_key_here\n", style=UIColors.CODE)
     instructions.append("3. Or set it as an environment variable:\n")
-    instructions.append(
-        "   export SECRET_KEY=your_secret_key_here\n", style=UIColors.CODE
-    )
-    instructions.append(
-        "4. Never commit secret keys to version control!\n", style=UIColors.WARNING
-    )
+    instructions.append("   export SECRET_KEY=your_secret_key_here\n", style=UIColors.CODE)
+    instructions.append("4. Never commit secret keys to version control!\n", style=UIColors.WARNING)
 
     console.print(Panel(instructions, title="💡 How to Use", border_style="blue"))
     console.print()

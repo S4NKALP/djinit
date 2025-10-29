@@ -57,20 +57,11 @@ class TemplateEngine:
         return template.render(**context)
 
     def get_template_names(self) -> list[str]:
-        """Get list of available template files.
-
-        Returns:
-            List of template file names
-        """
+        """Get list of available template files."""
         if not os.path.exists(self.template_dir):
             return []
 
-        template_files = []
-        for file in os.listdir(self.template_dir):
-            if file.endswith(".j2"):
-                template_files.append(file)
-
-        return sorted(template_files)
+        return sorted([file for file in os.listdir(self.template_dir) if file.endswith(".j2")])
 
     def template_exists(self, template_name: str) -> bool:
         """Check if a template file exists.

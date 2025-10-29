@@ -105,9 +105,5 @@ class Cli:
         return True
 
     def generate_secret_keys(self) -> bool:
-        try:
-            generate_secret_command()
-            return True
-        except Exception as e:
-            UIFormatter.print_error(f"Failed to generate secret keys: {e}")
-            return False
+        generate_secret_command()
+        return True

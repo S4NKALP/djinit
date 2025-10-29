@@ -51,33 +51,36 @@ class SettingsManager:
                 "app_names": effective_app_names,
             }
             base_content = template_engine.render_template("settings_base.j2", context)
-            return create_file_with_content(
+            create_file_with_content(
                 "base.py",
                 base_content,
                 "Updated settings/base.py with comprehensive configuration",
                 should_format=True,
             )
+        return True
 
     def update_development_settings(self) -> bool:
         """Update development.py with development-specific settings."""
         with change_cwd(self.settings_folder):
             context = {"secret_key": self.secret_key}
             dev_content = template_engine.render_template("settings_development.j2", context)
-            return create_file_with_content(
+            create_file_with_content(
                 "development.py",
                 dev_content,
                 "Updated settings/development.py",
                 should_format=True,
             )
+        return True
 
     def update_production_settings(self) -> bool:
         """Update production.py with production-specific settings."""
         with change_cwd(self.settings_folder):
             context = {"use_database_url": self.metadata.get("use_database_url", True)}
             prod_content = template_engine.render_template("settings_production.j2", context)
-            return create_file_with_content(
+            create_file_with_content(
                 "production.py",
                 prod_content,
                 "Updated settings/production.py",
                 should_format=True,
             )
+        return True

@@ -65,21 +65,12 @@ class AppManager:
         with change_cwd(apps_base_dir):
             UIFormatter.print_info(f"Creating app '{self.app_name}' in directory: {os.getcwd()}")
             
-            try:
-                # Use django-admin instead of manage.py to avoid dependency issues
-                result = subprocess.run(
-                    ["django-admin", "startapp", self.app_name], 
-                    capture_output=True, 
-                    text=True, 
-                    check=True
-                )
-            except subprocess.CalledProcessError as e:
-                UIFormatter.print_error(f"Failed to create app '{self.app_name}': {e}")
-                if e.stderr:
-                    UIFormatter.print_error(f"Error details: {e.stderr}")
-                if e.stdout:
-                    UIFormatter.print_info(f"Output: {e.stdout}")
-                return False
+            result = subprocess.run(
+                ["django-admin", "startapp", self.app_name], 
+                capture_output=True, 
+                text=True, 
+                check=True
+            )
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         return True
@@ -228,22 +219,20 @@ class AppManager:
         # Create serializers.py
         context = {"app_name": self.app_name}
         serializers_content = template_engine.render_template("serializers.j2", context)
-        if not create_file_with_content(
+        create_file_with_content(
             os.path.join(app_path, "serializers.py"),
             serializers_content,
             f"Created {self.app_name}/serializers.py",
             should_format=True,
-        ):
-            return False
+        )
 
         # Create routes.py
         routes_content = template_engine.render_template("routes.j2", context)
-        if not create_file_with_content(
+        create_file_with_content(
             os.path.join(app_path, "routes.py"),
             routes_content,
             f"Created {self.app_name}/routes.py",
             should_format=True,
-        ):
-            return False
+        )
 
         return True

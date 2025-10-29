@@ -25,58 +25,49 @@ def clear_screen() -> None:
 
 
 def main() -> None:
-    try:
-        # Parse command line arguments
-        args = parse_arguments()
+    # Parse command line arguments
+    args = parse_arguments()
 
-        # Handle secret command
-        if args.command == "secret":
-            handle_secret_command(args)
-            return
+    # Handle secret command
+    if args.command == "secret":
+        handle_secret_command(args)
+        return
 
-        # Handle app command
-        if args.command == "app":
-            handle_app_command(args)
-            return
+    # Handle app command
+    if args.command == "app":
+        handle_app_command(args)
+        return
 
-        # Default to setup command
-        # Clear screen
-        clear_screen()
+    # Default to setup command
+    # Clear screen
+    clear_screen()
 
-        # Display welcome screen
-        console.print()
-        console.print(UIFormatter.create_welcome_panel())
-        console.print()
+    # Display welcome screen
+    console.print()
+    console.print(UIFormatter.create_welcome_panel())
+    console.print()
 
-        # Get user input
-        project_dir, project_name, primary_app, app_names, metadata = get_user_input()
+    # Get user input
+    project_dir, project_name, primary_app, app_names, metadata = get_user_input()
 
-        # Confirm setup
-        if not confirm_setup(project_dir, project_name, app_names, metadata):
-            UIFormatter.print_info("Setup cancelled by user.")
-            return
+    # Confirm setup
+    if not confirm_setup(project_dir, project_name, app_names, metadata):
+        UIFormatter.print_info("Setup cancelled by user.")
+        return
 
-        # Run setup
-        console.print()
-        UIFormatter.print_info("Starting Django project setup...")
-        console.print()
+    # Run setup
+    console.print()
+    UIFormatter.print_info("Starting Django project setup...")
+    console.print()
 
-        django_cli = Cli(project_dir, project_name, primary_app, app_names, metadata)
-        success = django_cli.run_setup()
+    django_cli = Cli(project_dir, project_name, primary_app, app_names, metadata)
+    success = django_cli.run_setup()
 
-        # Display completion summary
-        UIFormatter.create_summary_panel(project_dir, project_name, app_names, True)
+    # Display completion summary
+    UIFormatter.create_summary_panel(project_dir, project_name, app_names, True)
 
-        # Exit with appropriate code
-        sys.exit(0 if success else 1)
-
-    except KeyboardInterrupt:
-        UIFormatter.print_info("\nSetup cancelled by user.")
-        sys.exit(0)
-    except Exception as e:
-        UIFormatter.print_error(f"Unexpected error: {str(e)}")
-        console.print("[dim]Please check your environment and try again.[/dim]")
-        sys.exit(1)
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
