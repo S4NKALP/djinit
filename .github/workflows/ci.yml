@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff
+        pip install -e .
+
+    - name: Lint with Ruff
+      run: |
+        ruff check src/
+
+    - name: Check formatting with Ruff
+      run: |
+        ruff format --check src/
+
+    - name: Test CLI import
+      run: |
+        python -c "from src.generator import main; print('Import successful')"
+
+    - name: Test console script entry point
+      run: |
+        djinit --help
+
