@@ -40,3 +40,4 @@ Homepage = "https://github.com/S4NKALP/djinit"
 
 [project.scripts]
 djinit = "src.generator:main"
+dj = "src.generator:main"

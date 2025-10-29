@@ -55,6 +55,8 @@ Run the interactive setup:
 
 ```bash
 djinit setup
+# or
+dj setup
 ```
 
 Prompts include:
@@ -68,13 +70,13 @@ Prompts include:
 
 ## Commands
 
-- `djinit setup` — Launch the interactive project generator
-- `djinit app <names>` — Create one or more Django apps in an existing project
+- `djinit setup` or `dj setup` — Launch the interactive project generator
+- `djinit app <names>` or `dj app <names>` — Create one or more Django apps in an existing project
   - Examples:
-    - `djinit app users`
-    - `djinit app users,products,orders`
-    - `djinit app users products orders`
-- `djinit secret [--count N] [--length L]` — Print random Django `SECRET_KEY` values
+    - `djinit app users` or `dj app users`
+    - `djinit app users,products,orders` or `dj app users,products,orders`
+    - `djinit app users products orders` or `dj app users products orders`
+- `djinit secret [--count N] [--length L]` or `dj secret [--count N] [--length L]` — Print random Django `SECRET_KEY` values
   - Example: `djinit secret --count 5 --length 50`
 
 ## What gets generated
