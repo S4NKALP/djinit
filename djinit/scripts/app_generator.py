@@ -62,8 +62,6 @@ class AppManager:
 
         # Create app in the correct location
         with change_cwd(apps_base_dir):
-            UIFormatter.print_info(f"Creating app '{self.app_name}' in directory: {os.getcwd()}")
-
             subprocess.run(["django-admin", "startapp", self.app_name], capture_output=True, text=True, check=True)
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
@@ -80,8 +78,6 @@ class AppManager:
             UIFormatter.print_error("Could not find base.py settings file")
             return False
 
-        UIFormatter.print_info(f"Found base.py at: {base_settings_path}")
-
         with open(base_settings_path) as f:
             content = f.read()
 
@@ -93,8 +89,6 @@ class AppManager:
             app_module_path = f"{nested_dir}.{self.app_name}"
         else:
             app_module_path = self.app_name
-
-        UIFormatter.print_info(f"App module path: {app_module_path}")
 
         # Check if app is already in USER_DEFINED_APPS section specifically
         lines = content.split("\n")
@@ -111,7 +105,7 @@ class AppManager:
                 break
 
         if app_already_exists:
-            UIFormatter.print_info(f"App '{app_module_path}' is already in USER_DEFINED_APPS")
+            UIFormatter.print_success(f"App '{app_module_path}' already configured in USER_DEFINED_APPS")
             return True
 
         if "USER_DEFINED_APPS" not in content:

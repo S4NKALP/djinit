@@ -9,8 +9,7 @@ setup(
     author="Sankalp Tharu",
     author_email="sankalptharu50028@gmail.com",
     url="https://github.com/S4NKALP/djinit",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(include=["djinit", "djinit.*"]),
     include_package_data=True,
     install_requires=[
         "ruff>=0.14.2",

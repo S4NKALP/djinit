@@ -1,0 +1,3 @@
+recursive-include djinit/templates *.j2
+include README.md
+include LICENSE
