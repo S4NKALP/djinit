@@ -1,5 +1,5 @@
 [project]
-name = "djinit"
+name = "djinitx"
 version = "0.1.0"
 description = "A CLI tool to setup Django project"
 readme = "README.md"
@@ -8,6 +8,17 @@ authors = [
 { name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" }
 ]
 license = { text = "MIT" }
+keywords = [
+    "django",
+    "cli",
+    "project",
+    "djinit",
+    "djinitx",
+    "dj",
+    "django-init",
+    "django project",
+    "django starter"
+]
 classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",

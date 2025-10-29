@@ -31,11 +31,11 @@ jobs:
 
     - name: Lint with Ruff
       run: |
-        ruff check src/
+        ruff check djinit/
 
     - name: Check formatting with Ruff
       run: |
-        ruff format --check src/
+        ruff format --check djinit/
 
     - name: Test CLI import
       run: |
