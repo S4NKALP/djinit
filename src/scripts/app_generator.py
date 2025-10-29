@@ -5,11 +5,12 @@ Handles creation of Django apps and updating settings.
 
 import os
 import subprocess
+import sys
 from typing import Optional
 
 from src.scripts.console_ui import UIFormatter
 from src.scripts.template_engine import template_engine
-from src.utils import create_file_with_content
+from src.utils import change_cwd, create_file_with_content
 
 
 class AppManager:
@@ -45,13 +46,42 @@ class AppManager:
         return os.path.exists(self.manage_py_path)
 
     def _app_exists(self) -> bool:
-        app_path = os.path.join(self.current_dir, self.app_name)
+        # Detect project structure to check in correct location
+        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+        app_path = os.path.join(apps_base_dir, self.app_name)
         return os.path.exists(app_path)
 
     def _create_django_app(self) -> bool:
-        result = subprocess.run(["django-admin", "startapp", self.app_name], capture_output=True, text=True, check=True)
+        # Detect project structure
+        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+        
+        # manage.py is always in the project root (current_dir), not in the project directory
+        manage_py_path = os.path.join(self.current_dir, "manage.py")
+        if not os.path.exists(manage_py_path):
+            UIFormatter.print_error("Could not find manage.py file in project root")
+            return False
+        
+        # Create app in the correct location
+        with change_cwd(apps_base_dir):
+            UIFormatter.print_info(f"Creating app '{self.app_name}' in directory: {os.getcwd()}")
+            
+            try:
+                # Use django-admin instead of manage.py to avoid dependency issues
+                result = subprocess.run(
+                    ["django-admin", "startapp", self.app_name], 
+                    capture_output=True, 
+                    text=True, 
+                    check=True
+                )
+            except subprocess.CalledProcessError as e:
+                UIFormatter.print_error(f"Failed to create app '{self.app_name}': {e}")
+                if e.stderr:
+                    UIFormatter.print_error(f"Error details: {e.stderr}")
+                if e.stdout:
+                    UIFormatter.print_info(f"Output: {e.stdout}")
+                return False
 
-        UIFormatter.print_success(f"Created Django app '{self.app_name}'")
+        UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         return True
 
     def _add_to_installed_apps(self) -> bool:
@@ -65,11 +95,38 @@ class AppManager:
             UIFormatter.print_error("Could not find base.py settings file")
             return False
 
+        UIFormatter.print_info(f"Found base.py at: {base_settings_path}")
+
         with open(base_settings_path) as f:
             content = f.read()
 
-        if f'"{self.app_name}"' in content or f"'{self.app_name}'" in content:
-            UIFormatter.print_info(f"App '{self.app_name}' is already in INSTALLED_APPS")
+        # Detect project structure to determine the correct app module path
+        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+        
+        # Determine the correct module path for the app
+        if is_nested and nested_dir:
+            app_module_path = f"{nested_dir}.{self.app_name}"
+        else:
+            app_module_path = self.app_name
+        
+        UIFormatter.print_info(f"App module path: {app_module_path}")
+
+        # Check if app is already in USER_DEFINED_APPS section specifically
+        lines = content.split("\n")
+        in_user_apps = False
+        app_already_exists = False
+        
+        for line in lines:
+            if "USER_DEFINED_APPS" in line and "=" in line:
+                in_user_apps = True
+            elif in_user_apps and line.strip() == "]":
+                in_user_apps = False
+            elif in_user_apps and (f'"{app_module_path}"' in line or f"'{app_module_path}'" in line):
+                app_already_exists = True
+                break
+
+        if app_already_exists:
+            UIFormatter.print_info(f"App '{app_module_path}' is already in USER_DEFINED_APPS")
             return True
 
         if "USER_DEFINED_APPS" not in content:
@@ -86,7 +143,7 @@ class AppManager:
                 in_user_apps = True
                 new_lines.append(line)
             elif in_user_apps and line.strip() == "]":
-                new_lines.append(f'    "{self.app_name}",')
+                new_lines.append(f'    "{app_module_path}",')
                 new_lines.append(line)
                 in_user_apps = False
                 apps_added = True
@@ -100,7 +157,7 @@ class AppManager:
         with open(base_settings_path, "w") as f:
             f.write("\n".join(new_lines))
 
-        UIFormatter.print_success(f"Added '{self.app_name}' to USER_DEFINED_APPS in base.py")
+        UIFormatter.print_success(f"Added '{app_module_path}' to USER_DEFINED_APPS in base.py")
         return True
 
     def _find_settings_path(self) -> Optional[str]:
@@ -122,9 +179,51 @@ class AppManager:
 
         return None
 
+    def _detect_project_structure(self) -> tuple[bool, Optional[str], str]:
+        """
+        Detect if the project uses nested apps and return the structure info.
+        
+        Returns:
+            tuple: (is_nested, nested_dir, apps_base_dir)
+        """
+        # Look for project directories that contain settings
+        for item in os.listdir(self.current_dir):
+            if os.path.isdir(item) and not item.startswith(".") and item != "__pycache__":
+                # Check if this directory contains Django project files
+                project_path = os.path.join(self.current_dir, item)
+                settings_path = os.path.join(project_path, "settings")
+
+                # Check if settings directory exists with base.py
+                if os.path.exists(settings_path) and os.path.exists(os.path.join(settings_path, "base.py")):
+                    # Found the project directory, now check for nested apps
+                    project_name = item
+                    
+                    # Look for common nested app directories
+                    for nested_dir in ["apps", "modules", "packages"]:
+                        nested_path = os.path.join(self.current_dir, nested_dir)
+                        if os.path.exists(nested_path) and os.path.isdir(nested_path):
+                            # Check if there are any Django apps in this directory
+                            for app_item in os.listdir(nested_path):
+                                app_path = os.path.join(nested_path, app_item)
+                                if os.path.isdir(app_path) and os.path.exists(os.path.join(app_path, "apps.py")):
+                                    # Found nested apps structure
+                                    return True, nested_dir, nested_path
+                    
+                    # No nested structure found
+                    return False, None, self.current_dir
+
+        # Fallback: check current directory
+        settings_path = os.path.join(self.current_dir, "settings")
+        if os.path.exists(settings_path) and os.path.exists(os.path.join(settings_path, "base.py")):
+            return False, None, self.current_dir
+
+        return False, None, self.current_dir
+
     def _create_additional_files(self) -> bool:
         """Create additional files for the app (serializers.py, routes.py)."""
-        app_path = os.path.join(self.current_dir, self.app_name)
+        # Detect project structure to get correct app path
+        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+        app_path = os.path.join(apps_base_dir, self.app_name)
         
         # Create serializers.py
         context = {"app_name": self.app_name}
