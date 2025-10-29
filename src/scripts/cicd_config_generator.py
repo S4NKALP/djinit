@@ -25,7 +25,7 @@ class CICDConfigGenerator:
             create_file_with_content(
                 workflow_file,
                 workflow_content,
-                f"Created Github Actions workflow ({workflow_file})",
+                "Created Github Actions workflow (ci.yml)",
             )
         return True
 
@@ -36,6 +36,6 @@ class CICDConfigGenerator:
             create_file_with_content(
                 ".gitlab-ci.yml",
                 gitlab_ci_content,
-                f"Created GitLab CI configuration (.gitlab-ci.yml)",
+                "Created GitLab CI configuration (.gitlab-ci.yml)",
             )
         return True

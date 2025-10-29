@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "main"
+    rebase-strategy: "auto"
     labels:
       - "dependencies"
       - "github-actions"
@@ -12,8 +14,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "main"
+    rebase-strategy: "auto"
     labels:
       - "dependencies"
       - "python"
     open-pull-requests-limit: 10
-
