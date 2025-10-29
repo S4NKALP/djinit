@@ -53,7 +53,7 @@ class FileManager:
         with change_cwd(self.project_root):
             context = {
                 "project_name": self.project_name,
-                "use_database_url": self.metadata.get("use_database_url", True)
+                "use_database_url": self.metadata.get("use_database_url", True),
             }
             env_content = template_engine.render_template("env_sample.j2", context)
             return create_file_with_content(

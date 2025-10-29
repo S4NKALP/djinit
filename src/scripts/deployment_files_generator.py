@@ -77,7 +77,7 @@ tmp_upload_dir = None
             create_file_with_content(
                 "gunicorn_config.py",
                 gunicorn_config_content,
-                f"Created gunicorn_config.py with Gunicorn configuration",
+                "Created gunicorn_config.py with Gunicorn configuration",
             )
         return True
 
@@ -88,7 +88,7 @@ tmp_upload_dir = None
             create_file_with_content(
                 "runtime.txt",
                 runtime_content,
-                f"Created runtime.txt with Python version specification",
+                "Created runtime.txt with Python version specification",
             )
         return True
 
@@ -113,6 +113,6 @@ cmd = "gunicorn {self.project_name}.wsgi:application --bind 0.0.0.0:$PORT"
             create_file_with_content(
                 "nixpacks.toml",
                 nixpacks_content,
-                f"Created nixpacks.toml for Nixpacks deployment",
+                "Created nixpacks.toml for Nixpacks deployment",
             )
         return True

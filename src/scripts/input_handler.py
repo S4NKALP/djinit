@@ -203,8 +203,12 @@ class InputCollector:
         """Ask whether to create nested Django apps and get directory name if yes."""
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Apps Layout[/{UIColors.INFO}]\n")
-        console.print(f"[{UIColors.MUTED}]Do you want to place apps inside a package directory (e.g., 'apps/')?[/{UIColors.MUTED}]")
-        console.print(f"[{UIColors.MUTED}]If yes, we'll create that directory as a Python package and generate apps inside it.[/{UIColors.MUTED}]")
+        console.print(
+            f"[{UIColors.MUTED}]Do you want to place apps inside a package directory (e.g., 'apps/')?[/{UIColors.MUTED}]"
+        )
+        console.print(
+            f"[{UIColors.MUTED}]If yes, we'll create that directory as a Python package and generate apps inside it.[/{UIColors.MUTED}]"
+        )
         console.print()
 
         console.print(f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}] ", end="")
@@ -270,7 +274,7 @@ class CharReader:
         # Fallback
         try:
             return msvcrt.getch().lower()
-        except:
+        except Exception:
             return ""
 
     @staticmethod
@@ -364,7 +368,7 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
     console.print(f"[{UIColors.HIGHLIGHT}]CI/CD:[/{UIColors.HIGHLIGHT}] {cicd_choices}")
 
     # Show database configuration
-    db_config = "DATABASE_URL" if metadata.get('use_database_url', True) else "Individual parameters"
+    db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
     console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
 
     console.print()

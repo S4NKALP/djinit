@@ -26,9 +26,7 @@ def parse_arguments() -> argparse.Namespace:
     secret_parser.add_argument("--length", type=int, default=50, help="Length of each secret key")
 
     # App command
-    app_parser = subparsers.add_parser(
-        "app", help="Create one or more Django apps (comma or space separated)"
-    )
+    app_parser = subparsers.add_parser("app", help="Create one or more Django apps (comma or space separated)")
     app_parser.add_argument(
         "app_name",
         nargs="+",
@@ -132,15 +130,11 @@ def handle_app_command(args: argparse.Namespace) -> None:
 
     instructions = Text()
     instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
-    instructions.append(
-        "1. The app(s) have been added to INSTALLED_APPS in settings/base.py\n"
-    )
+    instructions.append("1. The app(s) have been added to INSTALLED_APPS in settings/base.py\n")
     instructions.append("2. Create your models in each app's models.py\n")
     instructions.append("3. Run migrations: python manage.py makemigrations\n")
     instructions.append("4. Apply migrations: python manage.py migrate\n")
-    instructions.append(
-        "5. Create views, serializers and routes(URLs) for your app(s)\n"
-    )
+    instructions.append("5. Create views, serializers and routes(URLs) for your app(s)\n")
 
     console.print(Panel(instructions, title="💡 What's Next", border_style="green"))
     UIFormatter.print_info("")

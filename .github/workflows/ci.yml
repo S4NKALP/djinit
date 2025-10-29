@@ -44,4 +44,3 @@ jobs:
     - name: Test console script entry point
       run: |
         djinit --help
-
