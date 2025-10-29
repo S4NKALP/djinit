@@ -171,43 +171,71 @@ class AppManager:
         return None
 
     def _detect_project_structure(self) -> tuple[bool, Optional[str], str]:
-        """
-        Detect if the project uses nested apps and return the structure info.
-        
-        Returns:
-            tuple: (is_nested, nested_dir, apps_base_dir)
-        """
-        # Look for project directories that contain settings
+        # Step 1: find project directory containing settings/base.py
+        project_dir: Optional[str] = None
+        settings_base_path: Optional[str] = None
         for item in os.listdir(self.current_dir):
             if os.path.isdir(item) and not item.startswith(".") and item != "__pycache__":
-                # Check if this directory contains Django project files
-                project_path = os.path.join(self.current_dir, item)
-                settings_path = os.path.join(project_path, "settings")
+                candidate = os.path.join(self.current_dir, item)
+                base_py = os.path.join(candidate, "settings", "base.py")
+                if os.path.exists(base_py):
+                    project_dir = candidate
+                    settings_base_path = base_py
+                    break
 
-                # Check if settings directory exists with base.py
-                if os.path.exists(settings_path) and os.path.exists(os.path.join(settings_path, "base.py")):
-                    # Found the project directory, now check for nested apps
-                    project_name = item
-                    
-                    # Look for common nested app directories
-                    for nested_dir in ["apps", "modules", "packages"]:
-                        nested_path = os.path.join(self.current_dir, nested_dir)
-                        if os.path.exists(nested_path) and os.path.isdir(nested_path):
-                            # Check if there are any Django apps in this directory
-                            for app_item in os.listdir(nested_path):
-                                app_path = os.path.join(nested_path, app_item)
-                                if os.path.isdir(app_path) and os.path.exists(os.path.join(app_path, "apps.py")):
-                                    # Found nested apps structure
-                                    return True, nested_dir, nested_path
-                    
-                    # No nested structure found
-                    return False, None, self.current_dir
+        # Fallback: current_dir/settings/base.py
+        if project_dir is None:
+            base_py = os.path.join(self.current_dir, "settings", "base.py")
+            if os.path.exists(base_py):
+                project_dir = self.current_dir
+                settings_base_path = base_py
 
-        # Fallback: check current directory
-        settings_path = os.path.join(self.current_dir, "settings")
-        if os.path.exists(settings_path) and os.path.exists(os.path.join(settings_path, "base.py")):
+        if project_dir is None:
+            # Not a Django project structure
             return False, None, self.current_dir
 
+        # Step 2: try to infer nested_dir from USER_DEFINED_APPS in base.py
+        try:
+            if settings_base_path and os.path.exists(settings_base_path):
+                with open(settings_base_path, "r") as f:
+                    base_content = f.read()
+                # Find lines inside USER_DEFINED_APPS and extract first dotted app
+                in_user_apps = False
+                for line in base_content.splitlines():
+                    if "USER_DEFINED_APPS" in line and "=" in line:
+                        in_user_apps = True
+                        continue
+                    if in_user_apps and "]" in line:
+                        break
+                    if in_user_apps:
+                        line_stripped = line.strip().strip(",")
+                        if line_stripped.startswith("\"") or line_stripped.startswith("'"):
+                            app_label = line_stripped.strip("\"'")
+                            if "." in app_label:
+                                prefix = app_label.split(".", 1)[0]
+                                nested_path = os.path.join(self.current_dir, prefix)
+                                if os.path.isdir(nested_path):
+                                    return True, prefix, nested_path
+        except Exception:
+            # Ignore parsing issues and continue with heuristics
+            pass
+
+        # Step 3: look for existing package directories in project root
+        preferred = ["apps", "modules", "packages"]
+        for name in preferred:
+            nested_path = os.path.join(self.current_dir, name)
+            if os.path.isdir(nested_path) and os.path.exists(os.path.join(nested_path, "__init__.py")):
+                return True, name, nested_path
+
+        # Any other directory with __init__.py qualifies as a package
+        for item in os.listdir(self.current_dir):
+            if item in ("__pycache__",) or item.startswith("."):
+                continue
+            nested_path = os.path.join(self.current_dir, item)
+            if os.path.isdir(nested_path) and os.path.exists(os.path.join(nested_path, "__init__.py")):
+                return True, item, nested_path
+
+        # Step 4: fallback
         return False, None, self.current_dir
 
     def _create_additional_files(self) -> bool:

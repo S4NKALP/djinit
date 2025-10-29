@@ -26,8 +26,20 @@ def parse_arguments() -> argparse.Namespace:
     secret_parser.add_argument("--length", type=int, default=50, help="Length of each secret key")
 
     # App command
-    app_parser = subparsers.add_parser("app", help="Create a new Django app")
-    app_parser.add_argument("app_name", help="Name of the Django app to create")
+    app_parser = subparsers.add_parser(
+        "app", help="Create one or more Django apps (comma or space separated)"
+    )
+    app_parser.add_argument(
+        "app_name",
+        nargs="+",
+        help=(
+            "App name(s) or comma-separated list. Examples: \n"
+            "  djinit app users \n"
+            "  djinit app users,products,orders \n"
+            "  djinit app users products orders \n"
+            "  djinit app users, products, orders"
+        ),
+    )
 
     return parser.parse_args()
 
@@ -67,23 +79,52 @@ def handle_app_command(args: argparse.Namespace) -> None:
     UIFormatter.print_header("Django App Creation")
     UIFormatter.print_info("")
 
-    # Validate app name
-    is_valid, error_msg = validate_app_name(args.app_name)
-    if not is_valid:
-        UIFormatter.print_error(error_msg)
+    # Parse comma-separated names and validate
+    # args.app_name is a list due to nargs="+"; split each token by comma
+    tokens = args.app_name if isinstance(args.app_name, list) else [args.app_name]
+    pieces = []
+    for token in tokens:
+        if token is None:
+            continue
+        for part in str(token).split(","):
+            part = part.strip()
+            if part:
+                pieces.append(part)
+    app_names = pieces
+
+    # If no comma, keep single name behavior
+    if not app_names:
+        UIFormatter.print_error("App name cannot be empty")
         sys.exit(1)
 
-    # Create app manager
-    app_manager = AppManager(args.app_name)
+    # Deduplicate while preserving order
+    seen = set()
+    deduped_names = []
+    for name in app_names:
+        if name not in seen:
+            deduped_names.append(name)
+            seen.add(name)
 
-    # Create the app
-    success = app_manager.create_app()
+    # Validate all names first
+    for name in deduped_names:
+        is_valid, error_msg = validate_app_name(name)
+        if not is_valid:
+            UIFormatter.print_error(f"Invalid app name '{name}': {error_msg}")
+            sys.exit(1)
 
-    if not success:
-        UIFormatter.print_error(f"Failed to create Django app '{args.app_name}'")
+    # Create apps sequentially
+    any_failure = False
+    for name in deduped_names:
+        app_manager = AppManager(name)
+        success = app_manager.create_app()
+        if not success:
+            UIFormatter.print_error(f"Failed to create Django app '{name}'")
+            any_failure = True
+            break
+        UIFormatter.print_success(f"Django app '{name}' created successfully!")
+
+    if any_failure:
         sys.exit(1)
-
-    UIFormatter.print_success(f"Django app '{args.app_name}' created successfully!")
 
     # Show next steps
     from rich.panel import Panel
@@ -91,11 +132,15 @@ def handle_app_command(args: argparse.Namespace) -> None:
 
     instructions = Text()
     instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
-    instructions.append("1. The app has been added to INSTALLED_APPS in base.py\n")
-    instructions.append("2. Create your models in the app's models.py\n")
+    instructions.append(
+        "1. The app(s) have been added to INSTALLED_APPS in settings/base.py\n"
+    )
+    instructions.append("2. Create your models in each app's models.py\n")
     instructions.append("3. Run migrations: python manage.py makemigrations\n")
     instructions.append("4. Apply migrations: python manage.py migrate\n")
-    instructions.append("5. Create views, serializers and routes(URLs) for your app\n")
+    instructions.append(
+        "5. Create views, serializers and routes(URLs) for your app(s)\n"
+    )
 
     console.print(Panel(instructions, title="💡 What's Next", border_style="green"))
     UIFormatter.print_info("")
