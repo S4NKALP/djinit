@@ -22,7 +22,6 @@ ignore = [
 "__init__.py" = ["F401"]  # imported but unused
 
 [format]
-docstring-code-format = true
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"

@@ -54,7 +54,7 @@ class AppManager:
     def _create_django_app(self) -> bool:
         # Detect project structure
         is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        
+
         # manage.py is always in the project root (current_dir), not in the project directory
         manage_py_path = os.path.join(self.current_dir, "manage.py")
         if not os.path.exists(manage_py_path):
@@ -66,9 +66,9 @@ class AppManager:
             UIFormatter.print_info(f"Creating app '{self.app_name}' in directory: {os.getcwd()}")
             
             result = subprocess.run(
-                ["django-admin", "startapp", self.app_name], 
-                capture_output=True, 
-                text=True, 
+                ["django-admin", "startapp", self.app_name],
+                capture_output=True,
+                text=True,
                 check=True
             )
 
@@ -93,7 +93,7 @@ class AppManager:
 
         # Detect project structure to determine the correct app module path
         is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        
+
         # Determine the correct module path for the app
         if is_nested and nested_dir:
             app_module_path = f"{nested_dir}.{self.app_name}"

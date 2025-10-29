@@ -298,7 +298,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     project_dir = collector.get_validated_input(
         "Enter project directory name", validate_project_name, "project directory name"
     )
-    
+
     # Check if directory exists and ask for alternative
     while os.path.exists(project_dir):
         UIFormatter.print_error(f"Directory '{project_dir}' already exists.")
