@@ -17,7 +17,6 @@ setup(
         "rich>=14.2.0",
         "jinja2>=3.1.0",
         # "django<=5.2.7",
-
     ],
     entry_points={"console_scripts": ["djinit=src.generator:main"]},
     classifiers=[

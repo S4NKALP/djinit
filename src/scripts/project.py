@@ -3,6 +3,7 @@ Project management for djinit.
 Handles creation of Django projects and apps.
 """
 
+import importlib.util
 import os
 import subprocess
 import sys
@@ -65,9 +66,7 @@ class ProjectManager:
         return True
 
     def _ensure_django_installed(self) -> None:
-        try:
-            import django
-        except ImportError:
+        if importlib.util.find_spec("django") is None:
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "--upgrade", "django", "-q"],
                 check=True,
