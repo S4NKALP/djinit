@@ -73,7 +73,8 @@ class SettingsManager:
     def update_production_settings(self) -> bool:
         """Update production.py with production-specific settings."""
         with change_cwd(self.settings_folder):
-            prod_content = template_engine.render_template("settings_production.j2", {})
+            context = {"use_database_url": self.metadata.get("use_database_url", True)}
+            prod_content = template_engine.render_template("settings_production.j2", context)
             return create_file_with_content(
                 "production.py",
                 prod_content,

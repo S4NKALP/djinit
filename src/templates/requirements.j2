@@ -8,4 +8,4 @@ django-cors-headers
 whitenoise
 psycopg2-binary
 gunicorn
-dj-database-url
+{% if use_database_url %}dj-database-url{% endif %}

@@ -33,6 +33,7 @@ class ProjectMetadata:
     use_gitlab_ci: bool = False
     nested_apps: bool = False
     nested_dir: str | None = None
+    use_database_url: bool = False
 
     def to_dict(self) -> dict:
         """Convert to dictionary format."""
@@ -42,6 +43,7 @@ class ProjectMetadata:
             "use_gitlab_ci": self.use_gitlab_ci,
             "nested_apps": self.nested_apps,
             "nested_dir": self.nested_dir,
+            "use_database_url": self.use_database_url,
         }
 
 
@@ -229,6 +231,27 @@ class InputCollector:
         )
         return True, dir_name
 
+    def get_database_config_choice(self) -> bool:
+        """Ask user for database configuration preference."""
+        UIFormatter.print_separator()
+        console.print(f"\n[{UIColors.INFO}]Database Configuration[/{UIColors.INFO}]\n")
+        console.print(f"[{UIColors.MUTED}]Choose how to configure your database in production:[/{UIColors.MUTED}]")
+        console.print()
+        console.print(f"  [{UIColors.SUCCESS}]Y[/{UIColors.SUCCESS}]  Use DATABASE_URL (recommended for production)")
+        console.print(f"  [{UIColors.SUCCESS}]N[/{UIColors.SUCCESS}]  Use individual database parameters")
+        console.print()
+        console.print(f"[{UIColors.MUTED}]DATABASE_URL is a single environment variable like:[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.MUTED}]postgres://user:password@host:port/database[/{UIColors.MUTED}]")
+        console.print()
+
+        console.print(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}] ", end="")
+        sys.stdout.flush()
+        choice = self.char_reader.get_char()
+        console.print(choice.upper())
+
+        # Default to True (use DATABASE_URL) if user presses Enter or Y
+        return choice.lower() != "n"
+
 
 class CharReader:
     """Handles single character input across platforms."""
@@ -312,6 +335,9 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     # Section 3: CI/CD Pipeline
     use_github, use_gitlab = collector.get_cicd_choice()
 
+    # Section 4: Database Configuration
+    use_database_url = collector.get_database_config_choice()
+
     # Create metadata
     metadata = ProjectMetadata(
         package_name=project_dir,
@@ -319,6 +345,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         use_gitlab_ci=use_gitlab,
         nested_apps=nested,
         nested_dir=nested_dir,
+        use_database_url=use_database_url,
     )
 
     console.print()
@@ -343,6 +370,10 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
     # Show CI/CD choices
     cicd_choices = _get_cicd_display(metadata)
     console.print(f"[{UIColors.HIGHLIGHT}]CI/CD:[/{UIColors.HIGHLIGHT}] {cicd_choices}")
+
+    # Show database configuration
+    db_config = "DATABASE_URL" if metadata.get('use_database_url', True) else "Individual parameters"
+    console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
 
     console.print()
     UIFormatter.print_separator()
