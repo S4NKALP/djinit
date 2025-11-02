@@ -64,7 +64,9 @@ class AppManager:
         # Create app in the correct location
         # Use 'python -m django' instead of 'django-admin' for better compatibility
         with change_cwd(apps_base_dir):
-            subprocess.run([sys.executable, "-m", "django", "startapp", self.app_name], capture_output=True, text=True, check=True)
+            subprocess.run(
+                [sys.executable, "-m", "django", "startapp", self.app_name], capture_output=True, text=True, check=True
+            )
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         return True
