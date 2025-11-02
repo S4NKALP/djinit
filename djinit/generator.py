@@ -25,7 +25,6 @@ def clear_screen() -> None:
 
 
 def main() -> None:
-    # Parse command line arguments
     args = parse_arguments()
 
     # Handle secret command
@@ -39,7 +38,6 @@ def main() -> None:
         return
 
     # Default to setup command
-    # Clear screen
     clear_screen()
 
     # Display welcome screen
@@ -47,15 +45,12 @@ def main() -> None:
     console.print(UIFormatter.create_welcome_panel())
     console.print()
 
-    # Get user input
     project_dir, project_name, primary_app, app_names, metadata = get_user_input()
 
-    # Confirm setup
     if not confirm_setup(project_dir, project_name, app_names, metadata):
         UIFormatter.print_info("Setup cancelled by user.")
         return
 
-    # Run setup
     console.print()
     UIFormatter.print_info("Starting Django project setup...")
     console.print()
@@ -63,10 +58,7 @@ def main() -> None:
     django_cli = Cli(project_dir, project_name, primary_app, app_names, metadata)
     success = django_cli.run_setup()
 
-    # Display completion summary
     UIFormatter.create_summary_panel(project_dir, project_name, app_names, True)
-
-    # Exit with appropriate code
     sys.exit(0 if success else 1)
 
 

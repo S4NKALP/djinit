@@ -6,13 +6,10 @@ Coordinates between different managers to create a complete Django project.
 import os
 from typing import Callable, List, Tuple
 
-from djinit.scripts.cicd_config_generator import CICDConfigGenerator
 from djinit.scripts.console_ui import UIFormatter
-from djinit.scripts.deployment_files_generator import DeploymentConfigGenerator
 from djinit.scripts.files import FileManager
 from djinit.scripts.project import ProjectManager
 from djinit.scripts.secretkey_generator import generate_secret_command
-from djinit.scripts.settings import SettingsManager
 
 
 class Cli:
@@ -22,39 +19,24 @@ class Cli:
         self.primary_app = primary_app
         self.app_names = app_names
         self.metadata = metadata
-        # Handle '.' for current directory
-        if project_dir == ".":
+        if project_dir == ".":  # handle '.' for current directory
             self.project_root = os.getcwd()
         else:
             self.project_root = os.path.join(os.getcwd(), project_dir)
 
-        # Initialize managers
         self.project_manager = ProjectManager(project_dir, project_name, app_names, metadata)
-        self.settings_manager = SettingsManager(self.project_root, project_name, app_names, metadata)
         self.file_manager = FileManager(self.project_root, project_name, app_names, metadata)
-        self.deployment_manager = DeploymentConfigGenerator(self.project_root, project_name)
-        self.cicd_manager = CICDConfigGenerator(self.project_root, project_name)
 
     def run_setup(self) -> bool:
         steps: List[Tuple[str, Callable[[], bool]]] = [
             ("Creating Django project", self.project_manager.create_project),
             ("Creating Django apps", self.project_manager.create_apps),
+            ("Creating project URLs", self.file_manager.create_project_urls),
             ("Validating project structure", self.project_manager.validate_project_structure),
-            ("Setting up project structure", self.settings_manager.create_settings_structure),
-            ("Configuring base settings", self.settings_manager.update_base_settings),
-            ("Configuring development settings", self.settings_manager.update_development_settings),
-            ("Configuring production settings", self.settings_manager.update_production_settings),
             ("Creating utility files", self._create_utility_files),
-            ("Setting up app URLs", self.file_manager.create_app_urls),
-            ("Creating app serializers", self.file_manager.create_app_serializers),
-            ("Creating app routes", self.file_manager.create_app_routes),
-            ("Configuring comprehensive URLs", self.file_manager.update_project_urls),
-            ("Updating WSGI configuration", self.file_manager.update_wsgi_file),
-            ("Updating ASGI configuration", self.file_manager.update_asgi_file),
-            ("Updating manage.py", self.file_manager.update_manage_py),
-            ("Creating Justfile", self.deployment_manager.create_justfile),
-            ("Creating Procfile", self.deployment_manager.create_procfile),
-            ("Creating runtime.txt", lambda: self.deployment_manager.create_runtime_txt("3.13")),
+            ("Creating Procfile", self.file_manager.create_procfile),
+            ("Creating Justfile", self.file_manager.create_justfile),
+            ("Creating runtime.txt", self.file_manager.create_runtime_txt),
             ("Creating CI/CD pipelines", self._create_cicd_pipelines),
         ]
 
@@ -97,12 +79,12 @@ class Cli:
 
     def _create_cicd_pipelines(self) -> bool:
         if self.metadata.get("use_github_actions", True):
-            result = self.cicd_manager.create_github_actions()
+            result = self.file_manager.create_github_actions()
             if not result:
                 return False
 
         if self.metadata.get("use_gitlab_ci", True):
-            result = self.cicd_manager.create_gitlab_ci()
+            result = self.file_manager.create_gitlab_ci()
             if not result:
                 return False
 

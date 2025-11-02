@@ -6,7 +6,11 @@ Handles creation and modification of project files.
 import os
 
 from djinit.scripts.template_engine import template_engine
-from djinit.utils import change_cwd, create_file_with_content
+from djinit.utils import (
+    calculate_app_module_paths,
+    change_cwd,
+    create_file_with_content,
+)
 
 
 class FileManager:
@@ -21,7 +25,7 @@ class FileManager:
 
     def create_gitignore(self) -> bool:
         with change_cwd(self.project_root):
-            gitignore_content = template_engine.render_template("gitignore.j2", {})
+            gitignore_content = template_engine.render_template("shared/gitignore.j2", {})
             return create_file_with_content(
                 ".gitignore",
                 gitignore_content,
@@ -31,7 +35,7 @@ class FileManager:
     def create_requirements(self) -> bool:
         with change_cwd(self.project_root):
             context = {"use_database_url": self.metadata.get("use_database_url", True)}
-            requirements_content = template_engine.render_template("requirements.j2", context)
+            requirements_content = template_engine.render_template("shared/requirements.j2", context)
             return create_file_with_content(
                 "requirements.txt",
                 requirements_content,
@@ -41,7 +45,7 @@ class FileManager:
     def create_readme(self) -> bool:
         with change_cwd(self.project_root):
             context = {"project_name": self.project_name, "app_names": self.app_names}
-            readme_content = template_engine.render_template("readme.j2", context)
+            readme_content = template_engine.render_template("shared/readme.j2", context)
             return create_file_with_content(
                 "README.md",
                 readme_content,
@@ -55,7 +59,7 @@ class FileManager:
                 "project_name": self.project_name,
                 "use_database_url": self.metadata.get("use_database_url", True),
             }
-            env_content = template_engine.render_template("env_sample.j2", context)
+            env_content = template_engine.render_template("shared/env_sample.j2", context)
             return create_file_with_content(
                 ".env.sample",
                 env_content,
@@ -65,99 +69,85 @@ class FileManager:
     def create_pyproject_toml(self, metadata: dict) -> bool:
         with change_cwd(self.project_root):
             context = {"package_name": metadata["package_name"], "project_name": self.project_name}
-            pyproject_content = template_engine.render_template("pyproject_toml.j2", context)
+            pyproject_content = template_engine.render_template("shared/pyproject_toml.j2", context)
             return create_file_with_content(
                 "pyproject.toml",
                 pyproject_content,
                 "Created pyproject.toml file for uv",
             )
 
-    def _get_apps_base_dir(self) -> str:
-        """Get the base directory for apps based on project structure."""
-        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
-            return os.path.join(self.project_root, self.metadata.get("nested_dir"))
-        return self.project_root
-
-    def _create_app_file(self, apps_base_dir: str, app_name: str, template_name: str, filename: str) -> None:
-        """Helper method to create app files."""
-        app_path = os.path.join(apps_base_dir, app_name)
-        with change_cwd(app_path):
-            context = {"app_name": app_name}
-            content = template_engine.render_template(template_name, context)
-            create_file_with_content(
-                filename,
-                content,
-                f"Created {app_name}/{filename}",
-                should_format=True,
-            )
-
-    def create_app_urls(self) -> bool:
-        apps_base_dir = self._get_apps_base_dir()
-        for app_name in self.app_names:
-            self._create_app_file(apps_base_dir, app_name, "app_urls.j2", "urls.py")
-        return True
-
-    def create_app_serializers(self) -> bool:
-        """Create serializers.py file for each app."""
-        apps_base_dir = self._get_apps_base_dir()
-        for app_name in self.app_names:
-            self._create_app_file(apps_base_dir, app_name, "serializers.j2", "serializers.py")
-        return True
-
-    def create_app_routes(self) -> bool:
-        """Create routes.py file for each app."""
-        apps_base_dir = self._get_apps_base_dir()
-        for app_name in self.app_names:
-            self._create_app_file(apps_base_dir, app_name, "routes.j2", "routes.py")
-        return True
-
-    def update_project_urls(self) -> bool:
+    def create_project_urls(self) -> bool:
+        """Create project urls.py using project_urls.j2 template (replaces update_project_urls)."""
         with change_cwd(self.project_configs):
-            nested = bool(self.metadata.get("nested_apps"))
-            nested_dir = self.metadata.get("nested_dir")
-            effective_app_modules = [
-                f"{nested_dir}.{name}" if nested and nested_dir else name for name in self.app_names
-            ]
+            effective_app_modules = calculate_app_module_paths(self.app_names, self.metadata)
             context = {
                 "project_name": self.project_name,
                 "app_names": effective_app_modules,
             }
-            urls_content = template_engine.render_template("project_urls.j2", context)
+            urls_content = template_engine.render_template("project/project_urls.j2", context)
             result = create_file_with_content(
                 "urls.py",
                 urls_content,
-                "Updated project urls.py with comprehensive URL configuration",
+                "Created project urls.py with comprehensive URL configuration",
                 should_format=True,
             )
             return result
 
-    def update_wsgi_file(self) -> bool:
-        with change_cwd(self.project_configs):
-            wsgi_content = template_engine.render_template("wsgi.j2", {})
-            return create_file_with_content(
-                "wsgi.py",
-                wsgi_content,
-                "Updated wsgi.py with custom configuration",
-                should_format=True,
-            )
-
-    def update_asgi_file(self) -> bool:
-        with change_cwd(self.project_configs):
-            asgi_content = template_engine.render_template("asgi.j2", {})
-            return create_file_with_content(
-                "asgi.py",
-                asgi_content,
-                "Updated asgi.py with custom configuration",
-                should_format=True,
-            )
-
-    def update_manage_py(self) -> bool:
-        """Update manage.py with custom configuration."""
+    def create_justfile(self) -> bool:
         with change_cwd(self.project_root):
-            manage_content = template_engine.render_template("manage_py.j2", {})
-            return create_file_with_content(
-                "manage.py",
-                manage_content,
-                "Updated manage.py with custom configuration",
-                should_format=True,
+            context = {"project_name": self.project_name}
+            justfile_content = template_engine.render_template("shared/justfile.j2", context)
+            create_file_with_content(
+                "justfile",
+                justfile_content,
+                "Created justfile with Django development tasks",
             )
+        return True
+
+    def create_procfile(self) -> bool:
+        with change_cwd(self.project_root):
+            context = {"project_name": self.project_name}
+            procfile_content = template_engine.render_template("shared/procfile.j2", context)
+            create_file_with_content(
+                "Procfile",
+                procfile_content,
+                "Created Procfile with Gunicorn configuration",
+            )
+        return True
+
+    def create_runtime_txt(self) -> bool:
+        with change_cwd(self.project_root):
+            context = {"python_version": "3.13"}
+            runtime_content = template_engine.render_template("shared/runtime_txt.j2", context)
+            create_file_with_content(
+                "runtime.txt",
+                runtime_content,
+                "Created runtime.txt with Python version specification",
+            )
+        return True
+
+    def create_github_actions(self) -> bool:
+        with change_cwd(self.project_root):
+            github_dir = os.path.join(self.project_root, ".github", "workflows")
+            os.makedirs(github_dir, exist_ok=True)
+
+            context = {"project_name": self.project_name}
+            workflow_content = template_engine.render_template("shared/github_actions_ci.j2", context)
+            workflow_file = os.path.join(github_dir, "ci.yml")
+            create_file_with_content(
+                workflow_file,
+                workflow_content,
+                "Created Github Actions workflow (ci.yml)",
+            )
+        return True
+
+    def create_gitlab_ci(self) -> bool:
+        with change_cwd(self.project_root):
+            context = {"project_name": self.project_name}
+            gitlab_ci_content = template_engine.render_template("shared/gitlab_ci.j2", context)
+            create_file_with_content(
+                ".gitlab-ci.yml",
+                gitlab_ci_content,
+                "Created GitLab CI configuration (.gitlab-ci.yml)",
+            )
+        return True
