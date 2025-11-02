@@ -5,6 +5,7 @@ Contains common operations used across multiple managers.
 
 import os
 import subprocess
+import sys
 from contextlib import contextmanager
 
 from djinit.scripts.console_ui import UIFormatter
@@ -12,7 +13,8 @@ from djinit.scripts.console_ui import UIFormatter
 
 def format_file(filename: str) -> None:
     """Format Python file using Ruff formatter."""
-    subprocess.run(["ruff", "format", filename], check=False, capture_output=True)
+    # Use 'python -m ruff' instead of 'ruff' for better compatibility
+    subprocess.run([sys.executable, "-m", "ruff", "format", filename], check=False, capture_output=True)
 
 
 def create_file_with_content(filename: str, content: str, success_message: str, should_format: bool = False) -> bool:

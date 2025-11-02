@@ -18,7 +18,11 @@ class ProjectManager:
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
-        self.project_root = os.path.join(os.getcwd(), project_dir)
+        # Handle '.' for current directory
+        if project_dir == ".":
+            self.project_root = os.getcwd()
+        else:
+            self.project_root = os.path.join(os.getcwd(), project_dir)
 
     def create_project(self) -> bool:
         self._ensure_django_installed()
@@ -27,8 +31,9 @@ class ProjectManager:
         os.makedirs(self.project_root, exist_ok=True)
 
         # Create Django project inside the directory
+        # Use 'python -m django' instead of 'django-admin' for better compatibility
         subprocess.run(
-            ["django-admin", "startproject", self.project_name, self.project_root],
+            [sys.executable, "-m", "django", "startproject", self.project_name, self.project_root],
             check=True,
         )
 

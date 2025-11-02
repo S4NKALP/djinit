@@ -22,7 +22,11 @@ class Cli:
         self.primary_app = primary_app
         self.app_names = app_names
         self.metadata = metadata
-        self.project_root = os.path.join(os.getcwd(), project_dir)
+        # Handle '.' for current directory
+        if project_dir == ".":
+            self.project_root = os.getcwd()
+        else:
+            self.project_root = os.path.join(os.getcwd(), project_dir)
 
         # Initialize managers
         self.project_manager = ProjectManager(project_dir, project_name, app_names, metadata)
