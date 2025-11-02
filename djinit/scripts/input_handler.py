@@ -107,9 +107,9 @@ class InputCollector:
             console.print(f"[{UIColors.MUTED}]Please try again ({attempt}/{max_attempts}).[/{UIColors.MUTED}]")
 
     def get_app_names(self) -> list[str]:
-        console.print(f"[{UIColors.HIGHLIGHT}]App Names[/{UIColors.HIGHLIGHT}]")
-        console.print(f"[{UIColors.MUTED}]Enter app names separated by commas[/{UIColors.MUTED}]")
-        console.print(f"[{UIColors.MUTED}]Example: users, products, orders[/{UIColors.MUTED}]")
+        console.print(
+            f"[{UIColors.MUTED}]Enter app names separated by commas(e.g. users, products, orders)[/{UIColors.MUTED}]"
+        )
 
         user_input = console.input(
             f"[{UIColors.HIGHLIGHT}]Enter app names (comma-separated or single):[/{UIColors.HIGHLIGHT}] "
@@ -191,7 +191,6 @@ class InputCollector:
     def get_cicd_choice(self) -> Tuple[bool, bool]:
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 3: CI/CD Pipeline[/{UIColors.INFO}]\n")
-        console.print(f"[{UIColors.MUTED}]Choose CI/CD pipeline for your project[/{UIColors.MUTED}]")
         console.print()
 
         for option in CICDOption:
@@ -215,12 +214,8 @@ class InputCollector:
 
     def get_nested_apps_config(self) -> Tuple[bool, str | None]:
         UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Apps Layout[/{UIColors.INFO}]\n")
         console.print(
-            f"[{UIColors.MUTED}]Do you want to place apps inside a package directory (e.g., 'src/')?[/{UIColors.MUTED}]"
-        )
-        console.print(
-            f"[{UIColors.MUTED}]If yes, we'll create that directory as a Python package and generate apps inside it.[/{UIColors.MUTED}]"
+            f"[{UIColors.MUTED}]Do you want to place apps inside a package directory (e.g. 'src/')?[/{UIColors.MUTED}]"
         )
         console.print()
 
@@ -229,9 +224,8 @@ class InputCollector:
         if choice != "y":
             return False, None
 
-        # Ask for directory name
         dir_name = self.get_validated_input(
-            "Enter directory name for apps package (e.g., apps)",
+            "Enter directory name for apps package (e.g. src)",
             validate_project_name,
             "apps package name",
         )
@@ -240,13 +234,9 @@ class InputCollector:
     def get_database_config_choice(self) -> bool:
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Database Configuration[/{UIColors.INFO}]\n")
-        console.print(f"[{UIColors.MUTED}]Choose how to configure your database in production:[/{UIColors.MUTED}]")
         console.print()
         console.print(f"  [{UIColors.SUCCESS}]Y[/{UIColors.SUCCESS}]  Use DATABASE_URL (recommended for production)")
         console.print(f"  [{UIColors.SUCCESS}]N[/{UIColors.SUCCESS}]  Use individual database parameters")
-        console.print()
-        console.print(f"[{UIColors.MUTED}]DATABASE_URL is a single environment variable like:[/{UIColors.MUTED}]")
-        console.print(f"[{UIColors.MUTED}]postgres://user:password@host:port/database[/{UIColors.MUTED}]")
         console.print()
 
         return CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]") == "y"
@@ -393,12 +383,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     # Section 1: Project Setup
     UIFormatter.print_separator()
     console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
-
-    console.print(f"[{UIColors.HIGHLIGHT}]Project Directory[/{UIColors.HIGHLIGHT}]")
-    console.print(f"[{UIColors.MUTED}]Where your project files will be created[/{UIColors.MUTED}]")
     console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
 
-    # Get project directory with special handling for '.' and empty input
     project_dir = collector._get_project_directory()
 
     if project_dir is None:
@@ -407,9 +393,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
     console.print()
 
-    console.print(f"[{UIColors.HIGHLIGHT}]Django Project Name[/{UIColors.HIGHLIGHT}]")
-    console.print(f"[{UIColors.MUTED}]Name used in 'django-admin startproject' command[/{UIColors.MUTED}]")
-    console.print(f"[{UIColors.MUTED}]Common names: config, core, settings, project_name[/{UIColors.MUTED}]")
+    console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
     project_name = collector.get_validated_input(
         "Enter Django project name", validate_project_name, "Django project name"
     )
