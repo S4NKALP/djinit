@@ -183,11 +183,14 @@ class InputCollector:
             console.print(f"  [{UIColors.SUCCESS}]{option.key}[/{UIColors.SUCCESS}]  {option.description}")
         console.print()
 
-        console.print(f"[{UIColors.HIGHLIGHT}]Your choice: [/{UIColors.HIGHLIGHT}]", end="")
-        sys.stdout.flush()
+        # Get valid keys from CICDOption enum
+        valid_keys = [option.key for option in CICDOption]
 
-        choice = self.char_reader.get_char()
-        console.print(choice.upper())
+        choice = CharReader.get_cicd_choice(
+            f"[{UIColors.HIGHLIGHT}]Your choice: [/{UIColors.HIGHLIGHT}]",
+            valid_keys=valid_keys,
+            default=CICDOption.NONE.key,
+        )
 
         # Parse choice
         if choice == CICDOption.BOTH.key:
@@ -196,7 +199,7 @@ class InputCollector:
             return True, False
         elif choice == CICDOption.GITLAB.key:
             return False, True
-        else:  # Default to none for any unrecognized input
+        else:  # Default to none (should not happen due to validation, but kept as fallback)
             return False, False
 
     def get_nested_apps_config(self) -> Tuple[bool, str | None]:
@@ -211,10 +214,9 @@ class InputCollector:
         )
         console.print()
 
-        console.print(f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}] ", end="")
-        sys.stdout.flush()
-        choice = self.char_reader.get_char()
-        console.print(choice.upper())
+        choice = CharReader.get_yes_no(
+            f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}]", default="n"
+        )
 
         if choice != "y":
             return False, None
@@ -240,13 +242,12 @@ class InputCollector:
         console.print(f"[{UIColors.MUTED}]postgres://user:password@host:port/database[/{UIColors.MUTED}]")
         console.print()
 
-        console.print(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}] ", end="")
-        sys.stdout.flush()
-        choice = self.char_reader.get_char()
-        console.print(choice.upper())
+        choice = CharReader.get_yes_no(
+            f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]", default="y"
+        )
 
-        # Default to True (use DATABASE_URL) if user presses Enter or Y
-        return choice.lower() != "n"
+        # Return True if choice is 'y', False if 'n'
+        return choice == "y"
 
 
 class CharReader:
@@ -257,6 +258,121 @@ class CharReader:
         if os.name == "nt":
             return CharReader._get_char_windows()
         return CharReader._get_char_unix()
+
+    @staticmethod
+    def get_yes_no(prompt: str, default: str = "n") -> str:
+        max_attempts = 3
+        attempt = 0
+
+        while attempt < max_attempts:
+            try:
+                console.print(f"{prompt} ", end="")
+                sys.stdout.flush()
+
+                reader = CharReader()
+                response = reader.get_char()
+
+                # Handle Enter key (default) - in raw mode, Enter is '\r' (carriage return)
+                # Also handle empty string or other control characters as Enter
+                if not response or response == "\r" or response == "\n" or ord(response) < 32:
+                    console.print(default.upper())
+                    return default.lower()
+
+                response = response.lower()
+
+                # Validate response
+                if response in ("y", "n"):
+                    console.print(response.upper())
+                    return response
+
+                # Invalid input - show error (only show if it's a printable character)
+                console.print()
+                if response.isprintable():
+                    UIFormatter.print_error(f"Invalid input '{response}'. Please enter 'y' or 'n'.")
+                    attempt += 1
+                    if attempt < max_attempts:
+                        console.print(
+                            f"[{UIColors.MUTED}]Please try again ({attempt}/{max_attempts}).[/{UIColors.MUTED}]"
+                        )
+                        console.print()
+                else:
+                    # Control character entered, treat as Enter
+                    console.print(default.upper())
+                    return default.lower()
+
+            except KeyboardInterrupt:
+                console.print()
+                UIFormatter.print_info("\nOperation cancelled by user.")
+                raise
+
+        # Max attempts reached - use default
+        console.print()
+        UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
+        return default.lower()
+
+    @staticmethod
+    def get_cicd_choice(prompt: str, valid_keys: list[str], default: str = "n") -> str:
+        """
+        Get CI/CD choice input with validation and retries.
+
+        Args:
+            prompt: The prompt message to display
+            valid_keys: List of valid key characters (e.g., ['g', 'l', 'b', 'n'])
+            default: Default value if Enter is pressed
+
+        Returns:
+            Valid key (lowercase)
+        """
+        max_attempts = 3
+        attempt = 0
+        valid_keys_lower = [k.lower() for k in valid_keys]
+
+        while attempt < max_attempts:
+            try:
+                console.print(f"{prompt} ", end="")
+                sys.stdout.flush()
+
+                reader = CharReader()
+                response = reader.get_char()
+
+                # Handle Enter key (default) - in raw mode, Enter is '\r' (carriage return)
+                # Also handle empty string or other control characters as Enter
+                if not response or response == "\r" or response == "\n" or ord(response) < 32:
+                    console.print(default.upper())
+                    return default.lower()
+
+                response = response.lower()
+
+                # Validate response
+                if response in valid_keys_lower:
+                    console.print(response.upper())
+                    return response
+
+                # Invalid input - show error (only show if it's a printable character)
+                console.print()
+                if response.isprintable():
+                    valid_keys_str = ", ".join(f"'{k}'" for k in valid_keys)
+                    UIFormatter.print_error(f"Invalid input '{response}'. Please enter one of: {valid_keys_str}.")
+                    attempt += 1
+                    if attempt < max_attempts:
+                        console.print(
+                            f"[{UIColors.MUTED}]Please try again ({attempt}/{max_attempts}).[/{UIColors.MUTED}]"
+                        )
+                        console.print()
+                else:
+                    # Control character entered, treat as Enter
+                    console.print(default.upper())
+                    return default.lower()
+
+            except KeyboardInterrupt:
+                console.print()
+                UIFormatter.print_info("\nOperation cancelled by user.")
+                raise
+
+        # Max attempts reached - use default
+        console.print()
+        UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
+        return default.lower()
 
     @staticmethod
     def _get_char_windows() -> str:
@@ -299,17 +415,53 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
     console.print(f"[{UIColors.HIGHLIGHT}]Project Directory[/{UIColors.HIGHLIGHT}]")
     console.print(f"[{UIColors.MUTED}]Where your project files will be created[/{UIColors.MUTED}]")
-    project_dir = collector.get_validated_input(
-        "Enter project directory name", validate_project_name, "project directory name"
-    )
+    console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
 
-    # Check if directory exists and ask for alternative
-    while os.path.exists(project_dir):
-        UIFormatter.print_error(f"Directory '{project_dir}' already exists.")
-        UIFormatter.print_info("Please choose a different project directory name.")
-        project_dir = collector.get_validated_input(
-            "Enter project directory name", validate_project_name, "project directory name"
-        )
+    # Get project directory with special handling for '.' and empty input
+    attempt = 0
+    project_dir = None
+
+    while attempt < collector.MAX_ATTEMPTS and project_dir is None:
+        try:
+            user_input = console.input(
+                f"[{UIColors.HIGHLIGHT}]Enter project directory name:[/{UIColors.HIGHLIGHT}] "
+            ).strip()
+
+            # Handle empty input or '.' - use current directory
+            if not user_input or user_input == ".":
+                project_dir = "."
+                UIFormatter.print_info(f"Creating project in current directory: {os.getcwd()}")
+                break
+
+            # Validate the input
+            is_valid, error_msg = validate_project_name(user_input)
+            if not is_valid:
+                UIFormatter.print_error(error_msg)
+                attempt += 1
+                collector._show_retry_message(attempt)
+                continue
+
+            # Check if directory exists and ask for alternative
+            if os.path.exists(user_input):
+                UIFormatter.print_error(f"Directory '{user_input}' already exists.")
+                UIFormatter.print_info(
+                    "Please choose a different project directory name (or press Enter for current directory)."
+                )
+                attempt += 1
+                collector._show_retry_message(attempt)
+                continue
+
+            project_dir = user_input
+            break
+
+        except KeyboardInterrupt:
+            UIFormatter.print_info("\nSetup cancelled by user.")
+            sys.exit(0)
+
+    if project_dir is None:
+        UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
+        sys.exit(1)
+
     console.print()
 
     console.print(f"[{UIColors.HIGHLIGHT}]Django Project Name[/{UIColors.HIGHLIGHT}]")
@@ -377,13 +529,9 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     # Get confirmation
     try:
-        console.print(f"[{UIColors.WARNING}]Proceed with setup? (y/N):[/{UIColors.WARNING}] ", end="")
-        sys.stdout.flush()
-
-        reader = CharReader()
-        response = reader.get_char()
-        console.print(response.upper())
-
+        response = CharReader.get_yes_no(
+            f"[{UIColors.WARNING}]Proceed with setup? (y/N):[/{UIColors.WARNING}]", default="n"
+        )
         return response == "y"
 
     except KeyboardInterrupt:

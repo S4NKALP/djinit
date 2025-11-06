@@ -5,6 +5,7 @@ Handles creation of Django apps and updating settings.
 
 import os
 import subprocess
+import sys
 from typing import Optional
 
 from djinit.scripts.console_ui import UIFormatter
@@ -61,8 +62,11 @@ class AppManager:
             return False
 
         # Create app in the correct location
+        # Use 'python -m django' instead of 'django-admin' for better compatibility
         with change_cwd(apps_base_dir):
-            subprocess.run(["django-admin", "startapp", self.app_name], capture_output=True, text=True, check=True)
+            subprocess.run(
+                [sys.executable, "-m", "django", "startapp", self.app_name], capture_output=True, text=True, check=True
+            )
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         return True
