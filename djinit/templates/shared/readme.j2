@@ -36,6 +36,53 @@ A Django project created with django-setup.
 ## Project Structure
 
 ```
+{% if predefined_structure %}
+{{ project_name }}/
+├── {{ module_name }}/
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── apps/
+│   ├── users/
+│   │   ├── apps.py
+│   │   ├── models/
+│   │   │   └── user.py
+│   │   ├── serializers/
+│   │   │   └── user_serializer.py
+│   │   ├── services/
+│   │   │   └── user_service.py
+│   │   ├── views/
+│   │   │   └── user_view.py
+│   │   ├── urls.py
+│   │   └── tests/
+│   │       └── test_user_api.py
+│   └── core/
+│       ├── utils/
+│       │   └── responses.py
+│       ├── mixins/
+│       │   └── timestamped_model.py
+│       ├── exceptions.py
+│       └── middleware/
+│           └── request_logger.py
+├── api/
+│   ├── __init__.py
+│   ├── urls.py
+│   └── v1/
+│       ├── __init__.py
+│       └── urls.py
+├── manage.py
+├── requirements.txt
+├── pyproject.toml
+├── .env.sample
+├── justfile
+├── Procfile
+├── runtime.txt
+└── README.md
+{% else %}
 {{ project_name }}/
 ├── {{ project_name }}/
 │   ├── settings/
@@ -51,6 +98,7 @@ A Django project created with django-setup.
 ├── pyproject.toml
 ├── .env.sample
 └── README.md
+{% endif %}
 ```
 
 ## API Documentation

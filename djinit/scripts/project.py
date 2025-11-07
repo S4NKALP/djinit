@@ -23,11 +23,14 @@ class ProjectManager:
         self.app_names = app_names
         self.metadata = metadata
         self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
+        # Support custom module name for the Django config package (e.g., 'config')
+        # Fall back to project_name if key present but None
+        self.module_name = metadata.get("project_module_name") or self.project_name
 
     def create_project(self) -> bool:
         os.makedirs(self.project_root, exist_ok=True)
 
-        success = DjangoHelper.startproject(self.project_name, self.project_root)
+        success = DjangoHelper.startproject(self.module_name, self.project_root)
         if success:
             UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
         else:
@@ -61,13 +64,13 @@ class ProjectManager:
 
     def _add_apps_to_settings(self) -> bool:
         """Add all apps to USER_DEFINED_APPS in base.py settings file."""
-        base_settings_path = get_base_settings_path(self.project_root, self.project_name)
+        base_settings_path = get_base_settings_path(self.project_root, self.module_name)
 
         if not os.path.exists(base_settings_path):
             UIFormatter.print_error("Could not find base.py settings file")
             return False
 
-        content = read_base_settings(self.project_root, self.project_name)
+        content = read_base_settings(self.project_root, self.module_name)
         if content is None:
             UIFormatter.print_error("Could not read base.py settings file")
             return False
@@ -92,36 +95,42 @@ class ProjectManager:
         UIFormatter.print_success(f"Added apps to USER_DEFINED_APPS: {added_apps_str}")
         return True
 
+    # Public wrapper to allow external callers to add apps based on current state
+    def add_apps_to_settings(self) -> bool:
+        return self._add_apps_to_settings()
+
     def validate_project_structure(self) -> bool:
         required_files = [
             os.path.join(self.project_root, "manage.py"),
-            os.path.join(self.project_root, self.project_name, "__init__.py"),
-            os.path.join(self.project_root, self.project_name, "settings", "__init__.py"),
-            os.path.join(self.project_root, self.project_name, "settings", "base.py"),
-            os.path.join(self.project_root, self.project_name, "settings", "development.py"),
-            os.path.join(self.project_root, self.project_name, "settings", "production.py"),
-            os.path.join(self.project_root, self.project_name, "urls.py"),
-            os.path.join(self.project_root, self.project_name, "wsgi.py"),
-            os.path.join(self.project_root, self.project_name, "asgi.py"),
+            os.path.join(self.project_root, self.module_name, "__init__.py"),
+            os.path.join(self.project_root, self.module_name, "settings", "__init__.py"),
+            os.path.join(self.project_root, self.module_name, "settings", "base.py"),
+            os.path.join(self.project_root, self.module_name, "settings", "development.py"),
+            os.path.join(self.project_root, self.module_name, "settings", "production.py"),
+            os.path.join(self.project_root, self.module_name, "urls.py"),
+            os.path.join(self.project_root, self.module_name, "wsgi.py"),
+            os.path.join(self.project_root, self.module_name, "asgi.py"),
         ]
 
         apps_base_dir = self.project_root
         if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
             apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
 
-        for app_name in self.app_names:
-            app_files = [
-                os.path.join(apps_base_dir, app_name, "__init__.py"),
-                os.path.join(apps_base_dir, app_name, "apps.py"),
-                os.path.join(apps_base_dir, app_name, "models.py"),
-                os.path.join(apps_base_dir, app_name, "views.py"),
-                os.path.join(apps_base_dir, app_name, "serializers.py"),
-                os.path.join(apps_base_dir, app_name, "routes.py"),
-                os.path.join(apps_base_dir, app_name, "tests.py"),
-                os.path.join(apps_base_dir, app_name, "migrations"),
-                os.path.join(apps_base_dir, app_name, "admin.py"),
-            ]
-            required_files.extend(app_files)
+        # In predefined structure, apps layout differs; skip strict per-app validation
+        if not self.metadata.get("predefined_structure"):
+            for app_name in self.app_names:
+                app_files = [
+                    os.path.join(apps_base_dir, app_name, "__init__.py"),
+                    os.path.join(apps_base_dir, app_name, "apps.py"),
+                    os.path.join(apps_base_dir, app_name, "models.py"),
+                    os.path.join(apps_base_dir, app_name, "views.py"),
+                    os.path.join(apps_base_dir, app_name, "serializers.py"),
+                    os.path.join(apps_base_dir, app_name, "routes.py"),
+                    os.path.join(apps_base_dir, app_name, "tests.py"),
+                    os.path.join(apps_base_dir, app_name, "migrations"),
+                    os.path.join(apps_base_dir, app_name, "admin.py"),
+                ]
+                required_files.extend(app_files)
 
         missing_files = []
         for file_path in required_files:

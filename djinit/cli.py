@@ -28,17 +28,41 @@ class Cli:
         self.file_manager = FileManager(self.project_root, project_name, app_names, metadata)
 
     def run_setup(self) -> bool:
-        steps: List[Tuple[str, Callable[[], bool]]] = [
-            ("Creating Django project", self.project_manager.create_project),
-            ("Creating Django apps", self.project_manager.create_apps),
-            ("Creating project URLs", self.file_manager.create_project_urls),
-            ("Validating project structure", self.project_manager.validate_project_structure),
-            ("Creating utility files", self._create_utility_files),
-            ("Creating Procfile", self.file_manager.create_procfile),
-            ("Creating Justfile", self.file_manager.create_justfile),
-            ("Creating runtime.txt", self.file_manager.create_runtime_txt),
-            ("Creating CI/CD pipelines", self._create_cicd_pipelines),
-        ]
+        # If predefined structure is enabled, adjust metadata defaults
+        if self.metadata.get("predefined_structure"):
+            # Default module name to 'config' for conventional layout
+            self.metadata.setdefault("project_module_name", "config")
+            # Ensure nested apps live under 'apps'
+            self.metadata.setdefault("nested_apps", True)
+            self.metadata.setdefault("nested_dir", "apps")
+            # Default apps for predefined structure
+            if not self.app_names:
+                self.app_names = ["users", "core"]
+                # propagate to managers
+                self.project_manager.app_names = self.app_names
+
+        steps: List[Tuple[str, Callable[[], bool]]] = []
+
+        steps.append(("Creating Django project", self.project_manager.create_project))
+
+        if self.metadata.get("predefined_structure"):
+            # Build custom tree and then inject apps into settings
+            steps.append(("Creating predefined structure", self.file_manager.create_predefined_structure))
+            steps.append(("Adding apps to settings", self.project_manager.add_apps_to_settings))
+        else:
+            steps.append(("Creating Django apps", self.project_manager.create_apps))
+            steps.append(("Creating project URLs", self.file_manager.create_project_urls))
+
+        steps.extend(
+            [
+                ("Validating project structure", self.project_manager.validate_project_structure),
+                ("Creating utility files", self._create_utility_files),
+                ("Creating Procfile", self.file_manager.create_procfile),
+                ("Creating Justfile", self.file_manager.create_justfile),
+                ("Creating runtime.txt", self.file_manager.create_runtime_txt),
+                ("Creating CI/CD pipelines", self._create_cicd_pipelines),
+            ]
+        )
 
         total_steps = len(steps)
         success = True

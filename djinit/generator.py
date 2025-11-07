@@ -58,7 +58,7 @@ def main() -> None:
     django_cli = Cli(project_dir, project_name, primary_app, app_names, metadata)
     success = django_cli.run_setup()
 
-    UIFormatter.create_summary_panel(project_dir, project_name, app_names, True)
+    UIFormatter.create_summary_panel(project_dir, project_name, app_names, True, metadata=metadata)
     sys.exit(0 if success else 1)
 
 

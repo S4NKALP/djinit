@@ -17,6 +17,8 @@ from djinit.utils import (
     insert_apps_into_user_defined_apps,
     is_django_project,
 )
+from djinit.scripts.template_engine import template_engine
+from djinit.utils import create_file_with_content, create_init_file
 
 
 class AppManager:
@@ -63,6 +65,11 @@ class AppManager:
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
 
+        # If predefined structure detected (apps/ exists), scaffold nested layout using custom templates
+        if self._is_predefined_structure():
+            return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
+
+        # Otherwise, use standard flat app generation
         success = DjangoHelper.startapp(self.app_name, apps_base_dir)
         if success:
             UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
@@ -118,3 +125,96 @@ class AppManager:
 
         # Detect nested structure from settings file
         return detect_nested_structure_from_settings(settings_base_path, self.current_dir)
+
+    def _is_predefined_structure(self) -> bool:
+        # Heuristic: presence of 'apps' directory at project root (where manage.py lives) and 'api' dir
+        apps_dir = os.path.join(self.current_dir, "apps")
+        api_dir = os.path.join(self.current_dir, "api")
+        return os.path.isdir(apps_dir) and os.path.isdir(api_dir)
+
+    def _create_predefined_app(self, apps_dir: str) -> bool:
+        """Create an app following the predefined nested structure with custom templates."""
+        app_dir = os.path.join(apps_dir, self.app_name)
+        os.makedirs(app_dir, exist_ok=True)
+        create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
+
+        # apps.py using standard template
+        apps_py_content = template_engine.render_template("app/apps.j2", {"app_name": self.app_name})
+        create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py_content, f"Created apps/{self.app_name}/apps.py")
+
+        # Compute names for generic templates
+        model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
+        app_module = f"apps.{self.app_name}"
+
+        # Subfolders
+        subfolders = {
+            "models": [(f"{self.app_name}.py", "custom/app/models_generic.j2")],
+            "serializers": [(f"{self.app_name}_serializer.py", "custom/app/serializers_generic.j2")],
+            "services": [(f"{self.app_name}_service.py", "custom/app/services_generic.j2")],
+            "views": [(f"{self.app_name}_view.py", "custom/app/views_generic.j2")],
+            "tests": [(f"test_{self.app_name}_api.py", "custom/app/tests_generic.j2")],
+        }
+        for folder, files in subfolders.items():
+            folder_path = os.path.join(app_dir, folder)
+            os.makedirs(folder_path, exist_ok=True)
+            create_init_file(folder_path, f"Created apps/{self.app_name}/{folder}/__init__.py")
+            for filename, tpl in files:
+                content = template_engine.render_template(
+                    tpl,
+                    {"app_name": self.app_name, "app_module": app_module, "model_class_name": model_class_name},
+                )
+                create_file_with_content(
+                    os.path.join(folder_path, filename),
+                    content,
+                    f"Created apps/{self.app_name}/{folder}/{filename}",
+                )
+
+        # urls.py at app root
+        urls_content = template_engine.render_template(
+            "custom/app/urls_generic.j2", {"app_name": self.app_name, "app_module": app_module}
+        )
+        create_file_with_content(os.path.join(app_dir, "urls.py"), urls_content, f"Created apps/{self.app_name}/urls.py")
+
+        # Add route include to api/v1/urls.py if present
+        self._add_to_api_v1_urls(self.app_name)
+
+        UIFormatter.print_success(f"Created Django app '{self.app_name}' with predefined structure in {apps_dir}")
+        return True
+
+    def _add_to_api_v1_urls(self, app_name: str) -> None:
+        api_v1_urls = os.path.join(self.current_dir, "api", "v1", "urls.py")
+        if not os.path.exists(api_v1_urls):
+            return
+        try:
+            with open(api_v1_urls, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            import_line = "from django.urls import include, path"
+            if import_line not in content:
+                # ensure base import exists (fallback)
+                content = import_line + "\n\n" + content
+
+            include_stmt = f"path(\"{app_name}/\", include(\"apps.{app_name}.urls\")),"
+            if include_stmt in content:
+                # already present
+                return
+
+            # Insert into urlpatterns list before closing ]
+            if "urlpatterns = [" in content:
+                parts = content.split("urlpatterns = [", 1)
+                before = parts[0]
+                rest = parts[1]
+                if "]" in rest:
+                    idx = rest.rfind("]")
+                    new_rest = rest[:idx]
+                    # ensure newline and indentation
+                    if not new_rest.endswith("\n"):
+                        new_rest += "\n"
+                    new_rest += f"    {include_stmt}\n" + rest[idx:]
+                    content = before + "urlpatterns = [" + new_rest
+
+            with open(api_v1_urls, "w", encoding="utf-8") as f:
+                f.write(content)
+        except Exception:
+            # Non-fatal; leave API routes unchanged if edit fails
+            return

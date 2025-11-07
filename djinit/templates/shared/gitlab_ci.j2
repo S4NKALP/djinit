@@ -36,7 +36,7 @@ test:
   stage: test
   image: python:3.13
   variables:
-    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
     SECRET_KEY: test-secret-key-for-ci
     ALLOWED_HOSTS: localhost
   script:
@@ -52,7 +52,7 @@ test:python310:
   stage: test
   image: python:3.10
   variables:
-    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
     SECRET_KEY: test-secret-key-for-ci
     ALLOWED_HOSTS: localhost
   script:
@@ -69,7 +69,7 @@ test:python311:
   stage: test
   image: python:3.11
   variables:
-    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
     SECRET_KEY: test-secret-key-for-ci
     ALLOWED_HOSTS: localhost
   script:
@@ -86,7 +86,7 @@ test:python312:
   stage: test
   image: python:3.12
   variables:
-    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
     SECRET_KEY: test-secret-key-for-ci
     ALLOWED_HOSTS: localhost
   script:
@@ -103,7 +103,7 @@ test:python313:
   stage: test
   image: python:3.13
   variables:
-    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
     SECRET_KEY: test-secret-key-for-ci
     ALLOWED_HOSTS: localhost
   script:

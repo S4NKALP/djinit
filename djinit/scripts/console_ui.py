@@ -234,6 +234,7 @@ class UIFormatter:
         app_names: List[str],
         success: bool,
         duration: Optional[float] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Create a clean completion summary with optional duration"""
         console.print("\n")
@@ -253,7 +254,18 @@ class UIFormatter:
             console.print("   [dim]│[/dim]")
             console.print(f"   [dim]├─[/dim] [bold]Directory:[/bold] [white]{project_dir}[/white]")
             console.print(f"   [dim]├─[/dim] [bold]Project:[/bold] [white]{project_name}[/white]")
-            console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
+            # Predefined structure adjustments
+            if metadata and metadata.get("predefined_structure"):
+                module_name = metadata.get("project_module_name") or project_name
+                console.print(f"   [dim]├─[/dim] [bold]Module:[/bold] [white]{module_name}[/white]")
+                console.print(f"   [dim]├─[/dim] [bold]Structure:[/bold] [white]Predefined[/white]")
+                # Hide empty apps list in predefined quick flow
+                if app_names:
+                    console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
+                else:
+                    console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]users, core[/white]")
+            else:
+                console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
             console.print()
 
             # Next steps
