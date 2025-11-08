@@ -51,8 +51,12 @@ class AppManager:
         return is_django_project(self.current_dir)
 
     def _app_exists(self) -> bool:
-        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        app_path = os.path.join(apps_base_dir, self.app_name)
+        # For predefined structure, check in apps/ directory
+        if self._is_predefined_structure():
+            app_path = os.path.join(self.current_dir, "apps", self.app_name)
+        else:
+            is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+            app_path = os.path.join(apps_base_dir, self.app_name)
         return os.path.exists(app_path)
 
     def _create_django_app(self) -> bool:
@@ -92,8 +96,12 @@ class AppManager:
             content = f.read()
 
         # Get the app's module path (e.g., "apps.users" or just "users")
-        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-        app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
+        # For predefined structure, use "apps" as nested_dir
+        if self._is_predefined_structure():
+            app_module_path = f"apps.{self.app_name}"
+        else:
+            is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+            app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
 
         # Check if app is already in USER_DEFINED_APPS
         existing_apps = extract_existing_apps(content)
