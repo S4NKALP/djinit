@@ -273,11 +273,11 @@ class UIFormatter:
             console.print("   [dim]│[/dim]")
             console.print("   [dim]├─[/dim] [dim]1.[/dim] Navigate to your project directory")
             console.print("   [dim]├─[/dim] [dim]2.[/dim] Set environment variables in .env file")
-            console.print("   [dim]├─[/dim] [dim]3.[/dim] Run migrations: [cyan]python manage.py migrate[/cyan]")
+            console.print("   [dim]├─[/dim] [dim]3.[/dim] Run migrations: [cyan]just migrate[/cyan]")
             console.print(
-                "   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]python manage.py createsuperuser[/cyan]"
+                "   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]just createsuperuser[/cyan]"
             )
-            console.print("   [dim]└─[/dim] [dim]5.[/dim] Start server: [cyan]python manage.py runserver[/cyan]")
+            console.print("   [dim]└─[/dim] [dim]5.[/dim] Start server: [cyan]just dev[/cyan]")
             console.print()
 
             # Useful URLs

@@ -120,8 +120,8 @@ def handle_app_command(args: argparse.Namespace) -> None:
     instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
     instructions.append("1. The app(s) have been added to INSTALLED_APPS in settings/base.py\n")
     instructions.append("2. Create your models in each app's models.py\n")
-    instructions.append("3. Run migrations: python manage.py makemigrations\n")
-    instructions.append("4. Apply migrations: python manage.py migrate\n")
+    instructions.append("3. Run migrations: just makemigrations\n")
+    instructions.append("4. Apply migrations: just migrate\n")
     instructions.append("5. Create views, serializers and routes(URLs) for your app(s)\n")
 
     console.print(Panel(instructions, title="💡 What's Next", border_style="green"))
