@@ -77,7 +77,11 @@ class FileManager:
 
     def create_pyproject_toml(self, metadata: dict) -> bool:
         with change_cwd(self.project_root):
-            context = {"package_name": metadata["package_name"], "project_name": self.project_name}
+            # Default package_name to "backend" if it's "." or empty
+            package_name = metadata.get("package_name", "backend")
+            if package_name == "." or not package_name:
+                package_name = "backend"
+            context = {"package_name": package_name, "project_name": self.project_name}
             pyproject_content = template_engine.render_template("shared/pyproject_toml.j2", context)
             return create_file_with_content(
                 "pyproject.toml",

@@ -412,8 +412,10 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         # Ask database configuration for predefined structure as well
         use_database_url = collector.get_database_config_choice()
+        # Default package_name to "backend" if project_dir is "." or empty
+        package_name = "backend" if project_dir == "." or not project_dir else project_dir
         metadata = ProjectMetadata(
-            package_name=project_dir,
+            package_name=package_name,
             use_github_actions=use_github,
             use_gitlab_ci=use_gitlab,
             nested_apps=True,
@@ -459,8 +461,10 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     use_database_url = collector.get_database_config_choice()
 
     # Create metadata
+    # Default package_name to "backend" if project_dir is "." or empty
+    package_name = "backend" if project_dir == "." or not project_dir else project_dir
     metadata = ProjectMetadata(
-        package_name=project_dir,
+        package_name=package_name,
         use_github_actions=use_github,
         use_gitlab_ci=use_gitlab,
         nested_apps=nested,
