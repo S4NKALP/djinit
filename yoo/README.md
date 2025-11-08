@@ -1,4 +1,4 @@
-# {{ project_name }}
+# yoo
 
 A Django project created with django-setup.
 
@@ -36,54 +36,7 @@ A Django project created with django-setup.
 ## Project Structure
 
 ```
-{% if predefined_structure %}
-{{ project_name }}/
-├── {{ module_name }}/
-│   ├── settings/
-│   │   ├── base.py
-│   │   ├── development.py
-│   │   └── production.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-├── apps/
-│   ├── users/
-│   │   ├── apps.py
-│   │   ├── models/
-│   │   │   └── user.py
-│   │   ├── serializers/
-│   │   │   └── user_serializer.py
-│   │   ├── services/
-│   │   │   └── user_service.py
-│   │   ├── views/
-│   │   │   └── user_view.py
-│   │   ├── urls.py
-│   │   └── tests/
-│   │       └── test_user_api.py
-│   └── core/
-│       ├── utils/
-│       │   └── responses.py
-│       ├── mixins/
-│       │   └── timestamped_model.py
-│       ├── exceptions.py
-│       └── middleware/
-│           └── request_logger.py
-├── api/
-│   ├── __init__.py
-│   ├── urls.py
-│   └── v1/
-│       ├── __init__.py
-│       └── urls.py
-├── manage.py
-├── requirements.txt
-├── pyproject.toml
-├── .env.sample
-├── justfile
-├── Procfile
-├── runtime.txt
-└── README.md
-{% elif unified_structure %}
-{{ project_name }}/
+yoo/
 ├── core/
 │   ├── settings/
 │   │   ├── base.py
@@ -122,23 +75,6 @@ A Django project created with django-setup.
 ├── Procfile
 ├── runtime.txt
 └── README.md
-{% else %}
-{{ project_name }}/
-├── {{ project_name }}/
-│   ├── settings/
-│   │   ├── base.py
-│   │   ├── development.py
-│   │   └── production.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-{% for app in app_names %}├── {{ app }}/
-{% endfor %}├── manage.py
-├── requirements.txt
-├── pyproject.toml
-├── .env.sample
-└── README.md
-{% endif %}
 ```
 
 ## API Documentation

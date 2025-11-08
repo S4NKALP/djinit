@@ -30,7 +30,8 @@ class ProjectManager:
     def create_project(self) -> bool:
         os.makedirs(self.project_root, exist_ok=True)
 
-        success = DjangoHelper.startproject(self.module_name, self.project_root)
+        unified = self.metadata.get("unified_structure", False)
+        success = DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
         if success:
             UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
         else:
@@ -116,8 +117,8 @@ class ProjectManager:
         if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
             apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
 
-        # In predefined structure, apps layout differs; skip strict per-app validation
-        if not self.metadata.get("predefined_structure"):
+        # In predefined or unified structure, apps layout differs; skip strict per-app validation
+        if not self.metadata.get("predefined_structure") and not self.metadata.get("unified_structure"):
             for app_name in self.app_names:
                 app_files = [
                     os.path.join(apps_base_dir, app_name, "__init__.py"),

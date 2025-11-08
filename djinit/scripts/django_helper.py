@@ -15,14 +15,20 @@ class DjangoHelper:
     DJANGO_VERSION = "5.2"
 
     @staticmethod
-    def startproject(project_name: str, directory: str) -> bool:
+    def startproject(project_name: str, directory: str, unified: bool = False) -> bool:
         try:
             os.makedirs(directory, exist_ok=True)
 
             # Create manage.py
             manage_py_path = os.path.join(directory, "manage.py")
-            create_file_from_template(manage_py_path, "project/manage_py.j2", {}, "Created manage.py")
+            create_file_from_template(manage_py_path, "shared/manage_py.j2", {}, "Created manage.py")
             os.chmod(manage_py_path, 0o755)
+
+            # For unified structure, the project config is "core", not project_name
+            # The unified structure is created separately by create_unified_structure
+            if unified:
+                # Just create manage.py for unified, structure is created by create_unified_structure
+                return True
 
             # Create project config directory
             project_config_dir = os.path.join(directory, project_name)
@@ -37,19 +43,19 @@ class DjangoHelper:
             base_context = {"project_name": project_name, "app_names": []}
             create_file_from_template(
                 os.path.join(settings_dir, "base.py"),
-                "project/settings_base.j2",
+                "project/settings/base.j2",
                 base_context,
                 f"Created {project_name}/settings/base.py",
             )
             create_file_from_template(
                 os.path.join(settings_dir, "development.py"),
-                "project/settings_development.j2",
+                "project/settings/development.j2",
                 {},
                 f"Created {project_name}/settings/development.py",
             )
             create_file_from_template(
                 os.path.join(settings_dir, "production.py"),
-                "project/settings_production.j2",
+                "project/settings/production.j2",
                 {},
                 f"Created {project_name}/settings/production.py",
             )
@@ -93,14 +99,14 @@ class DjangoHelper:
             create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
             app_files = [
-                ("apps.py", "app/apps.j2"),
-                ("models.py", "app/models.j2"),
-                ("views.py", "app/views.j2"),
-                ("admin.py", "app/admin.j2"),
-                ("urls.py", "app/urls.j2"),
-                ("serializers.py", "app/serializers.j2"),
-                ("routes.py", "app/routes.j2"),
-                ("tests.py", "app/tests.j2"),
+                ("apps.py", "base/apps.j2"),
+                ("models.py", "base/models.j2"),
+                ("views.py", "base/views.j2"),
+                ("admin.py", "base/admin.j2"),
+                ("urls.py", "base/urls.j2"),
+                ("serializers.py", "base/serializers.j2"),
+                ("routes.py", "base/routes.j2"),
+                ("tests.py", "base/tests.j2"),
             ]
 
             for filename, template_path in app_files:

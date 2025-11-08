@@ -8,8 +8,11 @@ from typing import Optional
 
 from djinit.scripts.console_ui import UIFormatter
 from djinit.scripts.django_helper import DjangoHelper
+from djinit.scripts.template_engine import template_engine
 from djinit.utils import (
     calculate_app_module_path,
+    create_file_with_content,
+    create_init_file,
     detect_nested_structure_from_settings,
     extract_existing_apps,
     find_project_dir,
@@ -17,8 +20,6 @@ from djinit.utils import (
     insert_apps_into_user_defined_apps,
     is_django_project,
 )
-from djinit.scripts.template_engine import template_engine
-from djinit.utils import create_file_with_content, create_init_file
 
 
 class AppManager:
@@ -147,8 +148,10 @@ class AppManager:
         create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
 
         # apps.py using standard template
-        apps_py_content = template_engine.render_template("app/apps.j2", {"app_name": self.app_name})
-        create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py_content, f"Created apps/{self.app_name}/apps.py")
+        apps_py_content = template_engine.render_template("base/apps.j2", {"app_name": self.app_name})
+        create_file_with_content(
+            os.path.join(app_dir, "apps.py"), apps_py_content, f"Created apps/{self.app_name}/apps.py"
+        )
 
         # Compute names for generic templates
         model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
@@ -156,11 +159,11 @@ class AppManager:
 
         # Subfolders
         subfolders = {
-            "models": [(f"{self.app_name}.py", "custom/app/models_generic.j2")],
-            "serializers": [(f"{self.app_name}_serializer.py", "custom/app/serializers_generic.j2")],
-            "services": [(f"{self.app_name}_service.py", "custom/app/services_generic.j2")],
-            "views": [(f"{self.app_name}_view.py", "custom/app/views_generic.j2")],
-            "tests": [(f"test_{self.app_name}_api.py", "custom/app/tests_generic.j2")],
+            "models": [(f"{self.app_name}.py", "predefined/apps/generic/models.j2")],
+            "serializers": [(f"{self.app_name}_serializer.py", "predefined/apps/generic/serializers.j2")],
+            "services": [(f"{self.app_name}_service.py", "predefined/apps/generic/services.j2")],
+            "views": [(f"{self.app_name}_view.py", "predefined/apps/generic/views.j2")],
+            "tests": [(f"test_{self.app_name}_api.py", "predefined/apps/generic/tests.j2")],
         }
         for folder, files in subfolders.items():
             folder_path = os.path.join(app_dir, folder)
@@ -179,9 +182,11 @@ class AppManager:
 
         # urls.py at app root
         urls_content = template_engine.render_template(
-            "custom/app/urls_generic.j2", {"app_name": self.app_name, "app_module": app_module}
+            "predefined/apps/generic/urls.j2", {"app_name": self.app_name, "app_module": app_module}
         )
-        create_file_with_content(os.path.join(app_dir, "urls.py"), urls_content, f"Created apps/{self.app_name}/urls.py")
+        create_file_with_content(
+            os.path.join(app_dir, "urls.py"), urls_content, f"Created apps/{self.app_name}/urls.py"
+        )
 
         # Add route include to api/v1/urls.py if present
         self._add_to_api_v1_urls(self.app_name)
@@ -194,7 +199,7 @@ class AppManager:
         if not os.path.exists(api_v1_urls):
             return
         try:
-            with open(api_v1_urls, "r", encoding="utf-8") as f:
+            with open(api_v1_urls, encoding="utf-8") as f:
                 content = f.read()
 
             import_line = "from django.urls import include, path"
@@ -202,7 +207,7 @@ class AppManager:
                 # ensure base import exists (fallback)
                 content = import_line + "\n\n" + content
 
-            include_stmt = f"path(\"{app_name}/\", include(\"apps.{app_name}.urls\")),"
+            include_stmt = f'path("{app_name}/", include("apps.{app_name}.urls")),'
             if include_stmt in content:
                 # already present
                 return

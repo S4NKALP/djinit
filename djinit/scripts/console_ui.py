@@ -258,12 +258,12 @@ class UIFormatter:
             if metadata and metadata.get("predefined_structure"):
                 module_name = metadata.get("project_module_name") or project_name
                 console.print(f"   [dim]├─[/dim] [bold]Module:[/bold] [white]{module_name}[/white]")
-                console.print(f"   [dim]├─[/dim] [bold]Structure:[/bold] [white]Predefined[/white]")
+                console.print("   [dim]├─[/dim] [bold]Structure:[/bold] [white]Predefined[/white]")
                 # Hide empty apps list in predefined quick flow
                 if app_names:
                     console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
                 else:
-                    console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]users, core[/white]")
+                    console.print("   [dim]└─[/dim] [bold]Apps:[/bold] [white]users, core[/white]")
             else:
                 console.print(f"   [dim]└─[/dim] [bold]Apps:[/bold] [white]{', '.join(app_names)}[/white]")
             console.print()
@@ -274,9 +274,7 @@ class UIFormatter:
             console.print("   [dim]├─[/dim] [dim]1.[/dim] Navigate to your project directory")
             console.print("   [dim]├─[/dim] [dim]2.[/dim] Set environment variables in .env file")
             console.print("   [dim]├─[/dim] [dim]3.[/dim] Run migrations: [cyan]just migrate[/cyan]")
-            console.print(
-                "   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]just createsuperuser[/cyan]"
-            )
+            console.print("   [dim]├─[/dim] [dim]4.[/dim] Create superuser: [cyan]just createsuperuser[/cyan]")
             console.print("   [dim]└─[/dim] [dim]5.[/dim] Start server: [cyan]just dev[/cyan]")
             console.print()
 

@@ -41,11 +41,27 @@ class Cli:
                 # propagate to managers
                 self.project_manager.app_names = self.app_names
 
+        # If unified structure is enabled, adjust metadata defaults
+        if self.metadata.get("unified_structure"):
+            # For unified structure, module name is 'core'
+            self.metadata.setdefault("project_module_name", "core")
+            # Ensure nested apps live under 'apps'
+            self.metadata.setdefault("nested_apps", True)
+            self.metadata.setdefault("nested_dir", "apps")
+            # Default apps for unified structure (empty, apps/core and apps/api are created by default)
+            if not self.app_names:
+                self.app_names = []
+                # propagate to managers
+                self.project_manager.app_names = self.app_names
+
         steps: List[Tuple[str, Callable[[], bool]]] = []
 
         steps.append(("Creating Django project", self.project_manager.create_project))
 
-        if self.metadata.get("predefined_structure"):
+        if self.metadata.get("unified_structure"):
+            # Build unified structure
+            steps.append(("Creating unified structure", self.file_manager.create_unified_structure))
+        elif self.metadata.get("predefined_structure"):
             # Build custom tree and then inject apps into settings
             steps.append(("Creating predefined structure", self.file_manager.create_predefined_structure))
             steps.append(("Adding apps to settings", self.project_manager.add_apps_to_settings))

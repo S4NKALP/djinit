@@ -36,6 +36,7 @@ class ProjectMetadata:
     use_database_url: bool = False
     # predefined structure support
     predefined_structure: bool = False
+    unified_structure: bool = False
     project_module_name: str | None = None
 
     def to_dict(self) -> dict:
@@ -47,6 +48,7 @@ class ProjectMetadata:
             "nested_dir": self.nested_dir,
             "use_database_url": self.use_database_url,
             "predefined_structure": self.predefined_structure,
+            "unified_structure": self.unified_structure,
             "project_module_name": self.project_module_name,
         }
 
@@ -385,19 +387,27 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
     collector = InputCollector()
     console.print()
 
-    # Pre-step: Ask for predefined structure first
+    # Pre-step: Ask for structure type first
     UIFormatter.print_separator()
-    console.print(f"\n[{UIColors.INFO}]Choose Structure[/{UIColors.INFO}]\n")
-    use_predefined = CharReader.get_yes_no(
-        f"[{UIColors.HIGHLIGHT}]Use predefined structure? (Y/n):[/{UIColors.HIGHLIGHT}]"
-    )
+    console.print(f"\n[{UIColors.INFO}]Choose Structure Type[/{UIColors.INFO}]\n")
+    console.print(f"[{UIColors.MUTED}]1. Standard structure (default Django layout)[/{UIColors.MUTED}]")
+    console.print(f"[{UIColors.MUTED}]2. Predefined structure (apps/users, apps/core, api/)[/{UIColors.MUTED}]")
+    console.print(f"[{UIColors.MUTED}]3. Unified structure (core/, apps/core, apps/api)[/{UIColors.MUTED}]")
+    console.print()
 
-    if use_predefined == "y":
+    structure_choice = console.input(
+        f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3) [default: 1]:[/{UIColors.HIGHLIGHT}] "
+    ).strip()
+    if not structure_choice:
+        structure_choice = "1"
+
+    use_predefined = structure_choice == "2"
+    use_unified = structure_choice == "3"
+
+    if use_predefined:
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
-        console.print(
-            f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]"
-        )
+        console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
         project_dir = collector._get_project_directory()
         if project_dir is None:
             UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
@@ -423,6 +433,39 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             use_database_url=use_database_url,
             predefined_structure=True,
             project_module_name="config",
+        )
+
+        return project_dir, project_name, "", app_names, metadata.to_dict()
+
+    if use_unified:
+        UIFormatter.print_separator()
+        console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
+        console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
+        project_dir = collector._get_project_directory()
+        if project_dir is None:
+            UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
+            sys.exit(1)
+
+        # Minimal inputs: project_dir only, then ask for CI/CD choice.
+        project_name = project_dir
+        app_names: list[str] = []
+
+        # Ask for workflows so shared templates for CI/CD can be added
+        use_github, use_gitlab = collector.get_cicd_choice()
+
+        # Ask database configuration for unified structure as well
+        use_database_url = collector.get_database_config_choice()
+        # Default package_name to "backend" if project_dir is "." or empty
+        package_name = "backend" if project_dir == "." or not project_dir else project_dir
+        metadata = ProjectMetadata(
+            package_name=package_name,
+            use_github_actions=use_github,
+            use_gitlab_ci=use_gitlab,
+            nested_apps=True,
+            nested_dir="apps",
+            use_database_url=use_database_url,
+            unified_structure=True,
+            project_module_name="core",
         )
 
         return project_dir, project_name, "", app_names, metadata.to_dict()
