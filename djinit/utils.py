@@ -25,7 +25,7 @@ def create_file_with_content(filename: str, content: str, success_message: str, 
     if should_format:
         format_file(filename)
 
-    UIFormatter.print_success(success_message)
+    # UIFormatter.print_success(success_message)
     return True
 
 
