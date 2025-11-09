@@ -1,0 +1,14 @@
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+from {{ app_module }}.views.{{ app_name }}_view import {{ model_class_name }}ViewSet
+
+
+app_name = "{{ app_name }}"
+
+router = DefaultRouter()
+router.register(r"{{ app_name }}", {{ model_class_name }}ViewSet, basename="{{ app_name }}")
+
+urlpatterns = [
+    path("", include(router.urls)),
+]

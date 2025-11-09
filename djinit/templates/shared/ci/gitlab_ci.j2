@@ -1,0 +1,133 @@
+# GitLab CI/CD configuration for {{ project_name }}
+
+stages:
+  - test
+  - lint
+  - security
+
+variables:
+  POSTGRES_DB: test_db
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/test_db"
+
+# Use Docker-in-Docker
+services:
+  - postgres:15
+
+before_script:
+  - python --version
+  - pip install uv
+  - uv sync
+
+# Lint stage
+lint:
+  stage: lint
+  image: python:3.13
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+  only:
+    - branches
+    - merge_requests
+
+# Test stage
+test:
+  stage: test
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+# Multiple Python versions
+test:python310:
+  stage: test
+  image: python:3.10
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python311:
+  stage: test
+  image: python:3.11
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python312:
+  stage: test
+  image: python:3.12
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+test:python313:
+  stage: test
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ module_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+    ALLOWED_HOSTS: localhost
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check
+    - uv run python manage.py migrate
+    - uv run python manage.py test
+  only:
+    - branches
+    - merge_requests
+
+# Security check
+security:
+  stage: security
+  image: python:3.13
+  variables:
+    DJANGO_SETTINGS_MODULE: {{ project_name }}.settings.development
+    SECRET_KEY: test-secret-key-for-ci
+  script:
+    - pip install uv
+    - uv sync
+    - uv run python manage.py check --deploy
+    - uv run python manage.py validate_templates
+  only:
+    - main
+    - develop

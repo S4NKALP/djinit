@@ -6,9 +6,6 @@ updates:
       interval: "weekly"
     target-branch: "main"
     rebase-strategy: "auto"
-    labels:
-      - "dependencies"
-      - "github-actions"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -16,7 +13,4 @@ updates:
       interval: "weekly"
     target-branch: "main"
     rebase-strategy: "auto"
-    labels:
-      - "dependencies"
-      - "python"
     open-pull-requests-limit: 10

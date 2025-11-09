@@ -1,0 +1,10 @@
+from typing import Optional
+
+from {{ app_module }}.models.{{ app_name }} import {{ model_class_name }}
+
+
+def get_{{ app_name }}_by_id(object_id: int) -> Optional[{{ model_class_name }}]:
+    try:
+        return {{ model_class_name }}.objects.get(id=object_id)
+    except {{ model_class_name }}.DoesNotExist:
+        return None

@@ -6,8 +6,13 @@ Handles different commands like secret key generation and app creation.
 import argparse
 import sys
 
+from rich.panel import Panel
+from rich.text import Text
+
+from djinit.scripts.app_generator import AppManager
 from djinit.scripts.console_ui import UIColors, UIFormatter, console
 from djinit.scripts.name_validator import validate_app_name
+from djinit.scripts.secretkey_generator import display_secret_keys, generate_multiple_keys
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -43,18 +48,9 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def handle_secret_command(args: argparse.Namespace) -> None:
-    from djinit.scripts.secretkey_generator import display_secret_keys, generate_multiple_keys
-
-    # Generate keys
     keys = generate_multiple_keys(args.count, args.length)
-
-    # Display results
     UIFormatter.print_info("")
     display_secret_keys(keys)
-
-    # Show usage instructions
-    from rich.panel import Panel
-    from rich.text import Text
 
     instructions = Text()
     instructions.append("📋 Usage Instructions:\n", style=UIColors.ACCENT)
@@ -70,9 +66,6 @@ def handle_secret_command(args: argparse.Namespace) -> None:
 
 
 def handle_app_command(args: argparse.Namespace) -> None:
-    from djinit.scripts.app_generator import AppManager
-
-    # Display welcome message
     UIFormatter.print_info("")
     UIFormatter.print_header("Django App Creation")
     UIFormatter.print_info("")
@@ -103,7 +96,6 @@ def handle_app_command(args: argparse.Namespace) -> None:
             deduped_names.append(name)
             seen.add(name)
 
-    # Validate all names first
     for name in deduped_names:
         is_valid, error_msg = validate_app_name(name)
         if not is_valid:
@@ -124,16 +116,12 @@ def handle_app_command(args: argparse.Namespace) -> None:
     if any_failure:
         sys.exit(1)
 
-    # Show next steps
-    from rich.panel import Panel
-    from rich.text import Text
-
     instructions = Text()
     instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
     instructions.append("1. The app(s) have been added to INSTALLED_APPS in settings/base.py\n")
     instructions.append("2. Create your models in each app's models.py\n")
-    instructions.append("3. Run migrations: python manage.py makemigrations\n")
-    instructions.append("4. Apply migrations: python manage.py migrate\n")
+    instructions.append("3. Run migrations: just makemigrations\n")
+    instructions.append("4. Apply migrations: just migrate\n")
     instructions.append("5. Create views, serializers and routes(URLs) for your app(s)\n")
 
     console.print(Panel(instructions, title="💡 What's Next", border_style="green"))

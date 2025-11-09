@@ -76,5 +76,4 @@ class TemplateEngine:
         return os.path.exists(template_path)
 
 
-# Global template engine instance
 template_engine = TemplateEngine()

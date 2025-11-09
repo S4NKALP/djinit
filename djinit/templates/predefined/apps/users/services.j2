@@ -1,0 +1,10 @@
+from typing import Optional
+
+from apps.users.models.user import User
+
+
+def get_user_by_id(user_id: int) -> Optional[User]:
+    try:
+        return User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return None
