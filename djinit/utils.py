@@ -14,6 +14,10 @@ from djinit.scripts.template_engine import template_engine
 
 def format_file(filename: str) -> None:
     """Format Python file using Ruff formatter."""
+<<<<<<< HEAD
+=======
+    # Use 'python -m ruff' instead of 'ruff' for better compatibility
+>>>>>>> origin/main
     subprocess.run([sys.executable, "-m", "ruff", "format", filename], check=False, capture_output=True)
 
 

@@ -4,6 +4,11 @@ Handles creation of Django apps and updating settings.
 """
 
 import os
+<<<<<<< HEAD
+=======
+import subprocess
+import sys
+>>>>>>> origin/main
 from typing import Optional
 
 from djinit.scripts.console_ui import UIFormatter
@@ -70,9 +75,18 @@ class AppManager:
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
 
+<<<<<<< HEAD
         # If predefined structure detected (apps/ exists), scaffold nested layout using custom templates
         if self._is_predefined_structure():
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
+=======
+        # Create app in the correct location
+        # Use 'python -m django' instead of 'django-admin' for better compatibility
+        with change_cwd(apps_base_dir):
+            subprocess.run(
+                [sys.executable, "-m", "django", "startapp", self.app_name], capture_output=True, text=True, check=True
+            )
+>>>>>>> origin/main
 
         # Otherwise, use standard flat app generation
         success = DjangoHelper.startapp(self.app_name, apps_base_dir)

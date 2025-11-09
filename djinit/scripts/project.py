@@ -22,14 +22,23 @@ class ProjectManager:
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
+<<<<<<< HEAD
         self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
         # Support custom module name for the Django config package (e.g., 'config')
         # Fall back to project_name if key present but None
         self.module_name = metadata.get("project_module_name") or self.project_name
+=======
+        # Handle '.' for current directory
+        if project_dir == ".":
+            self.project_root = os.getcwd()
+        else:
+            self.project_root = os.path.join(os.getcwd(), project_dir)
+>>>>>>> origin/main
 
     def create_project(self) -> bool:
         os.makedirs(self.project_root, exist_ok=True)
 
+<<<<<<< HEAD
         unified = self.metadata.get("unified_structure", False)
         success = DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
         if success:
@@ -37,6 +46,17 @@ class ProjectManager:
         else:
             UIFormatter.print_error(f"Failed to create Django project '{self.project_name}'")
         return success
+=======
+        # Create Django project inside the directory
+        # Use 'python -m django' instead of 'django-admin' for better compatibility
+        subprocess.run(
+            [sys.executable, "-m", "django", "startproject", self.project_name, self.project_root],
+            check=True,
+        )
+
+        UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
+        return True
+>>>>>>> origin/main
 
     def create_apps(self) -> bool:
         apps_base_dir = self.project_root
