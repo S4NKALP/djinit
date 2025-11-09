@@ -8,5 +8,3 @@ def get_{{ app_name }}_by_id(object_id: int) -> Optional[{{ model_class_name }}]
         return {{ model_class_name }}.objects.get(id=object_id)
     except {{ model_class_name }}.DoesNotExist:
         return None
-
-

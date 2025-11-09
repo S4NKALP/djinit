@@ -9,6 +9,7 @@ from djinit.scripts.console_ui import UIFormatter
 from djinit.scripts.django_helper import DjangoHelper
 from djinit.utils import (
     calculate_app_module_paths,
+    create_directory_with_init,
     extract_existing_apps,
     get_base_settings_path,
     insert_apps_into_user_defined_apps,
@@ -22,23 +23,14 @@ class ProjectManager:
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
-<<<<<<< HEAD
         self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
         # Support custom module name for the Django config package (e.g., 'config')
         # Fall back to project_name if key present but None
         self.module_name = metadata.get("project_module_name") or self.project_name
-=======
-        # Handle '.' for current directory
-        if project_dir == ".":
-            self.project_root = os.getcwd()
-        else:
-            self.project_root = os.path.join(os.getcwd(), project_dir)
->>>>>>> origin/main
 
     def create_project(self) -> bool:
         os.makedirs(self.project_root, exist_ok=True)
 
-<<<<<<< HEAD
         unified = self.metadata.get("unified_structure", False)
         success = DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
         if success:
@@ -46,29 +38,19 @@ class ProjectManager:
         else:
             UIFormatter.print_error(f"Failed to create Django project '{self.project_name}'")
         return success
-=======
-        # Create Django project inside the directory
-        # Use 'python -m django' instead of 'django-admin' for better compatibility
-        subprocess.run(
-            [sys.executable, "-m", "django", "startproject", self.project_name, self.project_root],
-            check=True,
-        )
 
-        UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
-        return True
->>>>>>> origin/main
+    def _get_apps_base_dir(self) -> str:
+        """Get the base directory for apps, considering nested structure."""
+        apps_base_dir = self.project_root
+        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
+            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
+        return apps_base_dir
 
     def create_apps(self) -> bool:
-        apps_base_dir = self.project_root
-        nested = bool(self.metadata.get("nested_apps"))
-        nested_dir_name = self.metadata.get("nested_dir") if nested else None
+        apps_base_dir = self._get_apps_base_dir()
 
-        if nested and nested_dir_name:
-            apps_base_dir = os.path.join(self.project_root, nested_dir_name)
-            os.makedirs(apps_base_dir, exist_ok=True)
-            init_file = os.path.join(apps_base_dir, "__init__.py")
-            if not os.path.exists(init_file):
-                open(init_file, "a").close()
+        if apps_base_dir != self.project_root:
+            create_directory_with_init(apps_base_dir, f"Created {os.path.basename(apps_base_dir)}/__init__.py")
 
         for app_name in self.app_names:
             success = DjangoHelper.startapp(app_name, apps_base_dir)
@@ -78,12 +60,12 @@ class ProjectManager:
             UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
 
         # Add all apps to USER_DEFINED_APPS in settings
-        if not self._add_apps_to_settings():
+        if not self.add_apps_to_settings():
             return False
 
         return True
 
-    def _add_apps_to_settings(self) -> bool:
+    def add_apps_to_settings(self) -> bool:
         """Add all apps to USER_DEFINED_APPS in base.py settings file."""
         base_settings_path = get_base_settings_path(self.project_root, self.module_name)
 
@@ -116,10 +98,6 @@ class ProjectManager:
         UIFormatter.print_success(f"Added apps to USER_DEFINED_APPS: {added_apps_str}")
         return True
 
-    # Public wrapper to allow external callers to add apps based on current state
-    def add_apps_to_settings(self) -> bool:
-        return self._add_apps_to_settings()
-
     def validate_project_structure(self) -> bool:
         required_files = [
             os.path.join(self.project_root, "manage.py"),
@@ -133,9 +111,7 @@ class ProjectManager:
             os.path.join(self.project_root, self.module_name, "asgi.py"),
         ]
 
-        apps_base_dir = self.project_root
-        if self.metadata.get("nested_apps") and self.metadata.get("nested_dir"):
-            apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
+        apps_base_dir = self._get_apps_base_dir()
 
         # In predefined or unified structure, apps layout differs; skip strict per-app validation
         if not self.metadata.get("predefined_structure") and not self.metadata.get("unified_structure"):

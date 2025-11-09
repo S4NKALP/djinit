@@ -4,19 +4,14 @@ Handles creation of Django apps and updating settings.
 """
 
 import os
-<<<<<<< HEAD
-=======
-import subprocess
-import sys
->>>>>>> origin/main
 from typing import Optional
 
 from djinit.scripts.console_ui import UIFormatter
 from djinit.scripts.django_helper import DjangoHelper
-from djinit.scripts.template_engine import template_engine
 from djinit.utils import (
     calculate_app_module_path,
-    create_file_with_content,
+    create_directory_with_init,
+    create_file_from_template,
     create_init_file,
     detect_nested_structure_from_settings,
     extract_existing_apps,
@@ -32,6 +27,7 @@ class AppManager:
         self.app_name = app_name
         self.current_dir = os.getcwd()
         self.manage_py_path = os.path.join(self.current_dir, "manage.py")
+        self._project_structure_cache = None
 
     def create_app(self) -> bool:
         if not self._is_django_project():
@@ -61,34 +57,22 @@ class AppManager:
         if self._is_predefined_structure():
             app_path = os.path.join(self.current_dir, "apps", self.app_name)
         else:
-            is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+            _, _, apps_base_dir = self._get_project_structure()
             app_path = os.path.join(apps_base_dir, self.app_name)
         return os.path.exists(app_path)
 
     def _create_django_app(self) -> bool:
-        # Find where to create the app (flat or nested structure)
-        is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
-
         # Verify manage.py exists in project root
-        manage_py_path = os.path.join(self.current_dir, "manage.py")
-        if not os.path.exists(manage_py_path):
+        if not os.path.exists(self.manage_py_path):
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
 
-<<<<<<< HEAD
         # If predefined structure detected (apps/ exists), scaffold nested layout using custom templates
         if self._is_predefined_structure():
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
-=======
-        # Create app in the correct location
-        # Use 'python -m django' instead of 'django-admin' for better compatibility
-        with change_cwd(apps_base_dir):
-            subprocess.run(
-                [sys.executable, "-m", "django", "startapp", self.app_name], capture_output=True, text=True, check=True
-            )
->>>>>>> origin/main
 
         # Otherwise, use standard flat app generation
+        _, _, apps_base_dir = self._get_project_structure()
         success = DjangoHelper.startapp(self.app_name, apps_base_dir)
         if success:
             UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
@@ -115,7 +99,7 @@ class AppManager:
         if self._is_predefined_structure():
             app_module_path = f"apps.{self.app_name}"
         else:
-            is_nested, nested_dir, apps_base_dir = self._detect_project_structure()
+            is_nested, nested_dir, _ = self._get_project_structure()
             app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
 
         # Check if app is already in USER_DEFINED_APPS
@@ -139,15 +123,20 @@ class AppManager:
         UIFormatter.print_success(f"Added '{app_module_path}' to USER_DEFINED_APPS in base.py")
         return True
 
-    def _detect_project_structure(self) -> tuple[bool, Optional[str], str]:
-        # Find project directory with settings/base.py
-        project_dir, settings_base_path = find_project_dir(self.current_dir)
+    def _get_project_structure(self) -> tuple[bool, Optional[str], str]:
+        """Get project structure with caching to avoid repeated detection."""
+        if self._project_structure_cache is None:
+            # Find project directory with settings/base.py
+            project_dir, settings_base_path = find_project_dir(self.current_dir)
 
-        if project_dir is None:
-            return False, None, self.current_dir
-
-        # Detect nested structure from settings file
-        return detect_nested_structure_from_settings(settings_base_path, self.current_dir)
+            if project_dir is None:
+                self._project_structure_cache = (False, None, self.current_dir)
+            else:
+                # Detect nested structure from settings file
+                self._project_structure_cache = detect_nested_structure_from_settings(
+                    settings_base_path, self.current_dir
+                )
+        return self._project_structure_cache
 
     def _is_predefined_structure(self) -> bool:
         # Heuristic: presence of 'apps' directory at project root (where manage.py lives) and 'api' dir
@@ -161,15 +150,18 @@ class AppManager:
         os.makedirs(app_dir, exist_ok=True)
         create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
 
-        # apps.py using standard template
-        apps_py_content = template_engine.render_template("base/apps.j2", {"app_name": self.app_name})
-        create_file_with_content(
-            os.path.join(app_dir, "apps.py"), apps_py_content, f"Created apps/{self.app_name}/apps.py"
-        )
-
         # Compute names for generic templates
         model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
         app_module = f"apps.{self.app_name}"
+        base_context = {"app_name": self.app_name, "app_module": app_module, "model_class_name": model_class_name}
+
+        # Create apps.py
+        create_file_from_template(
+            os.path.join(app_dir, "apps.py"),
+            "base/apps.j2",
+            {"app_name": self.app_name},
+            f"Created apps/{self.app_name}/apps.py",
+        )
 
         # Subfolders
         subfolders = {
@@ -181,25 +173,19 @@ class AppManager:
         }
         for folder, files in subfolders.items():
             folder_path = os.path.join(app_dir, folder)
-            os.makedirs(folder_path, exist_ok=True)
-            create_init_file(folder_path, f"Created apps/{self.app_name}/{folder}/__init__.py")
-            for filename, tpl in files:
-                content = template_engine.render_template(
-                    tpl,
-                    {"app_name": self.app_name, "app_module": app_module, "model_class_name": model_class_name},
-                )
-                create_file_with_content(
-                    os.path.join(folder_path, filename),
-                    content,
-                    f"Created apps/{self.app_name}/{folder}/{filename}",
+            create_directory_with_init(folder_path, f"Created apps/{self.app_name}/{folder}/__init__.py")
+            for filename, template in files:
+                file_path = os.path.join(folder_path, filename)
+                create_file_from_template(
+                    file_path, template, base_context, f"Created apps/{self.app_name}/{folder}/{filename}"
                 )
 
         # urls.py at app root
-        urls_content = template_engine.render_template(
-            "predefined/apps/generic/urls.j2", {"app_name": self.app_name, "app_module": app_module}
-        )
-        create_file_with_content(
-            os.path.join(app_dir, "urls.py"), urls_content, f"Created apps/{self.app_name}/urls.py"
+        create_file_from_template(
+            os.path.join(app_dir, "urls.py"),
+            "predefined/apps/generic/urls.j2",
+            {"app_name": self.app_name, "app_module": app_module},
+            f"Created apps/{self.app_name}/urls.py",
         )
 
         # Add route include to api/v1/urls.py if present

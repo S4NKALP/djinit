@@ -14,10 +14,6 @@ from djinit.scripts.template_engine import template_engine
 
 def format_file(filename: str) -> None:
     """Format Python file using Ruff formatter."""
-<<<<<<< HEAD
-=======
-    # Use 'python -m ruff' instead of 'ruff' for better compatibility
->>>>>>> origin/main
     subprocess.run([sys.executable, "-m", "ruff", "format", filename], check=False, capture_output=True)
 
 
@@ -51,6 +47,38 @@ def create_init_file(directory: str, success_message: str) -> None:
     create_file_from_template(init_path, "shared/init.j2", {}, success_message, should_format=False)
 
 
+def create_directory_with_init(dir_path: str, message: str) -> None:
+    """Create directory and __init__.py file."""
+    os.makedirs(dir_path, exist_ok=True)
+    create_init_file(dir_path, message)
+
+
+def create_files_from_templates(base_dir: str, files: list, prefix: str = "", should_format: bool = False) -> None:
+    """Create multiple files from templates.
+
+    Args:
+        base_dir: Base directory where files will be created
+        files: List of tuples (filename, template_path, context)
+        prefix: Optional prefix for success message
+        should_format: Whether to format the created files
+    """
+    for file_spec in files:
+        if len(file_spec) == 3:
+            filename, template_path, context = file_spec
+        else:
+            # Support (filename, template_path) format with empty context
+            filename, template_path = file_spec
+            context = {}
+        filepath = os.path.join(base_dir, filename)
+        message = f"Created {prefix}{filename}" if prefix else f"Created {filename}"
+        create_file_from_template(filepath, template_path, context, message, should_format=should_format)
+
+
+def get_package_name(project_dir: str) -> str:
+    """Get package name, defaulting to 'backend' if project_dir is '.' or empty."""
+    return "backend" if project_dir == "." or not project_dir else project_dir
+
+
 # change the current working dir tempporary
 @contextmanager
 def change_cwd(path: str):
@@ -62,24 +90,41 @@ def change_cwd(path: str):
         os.chdir(original_cwd)
 
 
-# get app names from USER_DEFINED_APPS section in project_name/settings/base.py
-def extract_existing_apps(content: str) -> set:
+def _parse_app_entry_from_line(line: str) -> str | None:
+    """Extract app name from a line in USER_DEFINED_APPS section."""
+    line_stripped = line.strip().strip(",").strip()
+    for quote in ('"', "'"):
+        if line_stripped.startswith(quote) and line_stripped.endswith(quote):
+            return line_stripped.strip(quote)
+    return None
+
+
+def _is_user_apps_section_start(line: str) -> bool:
+    """Check if line starts USER_DEFINED_APPS section."""
+    return "USER_DEFINED_APPS" in line and "=" in line
+
+
+def _iterate_user_apps_lines(content: str):
+    """Generator that yields lines within USER_DEFINED_APPS section."""
     lines = content.split("\n")
-    existing_apps = set()
     in_user_apps = False
 
     for line in lines:
-        if "USER_DEFINED_APPS" in line and "=" in line:
+        if _is_user_apps_section_start(line):
             in_user_apps = True
         elif in_user_apps and line.strip() == "]":
             break
         elif in_user_apps:
-            line_stripped = line.strip().strip(",").strip()
-            for quote in ('"', "'"):
-                if line_stripped.startswith(quote) and line_stripped.endswith(quote):
-                    existing_apps.add(line_stripped.strip(quote))
-                    break
+            yield line
 
+
+# get app names from USER_DEFINED_APPS section in project_name/settings/base.py
+def extract_existing_apps(content: str) -> set:
+    existing_apps = set()
+    for line in _iterate_user_apps_lines(content):
+        app_name = _parse_app_entry_from_line(line)
+        if app_name:
+            existing_apps.add(app_name)
     return existing_apps
 
 
@@ -123,7 +168,7 @@ def insert_apps_into_user_defined_apps(content: str, apps_to_add: list) -> str:
 
     for i, line in enumerate(lines):
         # Entering USER_DEFINED_APPS section
-        if "USER_DEFINED_APPS" in line and "=" in line and not apps_added:
+        if _is_user_apps_section_start(line) and not apps_added:
             in_user_apps = True
 
             # Handle closing bracket on same line
@@ -166,7 +211,7 @@ def insert_apps_into_user_defined_apps(content: str, apps_to_add: list) -> str:
 def calculate_app_module_paths(app_names: list, metadata: dict) -> list:
     nested = bool(metadata.get("nested_apps"))
     nested_dir_name = metadata.get("nested_dir") if nested else None
-    return [f"{nested_dir_name}.{app_name}" if nested and nested_dir_name else app_name for app_name in app_names]
+    return [calculate_app_module_path(app_name, nested, nested_dir_name) for app_name in app_names]
 
 
 # calculate app module path for a single app
@@ -234,22 +279,13 @@ def detect_nested_structure_from_settings(
         with open(base_settings_path) as f:
             base_content = f.read()
 
-        in_user_apps = False
-        for line in base_content.splitlines():
-            if "USER_DEFINED_APPS" in line and "=" in line:
-                in_user_apps = True
-                continue
-            if in_user_apps and "]" in line:
-                break
-            if in_user_apps:
-                line_stripped = line.strip().strip(",")
-                if line_stripped.startswith('"') or line_stripped.startswith("'"):
-                    app_label = line_stripped.strip("\"'")
-                    if "." in app_label:
-                        nested_dir_name = app_label.split(".", 1)[0]
-                        nested_path = os.path.join(search_dir, nested_dir_name)
-                        if os.path.isdir(nested_path):
-                            return True, nested_dir_name, nested_path
+        for line in _iterate_user_apps_lines(base_content):
+            app_label = _parse_app_entry_from_line(line)
+            if app_label and "." in app_label:
+                nested_dir_name = app_label.split(".", 1)[0]
+                nested_path = os.path.join(search_dir, nested_dir_name)
+                if os.path.isdir(nested_path):
+                    return True, nested_dir_name, nested_path
     except Exception:
         pass
 

@@ -12,5 +12,3 @@ class RequestLoggerMiddleware:
         logger.info("%s %s", request.method, request.path)
         response = self.get_response(request)
         return response
-
-

@@ -11,4 +11,3 @@ def success(data=None, status_code=200):
 def error(message, status_code=400):
     """Return an error response."""
     return Response({"success": False, "message": message}, status=status_code)
-

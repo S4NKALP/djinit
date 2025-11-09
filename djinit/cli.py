@@ -19,12 +19,7 @@ class Cli:
         self.primary_app = primary_app
         self.app_names = app_names
         self.metadata = metadata
-<<<<<<< HEAD
         if project_dir == ".":  # handle '.' for current directory
-=======
-        # Handle '.' for current directory
-        if project_dir == ".":
->>>>>>> origin/main
             self.project_root = os.getcwd()
         else:
             self.project_root = os.path.join(os.getcwd(), project_dir)

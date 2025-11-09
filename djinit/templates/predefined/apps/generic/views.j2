@@ -7,5 +7,3 @@ from {{ app_module }}.serializers.{{ app_name }}_serializer import {{ model_clas
 class {{ model_class_name }}ViewSet(viewsets.ModelViewSet):
     queryset = {{ model_class_name }}.objects.all()
     serializer_class = {{ model_class_name }}Serializer
-
-

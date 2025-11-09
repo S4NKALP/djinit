@@ -7,7 +7,12 @@ This module provides functions to create Django projects and apps without requir
 import os
 
 from djinit.scripts.console_ui import UIFormatter
-from djinit.utils import create_file_from_template, create_init_file
+from djinit.utils import (
+    create_directory_with_init,
+    create_file_from_template,
+    create_files_from_templates,
+    create_init_file,
+)
 
 
 class DjangoHelper:
@@ -32,54 +37,28 @@ class DjangoHelper:
 
             # Create project config directory
             project_config_dir = os.path.join(directory, project_name)
-            os.makedirs(project_config_dir, exist_ok=True)
-            create_init_file(project_config_dir, f"Created {project_name}/__init__.py")
+            create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
 
             # Create settings directory and files
             settings_dir = os.path.join(project_config_dir, "settings")
-            os.makedirs(settings_dir, exist_ok=True)
-            create_init_file(settings_dir, f"Created {project_name}/settings/__init__.py")
+            create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
 
             base_context = {"project_name": project_name, "app_names": []}
-            create_file_from_template(
-                os.path.join(settings_dir, "base.py"),
-                "project/settings/base.j2",
-                base_context,
-                f"Created {project_name}/settings/base.py",
-            )
-            create_file_from_template(
-                os.path.join(settings_dir, "development.py"),
-                "project/settings/development.j2",
-                {},
-                f"Created {project_name}/settings/development.py",
-            )
-            create_file_from_template(
-                os.path.join(settings_dir, "production.py"),
-                "project/settings/production.j2",
-                {},
-                f"Created {project_name}/settings/production.py",
-            )
+            settings_files = [
+                ("base.py", "project/settings/base.j2", base_context),
+                ("development.py", "project/settings/development.j2", {}),
+                ("production.py", "project/settings/production.j2", {}),
+            ]
+            create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
             # Create project-level files
             urls_context = {"project_name": project_name, "django_version": DjangoHelper.DJANGO_VERSION}
-            create_file_from_template(
-                os.path.join(project_config_dir, "urls.py"),
-                "project/urls.j2",
-                urls_context,
-                f"Created {project_name}/urls.py",
-            )
-            create_file_from_template(
-                os.path.join(project_config_dir, "wsgi.py"),
-                "project/wsgi.j2",
-                {},
-                f"Created {project_name}/wsgi.py",
-            )
-            create_file_from_template(
-                os.path.join(project_config_dir, "asgi.py"),
-                "project/asgi.j2",
-                {},
-                f"Created {project_name}/asgi.py",
-            )
+            project_files = [
+                ("urls.py", "project/urls.j2", urls_context),
+                ("wsgi.py", "project/wsgi.j2", {}),
+                ("asgi.py", "project/asgi.j2", {}),
+            ]
+            create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
             return True
 
@@ -99,28 +78,21 @@ class DjangoHelper:
             create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
             app_files = [
-                ("apps.py", "base/apps.j2"),
-                ("models.py", "base/models.j2"),
-                ("views.py", "base/views.j2"),
-                ("admin.py", "base/admin.j2"),
-                ("urls.py", "base/urls.j2"),
-                ("serializers.py", "base/serializers.j2"),
-                ("routes.py", "base/routes.j2"),
-                ("tests.py", "base/tests.j2"),
+                ("apps.py", "base/apps.j2", context),
+                ("models.py", "base/models.j2", context),
+                ("views.py", "base/views.j2", context),
+                ("admin.py", "base/admin.j2", context),
+                ("urls.py", "base/urls.j2", context),
+                ("serializers.py", "base/serializers.j2", context),
+                ("routes.py", "base/routes.j2", context),
+                ("tests.py", "base/tests.j2", context),
             ]
 
-            for filename, template_path in app_files:
-                create_file_from_template(
-                    os.path.join(app_dir, filename),
-                    template_path,
-                    context,
-                    f"Created {app_name}/{filename}",
-                )
+            create_files_from_templates(app_dir, app_files, f"{app_name}/")
 
             # Create migrations directory and __init__.py
             migrations_dir = os.path.join(app_dir, "migrations")
-            os.makedirs(migrations_dir, exist_ok=True)
-            create_init_file(migrations_dir, f"Created {app_name}/migrations/__init__.py")
+            create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
 
             return True
 

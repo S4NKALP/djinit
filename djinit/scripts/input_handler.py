@@ -13,6 +13,7 @@ from typing import Callable, Tuple
 
 from djinit.scripts.console_ui import UIColors, UIFormatter, console
 from djinit.scripts.name_validator import validate_app_name, validate_project_name
+from djinit.utils import get_package_name
 
 
 class CICDOption(Enum):
@@ -69,7 +70,7 @@ class InputCollector:
     MAX_ATTEMPTS = 3
 
     def __init__(self):
-        self.char_reader = CharReader()
+        pass
 
     def get_validated_input(
         self, prompt: str, validator: Callable[[str], Tuple[bool, str]], input_type: str, allow_empty: bool = False
@@ -204,10 +205,6 @@ class InputCollector:
             console.print(f"  [{UIColors.SUCCESS}]{option.key}[/{UIColors.SUCCESS}]  {option.description}")
         console.print()
 
-<<<<<<< HEAD
-=======
-        # Get valid keys from CICDOption enum
->>>>>>> origin/main
         valid_keys = [option.key for option in CICDOption]
 
         choice = CharReader.get_cicd_choice(
@@ -216,24 +213,12 @@ class InputCollector:
             default=CICDOption.NONE.key,
         )
 
-<<<<<<< HEAD
         choice_map = {
             CICDOption.BOTH.key: (True, True),
             CICDOption.GITHUB.key: (True, False),
             CICDOption.GITLAB.key: (False, True),
         }
         return choice_map.get(choice, (False, False))
-=======
-        # Parse choice
-        if choice == CICDOption.BOTH.key:
-            return True, True
-        elif choice == CICDOption.GITHUB.key:
-            return True, False
-        elif choice == CICDOption.GITLAB.key:
-            return False, True
-        else:  # Default to none (should not happen due to validation, but kept as fallback)
-            return False, False
->>>>>>> origin/main
 
     def get_nested_apps_config(self) -> Tuple[bool, str | None]:
         UIFormatter.print_separator()
@@ -242,13 +227,7 @@ class InputCollector:
         )
         console.print()
 
-<<<<<<< HEAD
         choice = CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}]")
-=======
-        choice = CharReader.get_yes_no(
-            f"[{UIColors.HIGHLIGHT}]Nested Django apps? (y/N):[/{UIColors.HIGHLIGHT}]", default="n"
-        )
->>>>>>> origin/main
 
         if choice != "y":
             return False, None
@@ -268,16 +247,39 @@ class InputCollector:
         console.print(f"  [{UIColors.SUCCESS}]N[/{UIColors.SUCCESS}]  Use individual database parameters")
         console.print()
 
-<<<<<<< HEAD
         return CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]") == "y"
-=======
-        choice = CharReader.get_yes_no(
-            f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]", default="y"
+
+    def _get_structure_metadata(
+        self, project_dir: str, predefined: bool = False, unified: bool = False
+    ) -> Tuple[str, str, list[str], dict]:
+        """Helper method to get metadata for predefined/unified structures."""
+        project_name = project_dir
+        app_names: list[str] = []
+
+        # Ask for workflows so shared templates for CI/CD can be added
+        use_github, use_gitlab = self.get_cicd_choice()
+
+        # Ask database configuration
+        use_database_url = self.get_database_config_choice()
+
+        # Default package_name to "backend" if project_dir is "." or empty
+        package_name = get_package_name(project_dir)
+
+        project_module_name = "config" if predefined else "core" if unified else None
+
+        metadata = ProjectMetadata(
+            package_name=package_name,
+            use_github_actions=use_github,
+            use_gitlab_ci=use_gitlab,
+            nested_apps=True,
+            nested_dir="apps",
+            use_database_url=use_database_url,
+            predefined_structure=predefined,
+            unified_structure=unified,
+            project_module_name=project_module_name,
         )
 
-        # Return True if choice is 'y', False if 'n'
-        return choice == "y"
->>>>>>> origin/main
+        return project_name, "", app_names, metadata.to_dict()
 
 
 class CharReader:
@@ -290,7 +292,6 @@ class CharReader:
         return CharReader._get_char_unix()
 
     @staticmethod
-<<<<<<< HEAD
     def _is_enter_key(response: str) -> bool:
         """Check if response represents Enter key or control character."""
         return not response or response in ("\r", "\n") or ord(response) < 32
@@ -323,30 +324,10 @@ class CharReader:
                 # Handle Enter key (default)
                 if CharReader._is_enter_key(response):
                     return CharReader._handle_default(default)
-=======
-    def get_yes_no(prompt: str, default: str = "n") -> str:
-        max_attempts = 3
-        attempt = 0
-
-        while attempt < max_attempts:
-            try:
-                console.print(f"{prompt} ", end="")
-                sys.stdout.flush()
-
-                reader = CharReader()
-                response = reader.get_char()
-
-                # Handle Enter key (default) - in raw mode, Enter is '\r' (carriage return)
-                # Also handle empty string or other control characters as Enter
-                if not response or response == "\r" or response == "\n" or ord(response) < 32:
-                    console.print(default.upper())
-                    return default.lower()
->>>>>>> origin/main
 
                 response = response.lower()
 
                 # Validate response
-<<<<<<< HEAD
                 if response in valid_keys_lower:
                     console.print(response.upper())
                     return response
@@ -359,30 +340,11 @@ class CharReader:
                     if attempt < CharReader.MAX_ATTEMPTS:
                         console.print(
                             f"[{UIColors.MUTED}]Please try again ({attempt}/{CharReader.MAX_ATTEMPTS}).[/{UIColors.MUTED}]"
-=======
-                if response in ("y", "n"):
-                    console.print(response.upper())
-                    return response
-
-                # Invalid input - show error (only show if it's a printable character)
-                console.print()
-                if response.isprintable():
-                    UIFormatter.print_error(f"Invalid input '{response}'. Please enter 'y' or 'n'.")
-                    attempt += 1
-                    if attempt < max_attempts:
-                        console.print(
-                            f"[{UIColors.MUTED}]Please try again ({attempt}/{max_attempts}).[/{UIColors.MUTED}]"
->>>>>>> origin/main
                         )
                         console.print()
                 else:
                     # Control character entered, treat as Enter
-<<<<<<< HEAD
                     return CharReader._handle_default(default)
-=======
-                    console.print(default.upper())
-                    return default.lower()
->>>>>>> origin/main
 
             except KeyboardInterrupt:
                 console.print()
@@ -395,7 +357,6 @@ class CharReader:
         return default.lower()
 
     @staticmethod
-<<<<<<< HEAD
     def get_yes_no(prompt: str, default: str = None) -> str:
         # Auto-detect default from prompt format (capital letter indicates default)
         if default is None:
@@ -423,70 +384,16 @@ class CharReader:
             default=default,
             error_message=f"Invalid input '{{response}}'. Please enter one of: {valid_keys_str}.",
         )
-=======
-    def get_cicd_choice(prompt: str, valid_keys: list[str], default: str = "n") -> str:
-        """
-        Get CI/CD choice input with validation and retries.
 
-        Args:
-            prompt: The prompt message to display
-            valid_keys: List of valid key characters (e.g., ['g', 'l', 'b', 'n'])
-            default: Default value if Enter is pressed
-
-        Returns:
-            Valid key (lowercase)
-        """
-        max_attempts = 3
-        attempt = 0
-        valid_keys_lower = [k.lower() for k in valid_keys]
-
-        while attempt < max_attempts:
-            try:
-                console.print(f"{prompt} ", end="")
-                sys.stdout.flush()
-
-                reader = CharReader()
-                response = reader.get_char()
-
-                # Handle Enter key (default) - in raw mode, Enter is '\r' (carriage return)
-                # Also handle empty string or other control characters as Enter
-                if not response or response == "\r" or response == "\n" or ord(response) < 32:
-                    console.print(default.upper())
-                    return default.lower()
-
-                response = response.lower()
-
-                # Validate response
-                if response in valid_keys_lower:
-                    console.print(response.upper())
-                    return response
-
-                # Invalid input - show error (only show if it's a printable character)
-                console.print()
-                if response.isprintable():
-                    valid_keys_str = ", ".join(f"'{k}'" for k in valid_keys)
-                    UIFormatter.print_error(f"Invalid input '{response}'. Please enter one of: {valid_keys_str}.")
-                    attempt += 1
-                    if attempt < max_attempts:
-                        console.print(
-                            f"[{UIColors.MUTED}]Please try again ({attempt}/{max_attempts}).[/{UIColors.MUTED}]"
-                        )
-                        console.print()
-                else:
-                    # Control character entered, treat as Enter
-                    console.print(default.upper())
-                    return default.lower()
-
-            except KeyboardInterrupt:
-                console.print()
-                UIFormatter.print_info("\nOperation cancelled by user.")
-                raise
-
-        # Max attempts reached - use default
-        console.print()
-        UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
-        return default.lower()
->>>>>>> origin/main
+    @staticmethod
+    def get_structure_choice() -> str:
+        """Get structure type choice without requiring Enter key."""
+        return CharReader._get_validated_char_input(
+            prompt=f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3) [default: 1]:[/{UIColors.HIGHLIGHT}]",
+            valid_keys=["1", "2", "3"],
+            default="1",
+            error_message="Invalid input '{response}'. Please enter '1', '2', or '3'.",
+        )
 
     @staticmethod
     def _get_char_windows() -> str:
@@ -497,13 +404,32 @@ class CharReader:
         for encoding in encodings:
             try:
                 ch = msvcrt.getch()
-                return ch.decode(encoding).lower()
+                # Detect Ctrl+C (ETX character \x03)
+                if isinstance(ch, bytes):
+                    if ch == b"\x03":
+                        raise KeyboardInterrupt
+                    decoded = ch.decode(encoding).lower()
+                else:
+                    if ord(ch) == 3:  # Ctrl+C
+                        raise KeyboardInterrupt
+                    decoded = ch.lower()
+                return decoded
             except (UnicodeDecodeError, AttributeError):
                 continue
 
         # Fallback
         try:
-            return msvcrt.getch().lower()
+            ch = msvcrt.getch()
+            if isinstance(ch, bytes):
+                if ch == b"\x03":
+                    raise KeyboardInterrupt
+                return ch.decode("utf-8", errors="ignore").lower()
+            else:
+                if ord(ch) == 3:  # Ctrl+C
+                    raise KeyboardInterrupt
+                return ch.lower()
+        except KeyboardInterrupt:
+            raise
         except Exception:
             return ""
 
@@ -514,201 +440,101 @@ class CharReader:
         try:
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
+            # Detect Ctrl+C (ETX character \x03)
+            if ord(ch) == 3:  # Ctrl+C
+                raise KeyboardInterrupt
             return ch.lower()
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
 def get_user_input() -> Tuple[str, str, str, list, dict]:
-    collector = InputCollector()
-    console.print()
+    try:
+        collector = InputCollector()
+        console.print()
 
-    # Pre-step: Ask for structure type first
-    UIFormatter.print_separator()
-<<<<<<< HEAD
-    console.print(f"\n[{UIColors.INFO}]Choose Structure Type[/{UIColors.INFO}]\n")
-    console.print(f"[{UIColors.MUTED}]1. Standard structure (default Django layout)[/{UIColors.MUTED}]")
-    console.print(f"[{UIColors.MUTED}]2. Predefined structure (apps/users, apps/core, api/)[/{UIColors.MUTED}]")
-    console.print(f"[{UIColors.MUTED}]3. Unified structure (core/, apps/core, apps/api)[/{UIColors.MUTED}]")
-=======
-    console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
+        # Pre-step: Ask for structure type first
+        UIFormatter.print_separator()
+        console.print(f"\n[{UIColors.INFO}]Choose Structure Type[/{UIColors.INFO}]\n")
+        console.print(f"[{UIColors.MUTED}]1. Standard structure (default Django layout)[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.MUTED}]2. Predefined structure (apps/users, apps/core, api/)[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.MUTED}]3. Unified structure (core/, apps/core, apps/api)[/{UIColors.MUTED}]")
+        console.print()
 
-    console.print(f"[{UIColors.HIGHLIGHT}]Project Directory[/{UIColors.HIGHLIGHT}]")
-    console.print(f"[{UIColors.MUTED}]Where your project files will be created[/{UIColors.MUTED}]")
-    console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
+        structure_choice = CharReader.get_structure_choice()
 
-    # Get project directory with special handling for '.' and empty input
-    attempt = 0
-    project_dir = None
+        use_predefined = structure_choice == "2"
+        use_unified = structure_choice == "3"
 
-    while attempt < collector.MAX_ATTEMPTS and project_dir is None:
-        try:
-            user_input = console.input(
-                f"[{UIColors.HIGHLIGHT}]Enter project directory name:[/{UIColors.HIGHLIGHT}] "
-            ).strip()
+        if use_predefined or use_unified:
+            UIFormatter.print_separator()
+            console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
+            console.print(
+                f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]"
+            )
+            project_dir = collector._get_project_directory()
+            if project_dir is None:
+                UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
+                sys.exit(1)
 
-            # Handle empty input or '.' - use current directory
-            if not user_input or user_input == ".":
-                project_dir = "."
-                UIFormatter.print_info(f"Creating project in current directory: {os.getcwd()}")
-                break
+            project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(
+                project_dir, predefined=use_predefined, unified=use_unified
+            )
 
-            # Validate the input
-            is_valid, error_msg = validate_project_name(user_input)
-            if not is_valid:
-                UIFormatter.print_error(error_msg)
-                attempt += 1
-                collector._show_retry_message(attempt)
-                continue
+            return project_dir, project_name, primary_app, app_names, metadata_dict
 
-            # Check if directory exists and ask for alternative
-            if os.path.exists(user_input):
-                UIFormatter.print_error(f"Directory '{user_input}' already exists.")
-                UIFormatter.print_info(
-                    "Please choose a different project directory name (or press Enter for current directory)."
-                )
-                attempt += 1
-                collector._show_retry_message(attempt)
-                continue
-
-            project_dir = user_input
-            break
-
-        except KeyboardInterrupt:
-            UIFormatter.print_info("\nSetup cancelled by user.")
-            sys.exit(0)
-
-    if project_dir is None:
-        UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
-        sys.exit(1)
-
->>>>>>> origin/main
-    console.print()
-
-    structure_choice = console.input(
-        f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3) [default: 1]:[/{UIColors.HIGHLIGHT}] "
-    ).strip()
-    if not structure_choice:
-        structure_choice = "1"
-
-    use_predefined = structure_choice == "2"
-    use_unified = structure_choice == "3"
-
-    if use_predefined:
+        # Section 1: Project Setup (standard flow)
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
         console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
+
         project_dir = collector._get_project_directory()
+
         if project_dir is None:
             UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
             sys.exit(1)
 
-        # Minimal inputs: project_dir only, then ask for CI/CD choice.
-        project_name = project_dir
-        app_names: list[str] = []
+        console.print()
 
-        # Ask for workflows so shared templates for CI/CD can be added
-        use_github, use_gitlab = collector.get_cicd_choice()
-
-        # Ask database configuration for predefined structure as well
-        use_database_url = collector.get_database_config_choice()
-        # Default package_name to "backend" if project_dir is "." or empty
-        package_name = "backend" if project_dir == "." or not project_dir else project_dir
-        metadata = ProjectMetadata(
-            package_name=package_name,
-            use_github_actions=use_github,
-            use_gitlab_ci=use_gitlab,
-            nested_apps=True,
-            nested_dir="apps",
-            use_database_url=use_database_url,
-            predefined_structure=True,
-            project_module_name="config",
+        console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
+        project_name = collector.get_validated_input(
+            "Enter Django project name", validate_project_name, "Django project name"
         )
+        console.print()
 
-        return project_dir, project_name, "", app_names, metadata.to_dict()
-
-    if use_unified:
+        # Section 2: Django Apps
+        console.print()
         UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
-        console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
-        project_dir = collector._get_project_directory()
-        if project_dir is None:
-            UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
-            sys.exit(1)
+        console.print(f"\n[{UIColors.INFO}]Step 2: Django Apps[/{UIColors.INFO}]\n")
+        nested, nested_dir = collector.get_nested_apps_config()
+        app_names = collector.get_app_names()
+        console.print()
 
-        # Minimal inputs: project_dir only, then ask for CI/CD choice.
-        project_name = project_dir
-        app_names: list[str] = []
-
-        # Ask for workflows so shared templates for CI/CD can be added
+        # Section 3: CI/CD Pipeline
         use_github, use_gitlab = collector.get_cicd_choice()
 
-        # Ask database configuration for unified structure as well
+        # Section 4: Database Configuration
         use_database_url = collector.get_database_config_choice()
+
+        # Create metadata
         # Default package_name to "backend" if project_dir is "." or empty
-        package_name = "backend" if project_dir == "." or not project_dir else project_dir
+        package_name = get_package_name(project_dir)
         metadata = ProjectMetadata(
             package_name=package_name,
             use_github_actions=use_github,
             use_gitlab_ci=use_gitlab,
-            nested_apps=True,
-            nested_dir="apps",
+            nested_apps=nested,
+            nested_dir=nested_dir,
             use_database_url=use_database_url,
-            unified_structure=True,
-            project_module_name="core",
         )
 
-        return project_dir, project_name, "", app_names, metadata.to_dict()
+        console.print()
 
-    # Section 1: Project Setup (standard flow)
-    UIFormatter.print_separator()
-    console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
-    console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
-
-    project_dir = collector._get_project_directory()
-
-    if project_dir is None:
-        UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
-        sys.exit(1)
-
-    console.print()
-
-    console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
-    project_name = collector.get_validated_input(
-        "Enter Django project name", validate_project_name, "Django project name"
-    )
-    console.print()
-
-    # Section 2: Django Apps
-    console.print()
-    UIFormatter.print_separator()
-    console.print(f"\n[{UIColors.INFO}]Step 2: Django Apps[/{UIColors.INFO}]\n")
-    nested, nested_dir = collector.get_nested_apps_config()
-    app_names = collector.get_app_names()
-    console.print()
-
-    # Section 3: CI/CD Pipeline
-    use_github, use_gitlab = collector.get_cicd_choice()
-
-    # Section 4: Database Configuration
-    use_database_url = collector.get_database_config_choice()
-
-    # Create metadata
-    # Default package_name to "backend" if project_dir is "." or empty
-    package_name = "backend" if project_dir == "." or not project_dir else project_dir
-    metadata = ProjectMetadata(
-        package_name=package_name,
-        use_github_actions=use_github,
-        use_gitlab_ci=use_gitlab,
-        nested_apps=nested,
-        nested_dir=nested_dir,
-        use_database_url=use_database_url,
-    )
-
-    console.print()
-
-    # Return in legacy format for backward compatibility
-    return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
+        # Return in legacy format for backward compatibility
+        return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
+    except KeyboardInterrupt:
+        UIFormatter.print_info("\nSetup cancelled by user.")
+        sys.exit(0)
 
 
 def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata: dict) -> bool:
@@ -734,13 +560,7 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
     console.print()
 
     try:
-<<<<<<< HEAD
         response = CharReader.get_yes_no(f"[{UIColors.WARNING}]Proceed with setup? (y/N):[/{UIColors.WARNING}]")
-=======
-        response = CharReader.get_yes_no(
-            f"[{UIColors.WARNING}]Proceed with setup? (y/N):[/{UIColors.WARNING}]", default="n"
-        )
->>>>>>> origin/main
         return response == "y"
 
     except KeyboardInterrupt:

@@ -9,8 +9,11 @@ from djinit.scripts.template_engine import template_engine
 from djinit.utils import (
     calculate_app_module_paths,
     change_cwd,
+    create_directory_with_init,
+    create_file_from_template,
     create_file_with_content,
-    create_init_file,
+    create_files_from_templates,
+    get_package_name,
 )
 
 
@@ -42,21 +45,29 @@ class FileManager:
             content = template_engine.render_template(template_path, context)
             return create_file_with_content(filepath, content, message, should_format=should_format)
 
-    def _ensure_directory_with_init(self, dir_path: str, message: str) -> None:
-        """Helper to create directory and __init__.py file."""
-        os.makedirs(dir_path, exist_ok=True)
-        create_init_file(dir_path, message)
-
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
         base_context = base_context or {}
         for folder, files in folder_specs.items():
             folder_path = os.path.join(base_dir, folder)
-            self._ensure_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
+            create_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
             for filename, template_path in files:
                 file_path = os.path.join(folder_path, filename)
-                content = template_engine.render_template(template_path, base_context)
-                create_file_with_content(file_path, content, f"Created {file_path}")
+                create_file_from_template(file_path, template_path, base_context, f"Created {file_path}")
+
+    def _create_apps_py(self, app_dir: str, app_name: str, message: str = None, should_format: bool = False) -> None:
+        """Helper to create apps.py file for an app."""
+        apps_py_path = os.path.join(app_dir, "apps.py")
+        context = {"app_name": app_name} if app_name else {}
+        msg = message or f"Created {os.path.basename(app_dir)}/apps.py"
+        create_file_from_template(apps_py_path, "base/apps.j2", context, msg, should_format=should_format)
+
+    def _create_subdirectories_with_init(self, base_dir: str, subdirs: list, prefix: str = "") -> None:
+        """Helper to create multiple subdirectories with __init__.py files."""
+        for subdir in subdirs:
+            subdir_path = os.path.join(base_dir, subdir)
+            message = f"Created {prefix}{subdir}/__init__.py" if prefix else f"Created {subdir}/__init__.py"
+            create_directory_with_init(subdir_path, message)
 
     def create_gitignore(self) -> bool:
         return self._render_and_create_file(".gitignore", "shared/gitignore.j2", {}, "Created .gitignore file")
@@ -96,8 +107,7 @@ class FileManager:
     def create_pyproject_toml(self, metadata: dict) -> bool:
         # Default package_name to "backend" if it's "." or empty
         package_name = metadata.get("package_name", "backend")
-        if package_name == "." or not package_name:
-            package_name = "backend"
+        package_name = get_package_name(package_name)
         context = {"package_name": package_name, "project_name": self.project_name}
         return self._render_and_create_file(
             "pyproject.toml",
@@ -134,16 +144,12 @@ class FileManager:
     def create_predefined_structure(self) -> bool:
         # Ensure apps package
         apps_dir = os.path.join(self.project_root, "apps")
-        self._ensure_directory_with_init(apps_dir, "Created apps/__init__.py")
+        create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
         # users app
         users_dir = os.path.join(apps_dir, "users")
-        self._ensure_directory_with_init(users_dir, "Created apps/users/__init__.py")
-
-        # apps.py can reuse standard app template
-        users_apps_path = os.path.join(users_dir, "apps.py")
-        content = template_engine.render_template("base/apps.j2", {"app_name": "users"})
-        create_file_with_content(users_apps_path, content, "Created apps/users/apps.py")
+        create_directory_with_init(users_dir, "Created apps/users/__init__.py")
+        self._create_apps_py(users_dir, "users")
 
         # Nested folders and files for users
         users_subfolders = {
@@ -157,12 +163,13 @@ class FileManager:
 
         # users urls.py at app root
         users_urls_path = os.path.join(users_dir, "urls.py")
-        content = template_engine.render_template("predefined/apps/users/urls.j2", {"app_module": "apps.users"})
-        create_file_with_content(users_urls_path, content, "Created apps/users/urls.py")
+        create_file_from_template(
+            users_urls_path, "predefined/apps/users/urls.j2", {"app_module": "apps.users"}, "Created apps/users/urls.py"
+        )
 
         # core app
         core_dir = os.path.join(apps_dir, "core")
-        self._ensure_directory_with_init(core_dir, "Created apps/core/__init__.py")
+        create_directory_with_init(core_dir, "Created apps/core/__init__.py")
 
         # core subfolders and files
         core_subfolders = {
@@ -174,28 +181,30 @@ class FileManager:
 
         # core/exceptions.py
         exceptions_path = os.path.join(core_dir, "exceptions.py")
-        content = template_engine.render_template("predefined/core/exceptions.j2", {})
-        create_file_with_content(exceptions_path, content, "Created apps/core/exceptions.py")
+        create_file_from_template(
+            exceptions_path, "predefined/core/exceptions.j2", {}, "Created apps/core/exceptions.py"
+        )
 
         # api package
         api_dir = os.path.join(self.project_root, "api")
-        self._ensure_directory_with_init(api_dir, "Created api/__init__.py")
+        create_directory_with_init(api_dir, "Created api/__init__.py")
         api_urls_path = os.path.join(api_dir, "urls.py")
-        content = template_engine.render_template("predefined/api/urls.j2", {})
-        create_file_with_content(api_urls_path, content, "Created api/urls.py")
+        create_file_from_template(api_urls_path, "predefined/api/urls.j2", {}, "Created api/urls.py")
 
         # api/v1
         api_v1_dir = os.path.join(api_dir, "v1")
-        self._ensure_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
+        create_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
         api_v1_urls_path = os.path.join(api_v1_dir, "urls.py")
-        content = template_engine.render_template("predefined/api/v1/urls.j2", {})
-        create_file_with_content(api_v1_urls_path, content, "Created api/v1/urls.py")
+        create_file_from_template(api_v1_urls_path, "predefined/api/v1/urls.j2", {}, "Created api/v1/urls.py")
 
         # overwrite project urls to include api
         project_urls_path = os.path.join(self.project_configs, "urls.py")
-        content = template_engine.render_template("project/urls_with_api.j2", {"api_module": "api"})
-        create_file_with_content(
-            project_urls_path, content, "Updated project urls.py to include API routes", should_format=True
+        create_file_from_template(
+            project_urls_path,
+            "project/urls_with_api.j2",
+            {"api_module": "api"},
+            "Updated project urls.py to include API routes",
+            should_format=True,
         )
 
         return True
@@ -203,11 +212,11 @@ class FileManager:
     def create_unified_structure(self) -> bool:
         # Create core directory structure
         core_dir = os.path.join(self.project_root, "core")
-        self._ensure_directory_with_init(core_dir, "Created core/__init__.py")
+        create_directory_with_init(core_dir, "Created core/__init__.py")
 
         # Create core/settings directory
         settings_dir = os.path.join(core_dir, "settings")
-        self._ensure_directory_with_init(settings_dir, "Created core/settings/__init__.py")
+        create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
 
         # Generate secret key for development settings
         from djinit.scripts.secretkey_generator import generate_secret_key
@@ -230,8 +239,10 @@ class FileManager:
             ("production.py", base_context),
         ]:
             filepath = os.path.join(settings_dir, filename)
-            content = template_engine.render_template(f"project/settings/{filename.replace('.py', '')}.j2", context)
-            create_file_with_content(filepath, content, f"Created core/settings/{filename}", should_format=True)
+            template_path = f"project/settings/{filename.replace('.py', '')}.j2"
+            create_file_from_template(
+                filepath, template_path, context, f"Created core/settings/{filename}", should_format=True
+            )
 
         # Core project files
         core_files = [
@@ -241,66 +252,54 @@ class FileManager:
         ]
         for filename, template, context in core_files:
             filepath = os.path.join(core_dir, filename)
-            content = template_engine.render_template(template, context)
-            create_file_with_content(filepath, content, f"Created core/{filename}", should_format=True)
+            create_file_from_template(filepath, template, context, f"Created core/{filename}", should_format=True)
 
         # Create apps directory
         apps_dir = os.path.join(self.project_root, "apps")
-        self._ensure_directory_with_init(apps_dir, "Created apps/__init__.py")
+        create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
         # Create apps/core
         apps_core_dir = os.path.join(apps_dir, "core")
-        self._ensure_directory_with_init(apps_core_dir, "Created apps/core/__init__.py")
+        create_directory_with_init(apps_core_dir, "Created apps/core/__init__.py")
 
         # Create apps/core/apps.py
-        apps_py_path = os.path.join(apps_core_dir, "apps.py")
-        content = template_engine.render_template("base/apps.j2", {})
-        create_file_with_content(apps_py_path, content, "Created apps/core/apps.py", should_format=True)
+        self._create_apps_py(apps_core_dir, "", "Created apps/core/apps.py", should_format=True)
 
         # Create apps/core/models
         models_dir = os.path.join(apps_core_dir, "models")
-        os.makedirs(models_dir, exist_ok=True)
         model_files = [
             ("__init__.py", "base/models.j2"),
             ("base.py", "unified/apps/core/models/base.py.j2"),
             ("mixins.py", "unified/apps/core/models/mixins.py.j2"),
         ]
-        for filename, template in model_files:
-            filepath = os.path.join(models_dir, filename)
-            content = template_engine.render_template(template, {})
-            create_file_with_content(filepath, content, f"Created apps/core/models/{filename}", should_format=True)
+        os.makedirs(models_dir, exist_ok=True)
+        create_files_from_templates(
+            models_dir, [(f, t, {}) for f, t in model_files], "apps/core/models/", should_format=True
+        )
 
         # Create apps/core/utils
         utils_dir = os.path.join(apps_core_dir, "utils")
-        os.makedirs(utils_dir, exist_ok=True)
         utils_files = [
             ("__init__.py", "unified/apps/core/utils/__init__.py.j2"),
             ("responses.py", "unified/apps/core/utils/responses.py.j2"),
         ]
-        for filename, template in utils_files:
-            filepath = os.path.join(utils_dir, filename)
-            content = template_engine.render_template(template, {})
-            create_file_with_content(filepath, content, f"Created apps/core/utils/{filename}", should_format=True)
+        os.makedirs(utils_dir, exist_ok=True)
+        create_files_from_templates(
+            utils_dir, [(f, t, {}) for f, t in utils_files], "apps/core/utils/", should_format=True
+        )
 
         # Create apps/core/permissions and middleware
-        for subdir in ["permissions", "middleware"]:
-            subdir_path = os.path.join(apps_core_dir, subdir)
-            self._ensure_directory_with_init(subdir_path, f"Created apps/core/{subdir}/__init__.py")
+        self._create_subdirectories_with_init(apps_core_dir, ["permissions", "middleware"], "apps/core/")
 
         # Create apps/api
         apps_api_dir = os.path.join(apps_dir, "api")
-        self._ensure_directory_with_init(apps_api_dir, "Created apps/api/__init__.py")
-
-        # Create apps/api/apps.py
-        apps_py_path = os.path.join(apps_api_dir, "apps.py")
-        content = template_engine.render_template("base/apps.j2", {"app_name": "apps.api"})
-        create_file_with_content(apps_py_path, content, "Created apps/api/apps.py", should_format=True)
+        create_directory_with_init(apps_api_dir, "Created apps/api/__init__.py")
+        self._create_apps_py(apps_api_dir, "apps.api", "Created apps/api/apps.py", should_format=True)
 
         # Create apps/api subdirectories
-        api_subdirs = ["models", "serializers", "views", "services", "tests", "urls", "admin"]
-        for subdir in api_subdirs:
-            subdir_path = os.path.join(apps_api_dir, subdir)
-            self._ensure_directory_with_init(subdir_path, f"Created apps/api/{subdir}/__init__.py")
+        self._create_subdirectories_with_init(
+            apps_api_dir, ["models", "serializers", "views", "services", "tests", "urls", "admin"], "apps/api/"
+        )
 
         return True
 
