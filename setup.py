@@ -16,7 +16,6 @@ setup(
         "click>=8.3.0",
         "rich>=14.2.0",
         "jinja2>=3.1.0",
-        "django>=4.2,<6.0",
     ],
     entry_points={
         "console_scripts": [
