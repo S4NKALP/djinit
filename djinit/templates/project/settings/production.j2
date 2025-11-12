@@ -28,7 +28,16 @@ DATABASES = {
 }
 {% endif %}
 
+# CORS settings for production
+# Filter out empty strings from FRONTEND_URL
+frontend_urls = os.getenv("FRONTEND_URL", "")
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() for origin in frontend_urls.split(",") if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True
 
+# Additional CORS security for production
+CORS_ALLOW_PRIVATE_NETWORK = False
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
