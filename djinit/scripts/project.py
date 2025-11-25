@@ -114,7 +114,11 @@ class ProjectManager:
         apps_base_dir = self._get_apps_base_dir()
 
         # In predefined or unified structure, apps layout differs; skip strict per-app validation
-        if not self.metadata.get("predefined_structure") and not self.metadata.get("unified_structure") and not self.metadata.get("single_structure"):
+        if (
+            not self.metadata.get("predefined_structure")
+            and not self.metadata.get("unified_structure")
+            and not self.metadata.get("single_structure")
+        ):
             for app_name in self.app_names:
                 app_files = [
                     os.path.join(apps_base_dir, app_name, "__init__.py"),

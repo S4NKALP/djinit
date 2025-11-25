@@ -51,7 +51,6 @@ class ProjectMetadata:
             "nested_dir": self.nested_dir,
             "use_database_url": self.use_database_url,
             "predefined_structure": self.predefined_structure,
-            "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,
             "project_module_name": self.project_module_name,
@@ -254,7 +253,12 @@ class InputCollector:
         return CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]") == "y"
 
     def _get_structure_metadata(
-        self, project_dir: str, predefined: bool = False, unified: bool = False, single: bool = False, single_module_name: str = None
+        self,
+        project_dir: str,
+        predefined: bool = False,
+        unified: bool = False,
+        single: bool = False,
+        single_module_name: str = None,
     ) -> Tuple[str, str, list[str], dict]:
         """Helper method to get metadata for predefined/unified structures."""
         project_name = project_dir
@@ -270,7 +274,7 @@ class InputCollector:
         package_name = get_package_name(project_dir)
 
         project_module_name = "config" if predefined else "core" if unified else None
-        
+
         if single:
             project_module_name = single_module_name or "project"
 
@@ -486,22 +490,29 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             if project_dir is None:
                 UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
                 sys.exit(1)
-            
+
             # Ask for module name after project directory for single layout
             single_module_name = None
             if use_single:
                 console.print()
                 console.print(f"[{UIColors.MUTED}]Common names: project, core, app[/{UIColors.MUTED}]")
-                single_module_name = collector.get_validated_input(
-                    "Enter project configuration directory name (default: project)",
-                    validate_project_name,
-                    "directory name",
-                    allow_empty=True
-                ) or "project"
+                single_module_name = (
+                    collector.get_validated_input(
+                        "Enter project configuration directory name (default: project)",
+                        validate_project_name,
+                        "directory name",
+                        allow_empty=True,
+                    )
+                    or "project"
+                )
                 console.print()
 
             project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(
-                project_dir, predefined=use_predefined, unified=use_unified, single=use_single, single_module_name=single_module_name
+                project_dir,
+                predefined=use_predefined,
+                unified=use_unified,
+                single=use_single,
+                single_module_name=single_module_name,
             )
 
             return project_dir, project_name, primary_app, app_names, metadata_dict
