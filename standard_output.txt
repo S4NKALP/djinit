@@ -1,0 +1,14 @@
+ℹ 
+
+═════════════════════════════════════════════
+═════════════════════════
+                         Django App Creation 
+═════════════════════════════════════════════
+═════════════════════════
+
+ℹ 
+✓ Created Django app 'testapp' in 
+/home/sankalp/Projects/djinit/test_standard
+✗ Could not find USER_DEFINED_APPS section in
+base.py
+✗ Failed to create Django app 'testapp'
