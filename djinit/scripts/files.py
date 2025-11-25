@@ -303,6 +303,81 @@ class FileManager:
 
         return True
 
+    def create_single_structure(self) -> bool:
+        # Create project directory structure (project/)
+        project_dir = os.path.join(self.project_root, self.module_name)
+        create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
+
+        # Create project/settings directory
+        settings_dir = os.path.join(project_dir, "settings")
+        create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
+
+        # Generate secret key for development settings
+        from djinit.scripts.secretkey_generator import generate_secret_key
+
+        secret_key = generate_secret_key()
+
+        # Create settings files
+        base_context = {
+            "project_name": self.module_name,
+            "app_names": [self.module_name],  # Project acts as the app
+            "use_database_url": self.metadata.get("use_database_url", True),
+        }
+        dev_context = {"secret_key": secret_key}
+
+        for filename, context in [
+            ("base.py", base_context),
+            ("development.py", dev_context),
+            ("production.py", base_context),
+        ]:
+            filepath = os.path.join(settings_dir, filename)
+            template_path = f"project/settings/{filename.replace('.py', '')}.j2"
+            create_file_from_template(
+                filepath, template_path, context, f"Created {self.module_name}/settings/{filename}", should_format=True
+            )
+
+        # Core project files
+        project_files = [
+            ("urls.py", "project/urls_with_api.j2", {"api_module": f"{self.module_name}.api"}),
+            ("wsgi.py", "project/wsgi.j2", {}),
+            ("asgi.py", "project/asgi.j2", {}),
+        ]
+        for filename, template, context in project_files:
+            filepath = os.path.join(project_dir, filename)
+            create_file_from_template(filepath, template, context, f"Created {self.module_name}/{filename}", should_format=True)
+
+        # Create app component directories
+        components = ["admin", "api", "models", "routes", "serializers", "tests", "views"]
+        self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
+        
+        # Create basic files for components to ensure valid python packages/modules
+        
+        # admin
+        create_file_from_template(
+            os.path.join(project_dir, "admin", "__init__.py"), 
+            "base/admin.j2", 
+            {}, 
+            f"Created {self.module_name}/admin/__init__.py"
+        )
+        
+        # api
+        create_file_from_template(
+            os.path.join(project_dir, "api", "urls.py"),
+            "predefined/api/urls.j2",
+            {},
+            f"Created {self.module_name}/api/urls.py"
+        )
+        
+        # models
+        create_file_from_template(
+            os.path.join(project_dir, "models", "__init__.py"),
+            "base/models.j2",
+            {},
+            f"Created {self.module_name}/models/__init__.py"
+        )
+
+        return True
+
     def create_procfile(self) -> bool:
         context = {"project_name": self.project_name}
         return self._render_and_create_file(

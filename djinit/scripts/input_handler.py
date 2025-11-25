@@ -37,7 +37,9 @@ class ProjectMetadata:
     use_database_url: bool = False
     # predefined structure support
     predefined_structure: bool = False
+    predefined_structure: bool = False
     unified_structure: bool = False
+    single_structure: bool = False
     project_module_name: str | None = None
 
     def to_dict(self) -> dict:
@@ -49,7 +51,9 @@ class ProjectMetadata:
             "nested_dir": self.nested_dir,
             "use_database_url": self.use_database_url,
             "predefined_structure": self.predefined_structure,
+            "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
+            "single_structure": self.single_structure,
             "project_module_name": self.project_module_name,
         }
 
@@ -250,7 +254,7 @@ class InputCollector:
         return CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]") == "y"
 
     def _get_structure_metadata(
-        self, project_dir: str, predefined: bool = False, unified: bool = False
+        self, project_dir: str, predefined: bool = False, unified: bool = False, single: bool = False, single_module_name: str = None
     ) -> Tuple[str, str, list[str], dict]:
         """Helper method to get metadata for predefined/unified structures."""
         project_name = project_dir
@@ -266,6 +270,9 @@ class InputCollector:
         package_name = get_package_name(project_dir)
 
         project_module_name = "config" if predefined else "core" if unified else None
+        
+        if single:
+            project_module_name = single_module_name or "project"
 
         metadata = ProjectMetadata(
             package_name=package_name,
@@ -276,6 +283,7 @@ class InputCollector:
             use_database_url=use_database_url,
             predefined_structure=predefined,
             unified_structure=unified,
+            single_structure=single,
             project_module_name=project_module_name,
         )
 
@@ -389,10 +397,10 @@ class CharReader:
     def get_structure_choice() -> str:
         """Get structure type choice without requiring Enter key."""
         return CharReader._get_validated_char_input(
-            prompt=f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3) [default: 1]:[/{UIColors.HIGHLIGHT}]",
-            valid_keys=["1", "2", "3"],
+            prompt=f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3/4) [default: 1]:[/{UIColors.HIGHLIGHT}]",
+            valid_keys=["1", "2", "3", "4"],
             default="1",
-            error_message="Invalid input '{response}'. Please enter '1', '2', or '3'.",
+            error_message="Invalid input '{response}'. Please enter '1', '2', '3', or '4'.",
         )
 
     @staticmethod
@@ -459,14 +467,16 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         console.print(f"[{UIColors.MUTED}]1. Standard structure (default Django layout)[/{UIColors.MUTED}]")
         console.print(f"[{UIColors.MUTED}]2. Predefined structure (apps/users, apps/core, api/)[/{UIColors.MUTED}]")
         console.print(f"[{UIColors.MUTED}]3. Unified structure (core/, apps/core, apps/api)[/{UIColors.MUTED}]")
+        console.print(f"[{UIColors.MUTED}]4. Single folder layout (everything in one folder)[/{UIColors.MUTED}]")
         console.print()
 
         structure_choice = CharReader.get_structure_choice()
 
         use_predefined = structure_choice == "2"
         use_unified = structure_choice == "3"
+        use_single = structure_choice == "4"
 
-        if use_predefined or use_unified:
+        if use_predefined or use_unified or use_single:
             UIFormatter.print_separator()
             console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
             console.print(
@@ -476,9 +486,22 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             if project_dir is None:
                 UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
                 sys.exit(1)
+            
+            # Ask for module name after project directory for single layout
+            single_module_name = None
+            if use_single:
+                console.print()
+                console.print(f"[{UIColors.MUTED}]Common names: project, core, app[/{UIColors.MUTED}]")
+                single_module_name = collector.get_validated_input(
+                    "Enter project configuration directory name (default: project)",
+                    validate_project_name,
+                    "directory name",
+                    allow_empty=True
+                ) or "project"
+                console.print()
 
             project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(
-                project_dir, predefined=use_predefined, unified=use_unified
+                project_dir, predefined=use_predefined, unified=use_unified, single=use_single, single_module_name=single_module_name
             )
 
             return project_dir, project_name, primary_app, app_names, metadata_dict

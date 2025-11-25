@@ -54,6 +54,15 @@ class Cli:
                 # propagate to managers
                 self.project_manager.app_names = self.app_names
 
+        # If single structure is enabled, adjust metadata defaults
+        if self.metadata.get("single_structure"):
+            # Module name is already set in input_handler
+            # No nested apps
+            self.metadata.setdefault("nested_apps", False)
+            if not self.app_names:
+                self.app_names = []
+                self.project_manager.app_names = self.app_names
+
         steps: List[Tuple[str, Callable[[], bool]]] = []
 
         steps.append(("Creating Django project", self.project_manager.create_project))
@@ -61,6 +70,9 @@ class Cli:
         if self.metadata.get("unified_structure"):
             # Build unified structure
             steps.append(("Creating unified structure", self.file_manager.create_unified_structure))
+        elif self.metadata.get("single_structure"):
+            # Build single folder structure
+            steps.append(("Creating single folder structure", self.file_manager.create_single_structure))
         elif self.metadata.get("predefined_structure"):
             # Build custom tree and then inject apps into settings
             steps.append(("Creating predefined structure", self.file_manager.create_predefined_structure))
