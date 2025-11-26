@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeRemainingColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
 
@@ -79,7 +79,6 @@ class UIFormatter:
             TextColumn("[bold blue]{task.description}"),
             BarColumn(bar_width=40),
             TaskProgressColumn(),
-            TimeRemainingColumn(),
             console=console,
         )
         task = progress.add_task(description, total=total_steps)
