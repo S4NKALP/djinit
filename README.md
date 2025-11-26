@@ -2,7 +2,7 @@
 
 <div align="center">
 
-> PyPI did not allow the original name, so the package is released as **djinitx**
+> PyPI didn't allow the original name, so you'll find it as **djinitx** on PyPI
 
 <img src="https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white" alt="PyPI">
 <img src="https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2-0C4B33?logo=django&logoColor=white" alt="Django">
@@ -11,393 +11,239 @@
 
 </div>
 
-A fast, interactive CLI to bootstrap a modern, production‑ready Django project in minutes — featuring split settings, DRF and JWT integration, OpenAPI docs, CORS, static file handling via WhiteNoise, Postgres‑friendly configuration, CI/CD templates, deployment helpers, and battle‑tested defaults that deliver a polished developer experience out of the box.
+**djinit** helps you set up a production-ready Django project in minutes. No more copy-pasting settings or manually wiring up apps, just answer a few questions and get a modern Django project with REST API, authentication, documentation, and deployment configs ready to go.
 
-## Features
+## Why djinit?
 
-- ✨ **Split settings**: `settings/base.py`, `settings/development.py`, `settings/production.py`
-- 🏗️ **Three structure types**: Standard Django layout, Predefined structure, or Unified structure
-- 🧱 **Flexible app layout**: Flat or nested apps package (e.g., `apps/`)
-- 🧩 **Complete app scaffolding**: URLs, serializers, routes, views, models, admin, tests
-- 🔗 **Auto-wired URLs**: Project URLs automatically include your apps
-- 🧰 **Essential utility files**: `.gitignore`, `README.md`, `.env.sample`, `requirements.txt`, `pyproject.toml`
-- 🚀 **Deployment helpers**: `Justfile`, `Procfile`, `runtime.txt`
-- 🛠️ **CI/CD templates**: GitHub Actions and/or GitLab CI workflows
-- 🔐 **Secret key generator**: Generate secure Django secret keys
-- 🎨 **Polished UX**: Beautiful interactive interface with `rich` library
-- 📦 **App management**: Add apps to existing projects with automatic settings configuration
+Starting a Django project usually means spending hours setting up the same things: splitting settings for dev/prod, configuring DRF, adding JWT auth, setting up CORS, preparing for deployment. djinit does all of this for you with sensible defaults and lets you choose the project structure that fits your needs.
 
 ## Installation
 
-Using pipx (recommended):
+**Recommended** (using pipx):
 
 ```bash
 pipx install djinitx
 ```
 
-Using pip:
+Or with pip:
 
 ```bash
 pip install djinitx
 ```
 
-Using uv:
+Or with uv:
 
 ```bash
 uv tool install djinitx
 ```
 
-From source:
-
-```bash
-git clone https://github.com/S4NKALP/djinit
-cd djinit
-pip install -e .
-```
-
 **Requirements**: Python 3.13+
 
-## Quick Start
+## Getting Started
 
-Run the interactive setup:
+Just run:
 
 ```bash
 djinit setup
-# or
+```
+
+You can also use the shorter alias:
+
+```bash
 dj setup
 ```
 
-The interactive setup will guide you through:
+The tool will ask you a few questions:
 
-1. **Structure Type Selection**:
-   - Standard structure (default Django layout)
-   - Predefined structure (`apps/users`, `apps/core`, `api/` layout)
-   - Unified structure (`core/`, `apps/core`, `apps/api` layout)
+1. **What structure do you want?**
+   - **Standard**: Classic Django layout with split settings
+   - **Single Folder**: All apps in one configurable folder (simple and flat)
+   - **Predefined**: Organized with `apps/` and `api/` folders (great for larger projects)
+   - **Unified**: Everything under `core/` and `apps/` (clean and minimal)
 
-2. **Project Configuration**:
-   - Project directory (or use current directory with `.`)
-   - Django project name (used for the config module)
-   - Apps layout (flat vs nested package like `apps/`)
-   - App names (comma‑separated)
+2. **Project details**:
+   - Where to create it (use `.` for current directory)
+   - Project name
+   - Whether to use an `apps/` folder
+   - Which apps to create
 
-3. **CI/CD Configuration**:
-   - GitHub Actions only
-   - GitLab CI only
-   - Both (GitHub Actions + GitLab CI)
-   - None (skip CI/CD)
+3. **CI/CD setup** (optional):
+   - GitHub Actions, GitLab CI, both, or skip it
 
-4. **Database Configuration**:
-   - Use `DATABASE_URL` (recommended for production)
-   - Use individual database parameters
+4. **Database config**:
+   - Use `DATABASE_URL` (cleaner, recommended)
+   - Or separate DB variables
+
+That's it! Your project will be ready with everything configured.
+
+## What You Get
+
+Every project includes:
+
+✅ **Split settings** for development and production
+✅ **Django REST Framework** with JWT authentication
+✅ **API documentation** (Swagger UI at `/docs/`)
+✅ **CORS** configured for local development
+✅ **WhiteNoise** for serving static files
+✅ **PostgreSQL** support (SQLite for dev)
+✅ **Modern admin** interface (django-jazzmin)
+✅ **Deployment ready** with Procfile and runtime.txt
+✅ **Development tools** (Justfile with common commands)
+✅ **Environment template** (.env.sample)
+✅ **Git ready** (.gitignore included)
 
 ## Commands
 
-### Setup Command
-
-Launch the interactive project generator:
+### Create a Project
 
 ```bash
 djinit setup
-# or
-dj setup
 ```
 
-### App Command
-
-Create one or more Django apps in an existing project:
+### Add Apps to Existing Project
 
 ```bash
-djinit app <names>
-# or
-dj app <names>
+djinit app users products orders
 ```
 
-**Examples**:
+This automatically creates the apps, adds them to `INSTALLED_APPS`, and wires up URLs.
 
-- `djinit app users` or `dj app users`
-- `djinit app users,products,orders` or `dj app users,products,orders`
-- `djinit app users products orders` or `dj app users products orders`
-
-The app command automatically:
-
-- Creates the app with all necessary files
-- Adds the app to `INSTALLED_APPS` in `settings/base.py`
-- Configures URLs if using predefined structure
-- Detects and respects your project's structure (nested/flat)
-
-### Secret Command
-
-Generate secure Django `SECRET_KEY` values:
+### Generate Secret Keys
 
 ```bash
-djinit secret [--count N] [--length L]
-# or
-dj secret [--count N] [--length L]
+djinit secret
 ```
 
-**Examples**:
+Need more? Use `--count 5` or change length with `--length 64`.
 
-- `djinit secret` - Generate 3 keys with default length (50)
-- `djinit secret --count 5 --length 50` - Generate 5 keys of length 50
-- `dj secret --count 10 --length 64` - Generate 10 keys of length 64
-
-## Project Structure Types
+## Project Structures
 
 ### Standard Structure
 
-The default Django layout with split settings:
+The classic Django layout with split settings:
 
 ```
-project_name/
+myproject/
 ├── manage.py
-├── project_name/
-│   ├── __init__.py
-│   ├── settings/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── development.py
-│   │   └── production.py
+├── myproject/          # Config module
+│   ├── settings/       # Split settings
 │   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-├── apps/              # Optional nested apps
-│   └── <app_name>/
-│       ├── urls.py
-│       ├── serializers.py
-│       ├── routes.py
-│       └── ...
-└── <app_name>/        # Or flat apps
-    └── ...
+│   └── wsgi.py
+└── apps/               # Your apps (optional)
+    └── users/
+```
+
+### Single Folder Layout
+
+Simple structure with all apps in one folder:
+
+```
+myproject/
+├── manage.py
+├── project/            # Configurable folder name
+│   ├── settings/
+│   ├── urls.py
+│   ├── models/         # All models here
+│   ├── api/            # API views and serializers
+│   │   └── your_model_name/
+│   │       ├── views.py
+│   │       ├── serializers.py
+│   │       └── urls.py
+│   └── wsgi.py
+└── static/
 ```
 
 ### Predefined Structure
 
-A production-ready structure with `apps/` and `api/` packages:
+Organized for larger projects:
 
 ```
-project_name/
+myproject/
 ├── manage.py
-├── config/             # Django config module
+├── config/             # Django config
 │   ├── settings/
-│   │   ├── base.py
-│   │   ├── development.py
-│   │   └── production.py
 │   └── urls.py
-├── apps/
-│   ├── users/          # Pre-configured users app
-│   │   ├── models/
-│   │   ├── serializers/
-│   │   ├── views/
-│   │   ├── services/
-│   │   └── tests/
-│   └── core/           # Core utilities
-│       ├── exceptions.py
-│       ├── utils/
-│       ├── mixins/
-│       └── middleware/
-└── api/
-    ├── urls.py
+├── apps/               # Business logic
+│   ├── users/
+│   └── core/
+└── api/                # API routes
     └── v1/
-        └── urls.py
 ```
 
 ### Unified Structure
 
-A unified structure with `core/` as the main module:
+Clean and minimal:
 
 ```
-project_name/
+myproject/
 ├── manage.py
-├── core/               # Main Django config
+├── core/               # Django config
 │   ├── settings/
-│   │   ├── base.py
-│   │   ├── development.py
-│   │   └── production.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-└── apps/
-    ├── core/           # Core app with models, utils
-    │   ├── models/
-    │   └── utils/
-    └── api/            # API app
-        └── ...
+│   └── urls.py
+└── apps/               # Everything else
+    ├── core/
+    └── api/
 ```
-
-## What Gets Generated
-
-### Core Files
-
-- **Django project structure** with split settings
-- **Settings package**: `base.py`, `development.py`, `production.py`
-- **Project URLs**: Auto-configured with app includes
-- **WSGI/ASGI**: Production-ready application entry points
-- **manage.py**: Django management script
-
-### App Files
-
-Each app includes:
-
-- `urls.py` - URL routing
-- `serializers.py` - DRF serializers
-- `routes.py` - API route definitions
-- `views.py` - View classes
-- `models.py` - Database models
-- `admin.py` - Admin configuration
-- `tests.py` - Test structure
-- `apps.py` - App configuration
-- `migrations/` - Migration directory
-
-### Utility Files
-
-- `.gitignore` - Comprehensive Python/Django gitignore
-- `README.md` - Project documentation template
-- `.env.sample` - Environment variables template (includes `SECRET_KEY` placeholder, `DATABASE_URL` or individual DB params, email settings)
-- `requirements.txt` - All necessary dependencies
-- `pyproject.toml` - Modern Python project configuration (includes ruff linting/formatting config)
-- `Justfile` - Development commands (migrations, server, etc.) using `uv run`
-- `Procfile` - PaaS deployment configuration (Heroku, Railway, Render, etc.) with release task for migrations
-- `runtime.txt` - Python version specification
-
-### CI/CD Files
-
-- `.github/workflows/ci.yml` - GitHub Actions workflow (if selected)
-- `.gitlab-ci.yml` - GitLab CI configuration (if selected)
-
-## Included Packages
-
-The generated `requirements.txt` includes:
-
-- **Django** - Web framework
-- **python-dotenv** - Environment variable management
-- **django-jazzmin** - Modern Django admin interface
-- **djangorestframework** - REST API framework
-- **djangorestframework_simplejwt** - JWT authentication (note: underscore in package name)
-- **drf-spectacular** - OpenAPI 3.0 schema generation
-- **django-cors-headers** - CORS handling
-- **whitenoise** - Static file serving for production
-- **psycopg2-binary** - PostgreSQL adapter
-- **gunicorn** - Production WSGI server
-- **dj-database-url** - Database URL parsing (when using `DATABASE_URL`)
-
-This gives you a complete stack with:
-
-- REST API with DRF
-- JWT authentication endpoints: `/token/`, `/token/refresh/`, `/token/blacklist/`
-- OpenAPI documentation at `/docs/` and `/schema/` (available in DEBUG mode only)
-- CORS support (configured for localhost:3000 in development)
-- Production-ready static file handling with WhiteNoise
-- PostgreSQL support (SQLite in development by default)
-
-## Environment and Database
-
-### Environment Variables
-
-A `.env.sample` file is generated with:
-
-- `DJANGO_SETTINGS_MODULE` - Settings module path
-- `SECRET_KEY` - Placeholder for your secret key (use `djinit secret` to generate)
-- `ALLOWED_HOSTS` - Comma-separated list of allowed hosts
-- Database configuration (either `DATABASE_URL` or individual `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`)
-- Email settings (SMTP configuration)
-
-### Database Configuration
-
-**Development (Default)**
-
-- Uses SQLite (`db.sqlite3`) for local development
-- No database configuration needed
-
-**Production**
-
-**Option 1: DATABASE_URL (Recommended)**
-
-If you opt into `DATABASE_URL`, the production settings use `dj-database-url`:
-
-```
-DATABASE_URL=postgres://user:password@host:port/database
-```
-
-**Option 2: Individual Parameters**
-
-Traditional Django database configuration with separate environment variables:
-
-- `DB_NAME` - Database name
-- `DB_USER` - Database user
-- `DB_PASSWORD` - Database password
-- `DB_HOST` - Database host
-- `DB_PORT` - Database port
 
 ## Development Workflow
 
-After setup, use the generated `Justfile` for common tasks (uses `uv` by default):
+Your project comes with a `Justfile` for common tasks:
 
 ```bash
-just dev              # Start development server (uv run python manage.py runserver)
+just dev              # Start dev server
 just migrate          # Run migrations
 just makemigrations   # Create migrations
 just shell            # Django shell
 just test             # Run tests
-just format           # Format code with ruff
-just lint             # Lint code with ruff
-just setup            # Complete setup (uv sync + migrate + createsuperuser)
-just server           # Start production server with gunicorn
+just format           # Format code
+just lint             # Lint code
 ```
 
-**Note**: The Justfile uses `uv run` for all commands. If you're not using `uv`, you can modify the Justfile or use Django commands directly.
+Don't have `just` installed? No problem—these are just shortcuts for standard Django commands.
+
+## What's Included
+
+### Packages
+
+- Django (web framework)
+- Django REST Framework (API)
+- djangorestframework-simplejwt (JWT auth)
+- drf-spectacular (API docs)
+- django-cors-headers (CORS)
+- django-jazzmin (modern admin)
+- whitenoise (static files)
+- psycopg2-binary (PostgreSQL)
+- gunicorn (production server)
+- python-dotenv (environment variables)
 
 ### API Endpoints
 
-The generated project includes:
+- `/admin/` - Django admin
+- `/token/` - Get JWT token
+- `/token/refresh/` - Refresh token
+- `/docs/` - Swagger UI (dev only)
+- `/schema/` - OpenAPI schema (dev only)
 
-- **Admin**: `/admin/`
-- **JWT Authentication**:
-  - `/token/` - Obtain access token
-  - `/token/refresh/` - Refresh access token
-  - `/token/blacklist/` - Blacklist refresh token
-- **API Documentation** (DEBUG mode only):
-  - `/docs/` - Swagger UI
-  - `/schema/` - OpenAPI schema
+### Settings
 
-### Settings Configuration
+**Development**: SQLite, debug mode, console emails, permissive CORS
+**Production**: PostgreSQL, security hardened, SMTP emails, strict CORS
 
-- **Base Settings** (`settings/base.py`):
-  - DRF configuration with JWT authentication
-  - CORS settings
-  - WhiteNoise for static files
-  - Security headers
-  - Pagination (20 items per page)
+## Environment Setup
 
-- **Development Settings** (`settings/development.py`):
-  - SQLite database
-  - DEBUG = True
-  - Console email backend
-  - CORS allows all origins
-  - Generated secret key (replace in production)
+Copy `.env.sample` to `.env` and fill in your values:
 
-- **Production Settings** (`settings/production.py`):
-  - PostgreSQL database (via `DATABASE_URL` or individual params)
-  - DEBUG = False
-  - Security settings (HTTPS redirect, HSTS, secure cookies)
-  - SMTP email configuration
-  - Secret key from environment variable
+```bash
+SECRET_KEY=your-secret-key-here  # Use: djinit secret
+DATABASE_URL=postgres://user:pass@host:5432/db
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+```
+
+For development, SQLite works out of the box—no database setup needed!
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Open an issue for bugs or feature ideas
-2. Fork the repository
-3. Create a feature branch
-4. Submit a pull request with a clear description
-
-## Acknowledgments
-
-- Django and the Django community
-- Jinja2 - Template engine
-- rich - Beautiful terminal output
-- click - CLI framework
-- ruff - Fast Python linter and formatter
+Found a bug or have an idea? Open an issue or submit a pull request. Contributions are always welcome!
 
 ## License
 
