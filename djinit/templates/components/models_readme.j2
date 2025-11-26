@@ -1,0 +1,119 @@
+# Models Directory
+
+This directory contains your Django models.
+
+## Structure
+
+Organize your models as individual Python files:
+
+```
+models/
+├── __init__.py
+├── user.py
+├── product.py
+└── order.py
+```
+
+## Creating a Model
+
+### 1. Create the model file (e.g., `models/user.py`)
+
+```python
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+class User(AbstractUser):
+    """Custom user model."""
+    bio = models.TextField(blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'users'
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+
+    def __str__(self):
+        return self.username
+```
+
+### 2. Import in `models/__init__.py`
+
+```python
+from .user import User
+from .product import Product
+from .order import Order
+
+__all__ = ['User', 'Product', 'Order']
+```
+
+### 3. Create corresponding API endpoints
+
+After creating a model, create the corresponding API structure in the `api/` directory:
+
+```
+api/
+└── user/
+    ├── __init__.py
+    ├── views.py
+    ├── serializers.py
+    └── urls.py
+```
+
+See the `api/README.md` for detailed instructions on creating API endpoints.
+
+### 4. Register in admin (optional)
+
+Create or update `admin/__init__.py`:
+
+```python
+from django.contrib import admin
+from {{ module_name }}.models import User
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['username', 'email', 'created_at']
+    search_fields = ['username', 'email']
+    list_filter = ['is_active', 'created_at']
+```
+
+## Best Practices
+
+1. **One model per file**: Keep each model in its own file for better organization
+2. **Use meaningful names**: Choose clear, descriptive names for models and fields
+3. **Add Meta class**: Define `db_table`, `verbose_name`, and other metadata
+4. **Implement __str__**: Always define a meaningful `__str__` method
+5. **Use mixins**: Create reusable mixins for common fields (e.g., timestamps)
+6. **Add docstrings**: Document your models with clear docstrings
+
+## Common Model Patterns
+
+### Timestamped Model Mixin
+
+```python
+class TimestampedModel(models.Model):
+    """Abstract base class with timestamp fields."""
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+```
+
+### Soft Delete Mixin
+
+```python
+class SoftDeleteModel(models.Model):
+    """Abstract base class with soft delete functionality."""
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+```

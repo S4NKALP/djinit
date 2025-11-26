@@ -94,7 +94,7 @@ class FileManager:
     def create_env_file(self) -> bool:
         """Create .env.sample file with environment variables."""
         context = {
-            "project_name": self.project_name,
+            "project_name": self.module_name,
             "use_database_url": self.metadata.get("use_database_url", True),
         }
         return self._render_and_create_file(
@@ -341,7 +341,11 @@ class FileManager:
 
         # Core project files
         project_files = [
-            ("urls.py", "config/urls/with_api.j2", {"api_module": f"{self.module_name}.api"}),
+            (
+                "urls.py",
+                "config/urls/with_api.j2",
+                {"api_module": f"{self.module_name}.api", "comment_out_api_url": True},
+            ),
             ("wsgi.py", "config/wsgi.j2", {}),
             ("asgi.py", "config/asgi.j2", {}),
         ]
@@ -352,7 +356,9 @@ class FileManager:
             )
 
         # Create app component directories
-        components = ["admin", "api", "models", "routes", "serializers", "tests", "views"]
+        # Note: routes, serializers, views are NOT created here
+        # They should be organized under api/ by model name (e.g., api/user/views.py)
+        components = ["admin", "api", "models", "tests"]
         self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
 
         # Create basic files for components to ensure valid python packages/modules
@@ -365,20 +371,27 @@ class FileManager:
             f"Created {self.module_name}/admin/__init__.py",
         )
 
-        # api
-        create_file_from_template(
-            os.path.join(project_dir, "api", "urls.py"),
-            "presets/predefined/api/urls.j2",
-            {},
-            f"Created {self.module_name}/api/urls.py",
-        )
-
         # models
         create_file_from_template(
             os.path.join(project_dir, "models", "__init__.py"),
             "components/models.j2",
             {},
             f"Created {self.module_name}/models/__init__.py",
+        )
+
+        # Create README files for api and models directories
+        create_file_from_template(
+            os.path.join(project_dir, "api", "README.md"),
+            "components/api_readme.j2",
+            {"module_name": self.module_name},
+            f"Created {self.module_name}/api/README.md",
+        )
+
+        create_file_from_template(
+            os.path.join(project_dir, "models", "README.md"),
+            "components/models_readme.j2",
+            {"module_name": self.module_name},
+            f"Created {self.module_name}/models/README.md",
         )
 
         return True

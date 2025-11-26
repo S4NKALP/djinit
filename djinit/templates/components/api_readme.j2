@@ -1,0 +1,76 @@
+# API Directory
+
+This directory contains your API endpoints organized by model/resource.
+
+## Structure
+
+For each model in your `models/` directory, create a corresponding subdirectory here with the following files:
+
+```
+api/
+├── __init__.py
+├── urls.py          # Main API URL router
+└── <model_name>/    # e.g., user, product, order
+    ├── __init__.py
+    ├── views.py
+    ├── serializers.py
+    └── urls.py
+```
+
+## Example
+
+If you have a `User` model in `models/user.py`, create:
+
+### 1. `api/user/serializers.py`
+```python
+from rest_framework import serializers
+from {{ module_name }}.models.user import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+```
+
+### 2. `api/user/views.py`
+```python
+from rest_framework import viewsets
+from {{ module_name }}.models.user import User
+from .serializers import UserSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+```
+
+### 3. `api/user/urls.py`
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import UserViewSet
+
+router = DefaultRouter()
+router.register(r'', UserViewSet, basename='user')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+```
+
+### 4. Update `api/urls.py`
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    path('user/', include('{{ module_name }}.api.user.urls')),
+    # Add more API endpoints here
+]
+```
+
+## Best Practices
+
+1. **One model per subdirectory**: Keep API endpoints for each model in its own subdirectory
+2. **Consistent naming**: Use lowercase, plural names for API endpoints (e.g., `users/`, `products/`)
+3. **Version your API**: Consider adding versioning (e.g., `api/v1/user/`)
+4. **Use ViewSets**: Leverage DRF's ViewSets for standard CRUD operations
+5. **Custom actions**: Add custom actions using `@action` decorator for non-CRUD operations

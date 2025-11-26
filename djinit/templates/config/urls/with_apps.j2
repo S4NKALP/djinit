@@ -20,7 +20,7 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
     # App URLs
-{% for app in app_names %}    path("", include("{{ app }}.urls")),
+{% if comment_out_api_url %}# {% endif %} {% for app in app_names %}    path("", include("{{ app }}.urls")),
 {% endfor %}]
 
 # Don't show schema in production
