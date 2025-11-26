@@ -26,7 +26,7 @@ class DjangoHelper:
 
             # Create manage.py
             manage_py_path = os.path.join(directory, "manage.py")
-            create_file_from_template(manage_py_path, "shared/manage_py.j2", {}, "Created manage.py")
+            create_file_from_template(manage_py_path, "project/manage_py.j2", {}, "Created manage.py")
             os.chmod(manage_py_path, 0o755)
 
             # For unified structure, the project config is "core", not project_name
@@ -45,18 +45,18 @@ class DjangoHelper:
 
             base_context = {"project_name": project_name, "app_names": []}
             settings_files = [
-                ("base.py", "project/settings/base.j2", base_context),
-                ("development.py", "project/settings/development.j2", {}),
-                ("production.py", "project/settings/production.j2", {}),
+                ("base.py", "config/settings/base.j2", base_context),
+                ("development.py", "config/settings/development.j2", {}),
+                ("production.py", "config/settings/production.j2", {}),
             ]
             create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
             # Create project-level files
             urls_context = {"project_name": project_name, "django_version": DjangoHelper.DJANGO_VERSION}
             project_files = [
-                ("urls.py", "project/urls.j2", urls_context),
-                ("wsgi.py", "project/wsgi.j2", {}),
-                ("asgi.py", "project/asgi.j2", {}),
+                ("urls.py", "config/urls/base.j2", urls_context),
+                ("wsgi.py", "config/wsgi.j2", {}),
+                ("asgi.py", "config/asgi.j2", {}),
             ]
             create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
@@ -78,14 +78,14 @@ class DjangoHelper:
             create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
             app_files = [
-                ("apps.py", "base/apps.j2", context),
-                ("models.py", "base/models.j2", context),
-                ("views.py", "base/views.j2", context),
-                ("admin.py", "base/admin.j2", context),
-                ("urls.py", "base/urls.j2", context),
-                ("serializers.py", "base/serializers.j2", context),
-                ("routes.py", "base/routes.j2", context),
-                ("tests.py", "base/tests.j2", context),
+                ("apps.py", "components/apps.j2", context),
+                ("models.py", "components/models.j2", context),
+                ("views.py", "components/views.j2", context),
+                ("admin.py", "components/admin.j2", context),
+                ("urls.py", "components/urls.j2", context),
+                ("serializers.py", "components/serializers.j2", context),
+                ("routes.py", "components/routes.j2", context),
+                ("tests.py", "components/tests.j2", context),
             ]
 
             create_files_from_templates(app_dir, app_files, f"{app_name}/")

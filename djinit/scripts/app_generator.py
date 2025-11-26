@@ -36,6 +36,13 @@ class AppManager:
             )
             return False
 
+        if self._is_restricted_structure():
+            UIFormatter.print_error("The 'app' command is not supported for Unified or Single Folder structures.")
+            UIFormatter.print_info(
+                "Please add new apps manually by creating the necessary files and updating settings."
+            )
+            return False
+
         if self._app_exists():
             UIFormatter.print_error(f"Django app '{self.app_name}' already exists.")
             return False
@@ -144,6 +151,28 @@ class AppManager:
         api_dir = os.path.join(self.current_dir, "api")
         return os.path.isdir(apps_dir) and os.path.isdir(api_dir)
 
+    def _is_restricted_structure(self) -> bool:
+        """Check if the project structure is Unified or Single Folder."""
+        # Check for Unified Structure: apps/api exists
+        apps_api_dir = os.path.join(self.current_dir, "apps", "api")
+        if os.path.isdir(apps_api_dir):
+            return True
+
+        # Check for Single Folder Structure
+        # No apps/ directory, but project dir has models/ and api/
+        apps_dir = os.path.join(self.current_dir, "apps")
+        if os.path.isdir(apps_dir):
+            return False
+
+        project_dir, _ = find_project_dir(self.current_dir)
+        if project_dir:
+            models_dir = os.path.join(project_dir, "models")
+            api_dir = os.path.join(project_dir, "api")
+            if os.path.isdir(models_dir) and os.path.isdir(api_dir):
+                return True
+
+        return False
+
     def _create_predefined_app(self, apps_dir: str) -> bool:
         """Create an app following the predefined nested structure with custom templates."""
         app_dir = os.path.join(apps_dir, self.app_name)
@@ -158,18 +187,18 @@ class AppManager:
         # Create apps.py
         create_file_from_template(
             os.path.join(app_dir, "apps.py"),
-            "base/apps.j2",
+            "components/apps.j2",
             {"app_name": self.app_name},
             f"Created apps/{self.app_name}/apps.py",
         )
 
         # Subfolders
         subfolders = {
-            "models": [(f"{self.app_name}.py", "predefined/apps/generic/models.j2")],
-            "serializers": [(f"{self.app_name}_serializer.py", "predefined/apps/generic/serializers.j2")],
-            "services": [(f"{self.app_name}_service.py", "predefined/apps/generic/services.j2")],
-            "views": [(f"{self.app_name}_view.py", "predefined/apps/generic/views.j2")],
-            "tests": [(f"test_{self.app_name}_api.py", "predefined/apps/generic/tests.j2")],
+            "models": [(f"{self.app_name}.py", "presets/predefined/apps/generic/models.j2")],
+            "serializers": [(f"{self.app_name}_serializer.py", "presets/predefined/apps/generic/serializers.j2")],
+            "services": [(f"{self.app_name}_service.py", "presets/predefined/apps/generic/services.j2")],
+            "views": [(f"{self.app_name}_view.py", "presets/predefined/apps/generic/views.j2")],
+            "tests": [(f"test_{self.app_name}_api.py", "presets/predefined/apps/generic/tests.j2")],
         }
         for folder, files in subfolders.items():
             folder_path = os.path.join(app_dir, folder)
@@ -183,7 +212,7 @@ class AppManager:
         # urls.py at app root
         create_file_from_template(
             os.path.join(app_dir, "urls.py"),
-            "predefined/apps/generic/urls.j2",
+            "presets/predefined/apps/generic/urls.j2",
             {"app_name": self.app_name, "app_module": app_module},
             f"Created apps/{self.app_name}/urls.py",
         )
