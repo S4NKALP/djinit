@@ -24,8 +24,6 @@ class ProjectManager:
         self.app_names = app_names
         self.metadata = metadata
         self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
-        # Support custom module name for the Django config package (e.g., 'config')
-        # Fall back to project_name if key present but None
         self.module_name = metadata.get("project_module_name") or self.project_name
 
     def create_project(self) -> bool:
@@ -59,7 +57,6 @@ class ProjectManager:
                 return False
             UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
 
-        # Add all apps to USER_DEFINED_APPS in settings
         if not self.add_apps_to_settings():
             return False
 
@@ -113,7 +110,6 @@ class ProjectManager:
 
         apps_base_dir = self._get_apps_base_dir()
 
-        # In predefined or unified structure, apps layout differs; skip strict per-app validation
         if (
             not self.metadata.get("predefined_structure")
             and not self.metadata.get("unified_structure")

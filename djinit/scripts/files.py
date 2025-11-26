@@ -23,8 +23,6 @@ class FileManager:
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
-        # Use module name (e.g., 'config') for Django package paths if provided
-        # Fall back to project_name if key present but None
         self.module_name = metadata.get("project_module_name") or project_name
         self.project_configs = os.path.join(project_root, self.module_name)
         self.settings_folder = os.path.join(self.project_configs, "settings")
@@ -105,7 +103,6 @@ class FileManager:
         )
 
     def create_pyproject_toml(self, metadata: dict) -> bool:
-        # Default package_name to "backend" if it's "." or empty
         package_name = metadata.get("package_name", "backend")
         package_name = get_package_name(package_name)
         context = {"package_name": package_name, "project_name": self.project_name}
@@ -142,16 +139,13 @@ class FileManager:
         )
 
     def create_predefined_structure(self) -> bool:
-        # Ensure apps package
         apps_dir = os.path.join(self.project_root, "apps")
         create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
-        # users app
         users_dir = os.path.join(apps_dir, "users")
         create_directory_with_init(users_dir, "Created apps/users/__init__.py")
         self._create_apps_py(users_dir, "users")
 
-        # Nested folders and files for users
         users_subfolders = {
             "models": [("user.py", "presets/predefined/apps/users/models.j2")],
             "serializers": [("user_serializer.py", "presets/predefined/apps/users/serializers.j2")],
@@ -161,7 +155,6 @@ class FileManager:
         }
         self._create_files_from_specs(users_dir, users_subfolders, {"app_module": "apps.users"})
 
-        # users urls.py at app root
         users_urls_path = os.path.join(users_dir, "urls.py")
         create_file_from_template(
             users_urls_path,
@@ -170,11 +163,9 @@ class FileManager:
             "Created apps/users/urls.py",
         )
 
-        # core app
         core_dir = os.path.join(apps_dir, "core")
         create_directory_with_init(core_dir, "Created apps/core/__init__.py")
 
-        # core subfolders and files
         core_subfolders = {
             "utils": [("responses.py", "presets/predefined/core/utils/responses.j2")],
             "mixins": [("timestamped_model.py", "presets/predefined/core/mixins/timestamped_model.j2")],
@@ -182,25 +173,21 @@ class FileManager:
         }
         self._create_files_from_specs(core_dir, core_subfolders, {})
 
-        # core/exceptions.py
         exceptions_path = os.path.join(core_dir, "exceptions.py")
         create_file_from_template(
             exceptions_path, "presets/predefined/core/exceptions.j2", {}, "Created apps/core/exceptions.py"
         )
 
-        # api package
         api_dir = os.path.join(self.project_root, "api")
         create_directory_with_init(api_dir, "Created api/__init__.py")
         api_urls_path = os.path.join(api_dir, "urls.py")
         create_file_from_template(api_urls_path, "presets/predefined/api/urls.j2", {}, "Created api/urls.py")
 
-        # api/v1
         api_v1_dir = os.path.join(api_dir, "v1")
         create_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
         api_v1_urls_path = os.path.join(api_v1_dir, "urls.py")
         create_file_from_template(api_v1_urls_path, "presets/predefined/api/v1/urls.j2", {}, "Created api/v1/urls.py")
 
-        # overwrite project urls to include api
         project_urls_path = os.path.join(self.project_configs, "urls.py")
         create_file_from_template(
             project_urls_path,
@@ -213,21 +200,16 @@ class FileManager:
         return True
 
     def create_unified_structure(self) -> bool:
-        # Create core directory structure
         core_dir = os.path.join(self.project_root, "core")
         create_directory_with_init(core_dir, "Created core/__init__.py")
 
-        # Create core/settings directory
         settings_dir = os.path.join(core_dir, "settings")
         create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
 
-        # Generate secret key for development settings
         from djinit.scripts.secretkey_generator import generate_secret_key
 
         secret_key = generate_secret_key()
 
-        # Create settings files using project templates with unified context
-        # For unified structure, project_module_name is "core"
         base_context = {
             "project_name": "core",  # Use "core" as the module name
             "app_names": ["apps.core", "apps.api"] + [f"apps.{app}" for app in self.app_names],
@@ -235,7 +217,6 @@ class FileManager:
         }
         dev_context = {"secret_key": secret_key}
 
-        # Settings files
         for filename, context in [
             ("base.py", base_context),
             ("development.py", dev_context),
@@ -247,7 +228,6 @@ class FileManager:
                 filepath, template_path, context, f"Created core/settings/{filename}", should_format=True
             )
 
-        # Core project files
         core_files = [
             ("urls.py", "config/urls/with_api.j2", {"api_module": "apps.api"}),
             ("wsgi.py", "config/wsgi.j2", {}),
@@ -257,18 +237,14 @@ class FileManager:
             filepath = os.path.join(core_dir, filename)
             create_file_from_template(filepath, template, context, f"Created core/{filename}", should_format=True)
 
-        # Create apps directory
         apps_dir = os.path.join(self.project_root, "apps")
         create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
-        # Create apps/core
         apps_core_dir = os.path.join(apps_dir, "core")
         create_directory_with_init(apps_core_dir, "Created apps/core/__init__.py")
 
-        # Create apps/core/apps.py
         self._create_apps_py(apps_core_dir, "", "Created apps/core/apps.py", should_format=True)
 
-        # Create apps/core/models
         models_dir = os.path.join(apps_core_dir, "models")
         model_files = [
             ("__init__.py", "components/models.j2"),
@@ -280,7 +256,6 @@ class FileManager:
             models_dir, [(f, t, {}) for f, t in model_files], "apps/core/models/", should_format=True
         )
 
-        # Create apps/core/utils
         utils_dir = os.path.join(apps_core_dir, "utils")
         utils_files = [
             ("__init__.py", "presets/unified/apps/core/utils/__init__.py.j2"),
@@ -291,15 +266,12 @@ class FileManager:
             utils_dir, [(f, t, {}) for f, t in utils_files], "apps/core/utils/", should_format=True
         )
 
-        # Create apps/core/permissions and middleware
         self._create_subdirectories_with_init(apps_core_dir, ["permissions", "middleware"], "apps/core/")
 
-        # Create apps/api
         apps_api_dir = os.path.join(apps_dir, "api")
         create_directory_with_init(apps_api_dir, "Created apps/api/__init__.py")
         self._create_apps_py(apps_api_dir, "apps.api", "Created apps/api/apps.py", should_format=True)
 
-        # Create apps/api subdirectories
         self._create_subdirectories_with_init(
             apps_api_dir, ["models", "serializers", "views", "services", "tests", "urls", "admin"], "apps/api/"
         )
@@ -307,20 +279,16 @@ class FileManager:
         return True
 
     def create_single_structure(self) -> bool:
-        # Create project directory structure (project/)
         project_dir = os.path.join(self.project_root, self.module_name)
         create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
 
-        # Create project/settings directory
         settings_dir = os.path.join(project_dir, "settings")
         create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
 
-        # Generate secret key for development settings
         from djinit.scripts.secretkey_generator import generate_secret_key
 
         secret_key = generate_secret_key()
 
-        # Create settings files
         base_context = {
             "project_name": self.module_name,
             "app_names": [self.module_name],  # Project acts as the app
@@ -339,7 +307,6 @@ class FileManager:
                 filepath, template_path, context, f"Created {self.module_name}/settings/{filename}", should_format=True
             )
 
-        # Core project files
         project_files = [
             (
                 "urls.py",
@@ -355,15 +322,9 @@ class FileManager:
                 filepath, template, context, f"Created {self.module_name}/{filename}", should_format=True
             )
 
-        # Create app component directories
-        # Note: routes, serializers, views are NOT created here
-        # They should be organized under api/ by model name (e.g., api/user/views.py)
         components = ["admin", "api", "models", "tests"]
         self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
 
-        # Create basic files for components to ensure valid python packages/modules
-
-        # admin
         create_file_from_template(
             os.path.join(project_dir, "admin", "__init__.py"),
             "components/admin.j2",
@@ -371,7 +332,6 @@ class FileManager:
             f"Created {self.module_name}/admin/__init__.py",
         )
 
-        # models
         create_file_from_template(
             os.path.join(project_dir, "models", "__init__.py"),
             "components/models.j2",
@@ -379,7 +339,6 @@ class FileManager:
             f"Created {self.module_name}/models/__init__.py",
         )
 
-        # Create README files for api and models directories
         create_file_from_template(
             os.path.join(project_dir, "api", "README.md"),
             "components/api_readme.j2",

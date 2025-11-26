@@ -69,16 +69,13 @@ class AppManager:
         return os.path.exists(app_path)
 
     def _create_django_app(self) -> bool:
-        # Verify manage.py exists in project root
         if not os.path.exists(self.manage_py_path):
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
 
-        # If predefined structure detected (apps/ exists), scaffold nested layout using custom templates
         if self._is_predefined_structure():
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
 
-        # Otherwise, use standard flat app generation
         _, _, apps_base_dir = self._get_project_structure()
         success = DjangoHelper.startapp(self.app_name, apps_base_dir)
         if success:
@@ -101,15 +98,12 @@ class AppManager:
         with open(base_settings_path) as f:
             content = f.read()
 
-        # Get the app's module path (e.g., "apps.users" or just "users")
-        # For predefined structure, use "apps" as nested_dir
         if self._is_predefined_structure():
             app_module_path = f"apps.{self.app_name}"
         else:
             is_nested, nested_dir, _ = self._get_project_structure()
             app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
 
-        # Check if app is already in USER_DEFINED_APPS
         existing_apps = extract_existing_apps(content)
         if app_module_path in existing_apps:
             UIFormatter.print_success(f"App '{app_module_path}' already configured in USER_DEFINED_APPS")
@@ -119,7 +113,6 @@ class AppManager:
             UIFormatter.print_error("Could not find USER_DEFINED_APPS section in base.py")
             return False
 
-        # Add app to USER_DEFINED_APPS list in settings file
         updated_content = insert_apps_into_user_defined_apps(content, [app_module_path])
         if not updated_content:
             return False
@@ -133,33 +126,27 @@ class AppManager:
     def _get_project_structure(self) -> tuple[bool, Optional[str], str]:
         """Get project structure with caching to avoid repeated detection."""
         if self._project_structure_cache is None:
-            # Find project directory with settings/base.py
             project_dir, settings_base_path = find_project_dir(self.current_dir)
 
             if project_dir is None:
                 self._project_structure_cache = (False, None, self.current_dir)
             else:
-                # Detect nested structure from settings file
                 self._project_structure_cache = detect_nested_structure_from_settings(
                     settings_base_path, self.current_dir
                 )
         return self._project_structure_cache
 
     def _is_predefined_structure(self) -> bool:
-        # Heuristic: presence of 'apps' directory at project root (where manage.py lives) and 'api' dir
         apps_dir = os.path.join(self.current_dir, "apps")
         api_dir = os.path.join(self.current_dir, "api")
         return os.path.isdir(apps_dir) and os.path.isdir(api_dir)
 
     def _is_restricted_structure(self) -> bool:
         """Check if the project structure is Unified or Single Folder."""
-        # Check for Unified Structure: apps/api exists
         apps_api_dir = os.path.join(self.current_dir, "apps", "api")
         if os.path.isdir(apps_api_dir):
             return True
 
-        # Check for Single Folder Structure
-        # No apps/ directory, but project dir has models/ and api/
         apps_dir = os.path.join(self.current_dir, "apps")
         if os.path.isdir(apps_dir):
             return False
@@ -179,12 +166,10 @@ class AppManager:
         os.makedirs(app_dir, exist_ok=True)
         create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
 
-        # Compute names for generic templates
         model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
         app_module = f"apps.{self.app_name}"
         base_context = {"app_name": self.app_name, "app_module": app_module, "model_class_name": model_class_name}
 
-        # Create apps.py
         create_file_from_template(
             os.path.join(app_dir, "apps.py"),
             "components/apps.j2",
@@ -192,7 +177,6 @@ class AppManager:
             f"Created apps/{self.app_name}/apps.py",
         )
 
-        # Subfolders
         subfolders = {
             "models": [(f"{self.app_name}.py", "presets/predefined/apps/generic/models.j2")],
             "serializers": [(f"{self.app_name}_serializer.py", "presets/predefined/apps/generic/serializers.j2")],
@@ -209,7 +193,6 @@ class AppManager:
                     file_path, template, base_context, f"Created apps/{self.app_name}/{folder}/{filename}"
                 )
 
-        # urls.py at app root
         create_file_from_template(
             os.path.join(app_dir, "urls.py"),
             "presets/predefined/apps/generic/urls.j2",
@@ -217,7 +200,6 @@ class AppManager:
             f"Created apps/{self.app_name}/urls.py",
         )
 
-        # Add route include to api/v1/urls.py if present
         self._add_to_api_v1_urls(self.app_name)
 
         UIFormatter.print_success(f"Created Django app '{self.app_name}' with predefined structure in {apps_dir}")
@@ -238,10 +220,8 @@ class AppManager:
 
             include_stmt = f'path("{app_name}/", include("apps.{app_name}.urls")),'
             if include_stmt in content:
-                # already present
                 return
 
-            # Insert into urlpatterns list before closing ]
             if "urlpatterns = [" in content:
                 parts = content.split("urlpatterns = [", 1)
                 before = parts[0]
@@ -249,7 +229,6 @@ class AppManager:
                 if "]" in rest:
                     idx = rest.rfind("]")
                     new_rest = rest[:idx]
-                    # ensure newline and indentation
                     if not new_rest.endswith("\n"):
                         new_rest += "\n"
                     new_rest += f"    {include_stmt}\n" + rest[idx:]
@@ -258,5 +237,4 @@ class AppManager:
             with open(api_v1_urls, "w", encoding="utf-8") as f:
                 f.write(content)
         except Exception:
-            # Non-fatal; leave API routes unchanged if edit fails
             return

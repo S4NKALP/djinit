@@ -16,7 +16,6 @@ from djinit.utils import (
 
 
 class DjangoHelper:
-    # Django version to use in generated files (matches Django 5.2)
     DJANGO_VERSION = "5.2"
 
     @staticmethod
@@ -24,22 +23,16 @@ class DjangoHelper:
         try:
             os.makedirs(directory, exist_ok=True)
 
-            # Create manage.py
             manage_py_path = os.path.join(directory, "manage.py")
             create_file_from_template(manage_py_path, "project/manage_py.j2", {}, "Created manage.py")
             os.chmod(manage_py_path, 0o755)
 
-            # For unified structure, the project config is "core", not project_name
-            # The unified structure is created separately by create_unified_structure
             if unified:
-                # Just create manage.py for unified, structure is created by create_unified_structure
                 return True
 
-            # Create project config directory
             project_config_dir = os.path.join(directory, project_name)
             create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
 
-            # Create settings directory and files
             settings_dir = os.path.join(project_config_dir, "settings")
             create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
 
@@ -51,7 +44,6 @@ class DjangoHelper:
             ]
             create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
-            # Create project-level files
             urls_context = {"project_name": project_name, "django_version": DjangoHelper.DJANGO_VERSION}
             project_files = [
                 ("urls.py", "config/urls/base.j2", urls_context),
@@ -74,7 +66,6 @@ class DjangoHelper:
 
             context = {"app_name": app_name, "django_version": DjangoHelper.DJANGO_VERSION}
 
-            # Create app files
             create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
             app_files = [
@@ -90,7 +81,6 @@ class DjangoHelper:
 
             create_files_from_templates(app_dir, app_files, f"{app_name}/")
 
-            # Create migrations directory and __init__.py
             migrations_dir = os.path.join(app_dir, "migrations")
             create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
 

@@ -8,10 +8,8 @@ import re
 import sys
 from typing import Any, Callable, Tuple
 
-# Names that conflict with Django's structure
 DJANGO_RESERVED = {"django", "test", "site-packages", "admin"}
 
-# Common Python builtin modules
 PYTHON_BUILTINS = set(sys.builtin_module_names)
 
 NAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")

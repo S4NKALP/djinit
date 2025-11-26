@@ -16,31 +16,26 @@ from djinit.scripts.input_handler import confirm_setup, get_user_input
 def clear_screen() -> None:
     try:
         if os.name == "nt":
-            subprocess.run("cls", shell=True, check=True)  # Windows
+            subprocess.run("cls", shell=True, check=True)
         else:
-            subprocess.run("clear", shell=True, check=True)  # Linux/MacOS
+            subprocess.run("clear", shell=True, check=True)
     except subprocess.CalledProcessError:
-        # If clearing fails, just print some newlines
         console.print("\n" * 50)
 
 
 def main() -> None:
     args = parse_arguments()
 
-    # Handle secret command
     if args.command == "secret":
         handle_secret_command(args)
         return
 
-    # Handle app command
     if args.command == "app":
         handle_app_command(args)
         return
 
-    # Default to setup command
     clear_screen()
 
-    # Display welcome screen
     console.print()
     console.print(UIFormatter.create_welcome_panel())
     console.print()

@@ -19,7 +19,7 @@ class Cli:
         self.primary_app = primary_app
         self.app_names = app_names
         self.metadata = metadata
-        if project_dir == ".":  # handle '.' for current directory
+        if project_dir == ".":
             self.project_root = os.getcwd()
         else:
             self.project_root = os.path.join(os.getcwd(), project_dir)
@@ -28,36 +28,23 @@ class Cli:
         self.file_manager = FileManager(self.project_root, project_name, app_names, metadata)
 
     def run_setup(self) -> bool:
-        # If predefined structure is enabled, adjust metadata defaults
         if self.metadata.get("predefined_structure"):
-            # Default module name to 'config' for conventional layout
             self.metadata.setdefault("project_module_name", "config")
-            # Ensure nested apps live under 'apps'
             self.metadata.setdefault("nested_apps", True)
             self.metadata.setdefault("nested_dir", "apps")
-            # Default apps for predefined structure
             if not self.app_names:
                 self.app_names = ["users", "core"]
-                # propagate to managers
                 self.project_manager.app_names = self.app_names
 
-        # If unified structure is enabled, adjust metadata defaults
         if self.metadata.get("unified_structure"):
-            # For unified structure, module name is 'core'
             self.metadata.setdefault("project_module_name", "core")
-            # Ensure nested apps live under 'apps'
             self.metadata.setdefault("nested_apps", True)
             self.metadata.setdefault("nested_dir", "apps")
-            # Default apps for unified structure (empty, apps/core and apps/api are created by default)
             if not self.app_names:
                 self.app_names = []
-                # propagate to managers
                 self.project_manager.app_names = self.app_names
 
-        # If single structure is enabled, adjust metadata defaults
         if self.metadata.get("single_structure"):
-            # Module name is already set in input_handler
-            # No nested apps
             self.metadata.setdefault("nested_apps", False)
             if not self.app_names:
                 self.app_names = []
@@ -68,13 +55,10 @@ class Cli:
         steps.append(("Creating Django project", self.project_manager.create_project))
 
         if self.metadata.get("unified_structure"):
-            # Build unified structure
             steps.append(("Creating unified structure", self.file_manager.create_unified_structure))
         elif self.metadata.get("single_structure"):
-            # Build single folder structure
             steps.append(("Creating single folder structure", self.file_manager.create_single_structure))
         elif self.metadata.get("predefined_structure"):
-            # Build custom tree and then inject apps into settings
             steps.append(("Creating predefined structure", self.file_manager.create_predefined_structure))
             steps.append(("Adding apps to settings", self.project_manager.add_apps_to_settings))
         else:
@@ -95,11 +79,9 @@ class Cli:
         total_steps = len(steps)
         success = True
 
-        # Create live progress display
         progress, task = UIFormatter.create_live_progress(description="Setup Progress", total_steps=total_steps)
 
         with progress:
-            # Execute each step with progress tracking
             for step_number, (description, step_func) in enumerate(steps, 1):
                 result = step_func()
                 if not result:
@@ -107,7 +89,6 @@ class Cli:
                     UIFormatter.print_error(f"Step {step_number} failed: {description}")
                     break
 
-                # Update the same progress bar
                 progress.update(task, advance=1, description=f"Step {step_number}/{total_steps}")
 
         return success

@@ -35,7 +35,6 @@ class ProjectMetadata:
     nested_apps: bool = False
     nested_dir: str | None = None
     use_database_url: bool = False
-    # predefined structure support
     predefined_structure: bool = False
     predefined_structure: bool = False
     unified_structure: bool = False
@@ -170,7 +169,6 @@ class InputCollector:
                     f"[{UIColors.HIGHLIGHT}]Enter project directory name:[/{UIColors.HIGHLIGHT}] "
                 ).strip()
 
-                # Handle empty input or '.' - use current directory
                 if not user_input or user_input == ".":
                     UIFormatter.print_info(f"Creating project in current directory: {os.getcwd()}")
                     return "."
@@ -370,14 +368,12 @@ class CharReader:
 
     @staticmethod
     def get_yes_no(prompt: str, default: str = None) -> str:
-        # Auto-detect default from prompt format (capital letter indicates default)
         if default is None:
             if "(Y/n)" in prompt or "(Y/N)" in prompt:
                 default = "y"
             elif "(y/N)" in prompt:
                 default = "n"
             else:
-                # Default to 'y' for yes/no prompts
                 default = "y"
 
         return CharReader._get_validated_char_input(
@@ -416,7 +412,6 @@ class CharReader:
         for encoding in encodings:
             try:
                 ch = msvcrt.getch()
-                # Detect Ctrl+C (ETX character \x03)
                 if isinstance(ch, bytes):
                     if ch == b"\x03":
                         raise KeyboardInterrupt
@@ -452,7 +447,6 @@ class CharReader:
         try:
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
-            # Detect Ctrl+C (ETX character \x03)
             if ord(ch) == 3:  # Ctrl+C
                 raise KeyboardInterrupt
             return ch.lower()
@@ -465,7 +459,6 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         collector = InputCollector()
         console.print()
 
-        # Pre-step: Ask for structure type first
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Choose Structure Type[/{UIColors.INFO}]\n")
         console.print(f"[{UIColors.MUTED}]1. Standard structure (default Django layout)[/{UIColors.MUTED}]")
@@ -491,7 +484,6 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
                 sys.exit(1)
 
-            # Ask for module name after project directory for single layout
             single_module_name = None
             if use_single:
                 console.print()
@@ -517,7 +509,6 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
             return project_dir, project_name, primary_app, app_names, metadata_dict
 
-        # Section 1: Project Setup (standard flow)
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
         console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
@@ -536,7 +527,6 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         )
         console.print()
 
-        # Section 2: Django Apps
         console.print()
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 2: Django Apps[/{UIColors.INFO}]\n")
@@ -544,14 +534,10 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         app_names = collector.get_app_names()
         console.print()
 
-        # Section 3: CI/CD Pipeline
         use_github, use_gitlab = collector.get_cicd_choice()
 
-        # Section 4: Database Configuration
         use_database_url = collector.get_database_config_choice()
 
-        # Create metadata
-        # Default package_name to "backend" if project_dir is "." or empty
         package_name = get_package_name(project_dir)
         metadata = ProjectMetadata(
             package_name=package_name,
@@ -564,7 +550,6 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         console.print()
 
-        # Return in legacy format for backward compatibility
         return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
     except KeyboardInterrupt:
         UIFormatter.print_info("\nSetup cancelled by user.")

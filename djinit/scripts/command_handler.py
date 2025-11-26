@@ -20,17 +20,14 @@ def parse_arguments() -> argparse.Namespace:
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # Setup command (default)
     setup_parser = subparsers.add_parser("setup", help="Create a new Django project")
     setup_parser.add_argument("--project", help="Django project name")
     setup_parser.add_argument("--app", help="Django app name")
 
-    # Secret command
     secret_parser = subparsers.add_parser("secret", help="Generate Django secret keys")
     secret_parser.add_argument("--count", type=int, default=3, help="Number of keys to generate")
     secret_parser.add_argument("--length", type=int, default=50, help="Length of each secret key")
 
-    # App command
     app_parser = subparsers.add_parser("app", help="Create one or more Django apps (comma or space separated)")
     app_parser.add_argument(
         "app_name",
@@ -70,8 +67,6 @@ def handle_app_command(args: argparse.Namespace) -> None:
     UIFormatter.print_header("Django App Creation")
     UIFormatter.print_info("")
 
-    # Parse comma-separated names and validate
-    # args.app_name is a list due to nargs="+"; split each token by comma
     tokens = args.app_name if isinstance(args.app_name, list) else [args.app_name]
     pieces = []
     for token in tokens:
@@ -83,12 +78,10 @@ def handle_app_command(args: argparse.Namespace) -> None:
                 pieces.append(part)
     app_names = pieces
 
-    # If no comma, keep single name behavior
     if not app_names:
         UIFormatter.print_error("App name cannot be empty")
         sys.exit(1)
 
-    # Deduplicate while preserving order
     seen = set()
     deduped_names = []
     for name in app_names:
@@ -102,7 +95,6 @@ def handle_app_command(args: argparse.Namespace) -> None:
             UIFormatter.print_error(f"Invalid app name '{name}': {error_msg}")
             sys.exit(1)
 
-    # Create apps sequentially
     any_failure = False
     for name in deduped_names:
         app_manager = AppManager(name)

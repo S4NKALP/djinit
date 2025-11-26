@@ -45,10 +45,6 @@ class Icons:
 class UIFormatter:
     """Utility class for consistent UI formatting"""
 
-    # ============================================================================
-    # Basic Output Methods
-    # ============================================================================
-
     @staticmethod
     def print_success(message: str, icon: str = Icons.SUCCESS):
         """Print success message"""
@@ -73,10 +69,6 @@ class UIFormatter:
             console.print(f"[{UIColors.INFO}]{icon}[/{UIColors.INFO}] [bold]{message}[/bold]")
         else:
             console.print(f"[{UIColors.INFO}]{message}[/{UIColors.INFO}]")
-
-    # ============================================================================
-    # Progress & Headers
-    # ============================================================================
 
     @staticmethod
     def create_live_progress(description: str = "Setup Progress", total_steps: int = 100):
@@ -104,10 +96,6 @@ class UIFormatter:
         """Print a visual separator"""
         console.print(f"[{style}]{char * width}[/{style}]")
 
-    # ============================================================================
-    # Panels & Tables
-    # ============================================================================
-
     @staticmethod
     def print_panel(content: str, title: str = "", border_style: str = "blue"):
         """Print content in a styled panel"""
@@ -129,10 +117,6 @@ class UIFormatter:
             table.add_row(*[str(v) for v in row.values()])
 
         console.print(table)
-
-    # ============================================================================
-    # Welcome & Summary
-    # ============================================================================
 
     @staticmethod
     def create_welcome_panel():
@@ -170,10 +154,6 @@ class UIFormatter:
             console.print(f"[bold red]{'═' * 70}[/bold red]\n")
             console.print("[red]Setup encountered an error. Check messages above.[/red]\n")
             console.print(f"[bold red]{'═' * 70}[/bold red]\n")
-
-    # ============================================================================
-    # User Input
-    # ============================================================================
 
     @staticmethod
     @contextmanager
