@@ -60,7 +60,7 @@ class FileManager:
         apps_py_path = os.path.join(app_dir, "apps.py")
         context = {"app_name": app_name} if app_name else {}
         msg = message or f"Created {os.path.basename(app_dir)}/apps.py"
-        create_file_from_template(apps_py_path, "base/apps.j2", context, msg, should_format=should_format)
+        create_file_from_template(apps_py_path, "components/apps.j2", context, msg, should_format=should_format)
 
     def _create_subdirectories_with_init(self, base_dir: str, subdirs: list, prefix: str = "") -> None:
         """Helper to create multiple subdirectories with __init__.py files."""
@@ -70,13 +70,13 @@ class FileManager:
             create_directory_with_init(subdir_path, message)
 
     def create_gitignore(self) -> bool:
-        return self._render_and_create_file(".gitignore", "shared/gitignore.j2", {}, "Created .gitignore file")
+        return self._render_and_create_file(".gitignore", "project/gitignore.j2", {}, "Created .gitignore file")
 
     def create_requirements(self) -> bool:
         context = {"use_database_url": self.metadata.get("use_database_url", True)}
         return self._render_and_create_file(
             "requirements.txt",
-            "shared/requirements.j2",
+            "project/requirements.j2",
             context,
             "Created requirements.txt with Django dependencies",
         )
@@ -89,7 +89,7 @@ class FileManager:
             "unified_structure": bool(self.metadata.get("unified_structure")),
             "module_name": self.module_name,
         }
-        return self._render_and_create_file("README.md", "shared/readme.j2", context, "Created README.md file")
+        return self._render_and_create_file("README.md", "project/readme.j2", context, "Created README.md file")
 
     def create_env_file(self) -> bool:
         """Create .env.sample file with environment variables."""
@@ -99,7 +99,7 @@ class FileManager:
         }
         return self._render_and_create_file(
             ".env.sample",
-            "shared/env_sample.j2",
+            "project/env_sample.j2",
             context,
             "Created .env.sample file with generated secret key",
         )
@@ -111,7 +111,7 @@ class FileManager:
         context = {"package_name": package_name, "project_name": self.project_name}
         return self._render_and_create_file(
             "pyproject.toml",
-            "shared/pyproject_toml.j2",
+            "project/pyproject_toml.j2",
             context,
             "Created pyproject.toml file for uv",
         )
@@ -125,7 +125,7 @@ class FileManager:
         }
         return self._render_and_create_file(
             "urls.py",
-            "project/urls_with_apps.j2",
+            "config/urls/with_apps.j2",
             context,
             "Created project urls.py with comprehensive URL configuration",
             base_dir=self.project_configs,
@@ -136,7 +136,7 @@ class FileManager:
         context = {"project_name": self.project_name}
         return self._render_and_create_file(
             "justfile",
-            "shared/justfile.j2",
+            "project/justfile.j2",
             context,
             "Created justfile with Django development tasks",
         )
@@ -153,18 +153,21 @@ class FileManager:
 
         # Nested folders and files for users
         users_subfolders = {
-            "models": [("user.py", "predefined/apps/users/models.j2")],
-            "serializers": [("user_serializer.py", "predefined/apps/users/serializers.j2")],
-            "services": [("user_service.py", "predefined/apps/users/services.j2")],
-            "views": [("user_view.py", "predefined/apps/users/views.j2")],
-            "tests": [("test_user_api.py", "predefined/apps/users/tests.j2")],
+            "models": [("user.py", "presets/predefined/apps/users/models.j2")],
+            "serializers": [("user_serializer.py", "presets/predefined/apps/users/serializers.j2")],
+            "services": [("user_service.py", "presets/predefined/apps/users/services.j2")],
+            "views": [("user_view.py", "presets/predefined/apps/users/views.j2")],
+            "tests": [("test_user_api.py", "presets/predefined/apps/users/tests.j2")],
         }
         self._create_files_from_specs(users_dir, users_subfolders, {"app_module": "apps.users"})
 
         # users urls.py at app root
         users_urls_path = os.path.join(users_dir, "urls.py")
         create_file_from_template(
-            users_urls_path, "predefined/apps/users/urls.j2", {"app_module": "apps.users"}, "Created apps/users/urls.py"
+            users_urls_path,
+            "presets/predefined/apps/users/urls.j2",
+            {"app_module": "apps.users"},
+            "Created apps/users/urls.py",
         )
 
         # core app
@@ -173,35 +176,35 @@ class FileManager:
 
         # core subfolders and files
         core_subfolders = {
-            "utils": [("responses.py", "predefined/core/utils/responses.j2")],
-            "mixins": [("timestamped_model.py", "predefined/core/mixins/timestamped_model.j2")],
-            "middleware": [("request_logger.py", "predefined/core/middleware/request_logger.j2")],
+            "utils": [("responses.py", "presets/predefined/core/utils/responses.j2")],
+            "mixins": [("timestamped_model.py", "presets/predefined/core/mixins/timestamped_model.j2")],
+            "middleware": [("request_logger.py", "presets/predefined/core/middleware/request_logger.j2")],
         }
         self._create_files_from_specs(core_dir, core_subfolders, {})
 
         # core/exceptions.py
         exceptions_path = os.path.join(core_dir, "exceptions.py")
         create_file_from_template(
-            exceptions_path, "predefined/core/exceptions.j2", {}, "Created apps/core/exceptions.py"
+            exceptions_path, "presets/predefined/core/exceptions.j2", {}, "Created apps/core/exceptions.py"
         )
 
         # api package
         api_dir = os.path.join(self.project_root, "api")
         create_directory_with_init(api_dir, "Created api/__init__.py")
         api_urls_path = os.path.join(api_dir, "urls.py")
-        create_file_from_template(api_urls_path, "predefined/api/urls.j2", {}, "Created api/urls.py")
+        create_file_from_template(api_urls_path, "presets/predefined/api/urls.j2", {}, "Created api/urls.py")
 
         # api/v1
         api_v1_dir = os.path.join(api_dir, "v1")
         create_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
         api_v1_urls_path = os.path.join(api_v1_dir, "urls.py")
-        create_file_from_template(api_v1_urls_path, "predefined/api/v1/urls.j2", {}, "Created api/v1/urls.py")
+        create_file_from_template(api_v1_urls_path, "presets/predefined/api/v1/urls.j2", {}, "Created api/v1/urls.py")
 
         # overwrite project urls to include api
         project_urls_path = os.path.join(self.project_configs, "urls.py")
         create_file_from_template(
             project_urls_path,
-            "project/urls_with_api.j2",
+            "config/urls/with_api.j2",
             {"api_module": "api"},
             "Updated project urls.py to include API routes",
             should_format=True,
@@ -239,16 +242,16 @@ class FileManager:
             ("production.py", base_context),
         ]:
             filepath = os.path.join(settings_dir, filename)
-            template_path = f"project/settings/{filename.replace('.py', '')}.j2"
+            template_path = f"config/settings/{filename.replace('.py', '')}.j2"
             create_file_from_template(
                 filepath, template_path, context, f"Created core/settings/{filename}", should_format=True
             )
 
         # Core project files
         core_files = [
-            ("urls.py", "project/urls_with_api.j2", {"api_module": "apps.api"}),
-            ("wsgi.py", "project/wsgi.j2", {}),
-            ("asgi.py", "project/asgi.j2", {}),
+            ("urls.py", "config/urls/with_api.j2", {"api_module": "apps.api"}),
+            ("wsgi.py", "config/wsgi.j2", {}),
+            ("asgi.py", "config/asgi.j2", {}),
         ]
         for filename, template, context in core_files:
             filepath = os.path.join(core_dir, filename)
@@ -268,9 +271,9 @@ class FileManager:
         # Create apps/core/models
         models_dir = os.path.join(apps_core_dir, "models")
         model_files = [
-            ("__init__.py", "base/models.j2"),
-            ("base.py", "unified/apps/core/models/base.py.j2"),
-            ("mixins.py", "unified/apps/core/models/mixins.py.j2"),
+            ("__init__.py", "components/models.j2"),
+            ("base.py", "presets/unified/apps/core/models/base.py.j2"),
+            ("mixins.py", "presets/unified/apps/core/models/mixins.py.j2"),
         ]
         os.makedirs(models_dir, exist_ok=True)
         create_files_from_templates(
@@ -280,8 +283,8 @@ class FileManager:
         # Create apps/core/utils
         utils_dir = os.path.join(apps_core_dir, "utils")
         utils_files = [
-            ("__init__.py", "unified/apps/core/utils/__init__.py.j2"),
-            ("responses.py", "unified/apps/core/utils/responses.py.j2"),
+            ("__init__.py", "presets/unified/apps/core/utils/__init__.py.j2"),
+            ("responses.py", "presets/unified/apps/core/utils/responses.py.j2"),
         ]
         os.makedirs(utils_dir, exist_ok=True)
         create_files_from_templates(
@@ -331,16 +334,16 @@ class FileManager:
             ("production.py", base_context),
         ]:
             filepath = os.path.join(settings_dir, filename)
-            template_path = f"project/settings/{filename.replace('.py', '')}.j2"
+            template_path = f"config/settings/{filename.replace('.py', '')}.j2"
             create_file_from_template(
                 filepath, template_path, context, f"Created {self.module_name}/settings/{filename}", should_format=True
             )
 
         # Core project files
         project_files = [
-            ("urls.py", "project/urls_with_api.j2", {"api_module": f"{self.module_name}.api"}),
-            ("wsgi.py", "project/wsgi.j2", {}),
-            ("asgi.py", "project/asgi.j2", {}),
+            ("urls.py", "config/urls/with_api.j2", {"api_module": f"{self.module_name}.api"}),
+            ("wsgi.py", "config/wsgi.j2", {}),
+            ("asgi.py", "config/asgi.j2", {}),
         ]
         for filename, template, context in project_files:
             filepath = os.path.join(project_dir, filename)
@@ -357,7 +360,7 @@ class FileManager:
         # admin
         create_file_from_template(
             os.path.join(project_dir, "admin", "__init__.py"),
-            "base/admin.j2",
+            "components/admin.j2",
             {},
             f"Created {self.module_name}/admin/__init__.py",
         )
@@ -365,7 +368,7 @@ class FileManager:
         # api
         create_file_from_template(
             os.path.join(project_dir, "api", "urls.py"),
-            "predefined/api/urls.j2",
+            "presets/predefined/api/urls.j2",
             {},
             f"Created {self.module_name}/api/urls.py",
         )
@@ -373,7 +376,7 @@ class FileManager:
         # models
         create_file_from_template(
             os.path.join(project_dir, "models", "__init__.py"),
-            "base/models.j2",
+            "components/models.j2",
             {},
             f"Created {self.module_name}/models/__init__.py",
         )
@@ -384,7 +387,7 @@ class FileManager:
         context = {"project_name": self.project_name}
         return self._render_and_create_file(
             "Procfile",
-            "shared/procfile.j2",
+            "project/procfile.j2",
             context,
             "Created Procfile with Gunicorn configuration",
         )
@@ -393,7 +396,7 @@ class FileManager:
         context = {"python_version": "3.13"}
         return self._render_and_create_file(
             "runtime.txt",
-            "shared/runtime_txt.j2",
+            "project/runtime_txt.j2",
             context,
             "Created runtime.txt with Python version specification",
         )
@@ -405,7 +408,7 @@ class FileManager:
         workflow_file = os.path.join(github_dir, "ci.yml")
         return self._render_and_create_file(
             workflow_file,
-            "shared/ci/github_actions.j2",
+            "project/ci/github_actions.j2",
             context,
             "Created Github Actions workflow (ci.yml)",
             base_dir=self.project_root,
@@ -415,7 +418,7 @@ class FileManager:
         context = {"project_name": self.project_name, "module_name": self.module_name}
         return self._render_and_create_file(
             ".gitlab-ci.yml",
-            "shared/ci/gitlab_ci.j2",
+            "project/ci/gitlab_ci.j2",
             context,
             "Created GitLab CI configuration (.gitlab-ci.yml)",
         )

@@ -124,16 +124,22 @@ A Django project created with [djinitx/djinit/dj](https://github.com/S4NKALP/dji
 └── README.md
 {% else %}
 {{ project_name }}/
-├── {{ project_name }}/
+├── {{ module_name }}/
 │   ├── settings/
 │   │   ├── base.py
 │   │   ├── development.py
 │   │   └── production.py
+│   ├── admin/
+│   ├── api/
+│   ├── models/
+│   ├── routes/
+│   ├── serializers/
+│   ├── tests/
+│   ├── views/
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
-{% for app in app_names %}├── {{ app }}/
-{% endfor %}├── manage.py
+├── manage.py
 ├── requirements.txt
 ├── pyproject.toml
 ├── .env.sample
