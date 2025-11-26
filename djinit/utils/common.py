@@ -8,8 +8,8 @@ import subprocess
 import sys
 from contextlib import contextmanager
 
-from djinit.scripts.console_ui import UIFormatter
-from djinit.scripts.template_engine import template_engine
+from djinit.services.templates import template_engine
+from djinit.ui.console import UIFormatter
 
 
 def format_file(filename: str) -> None:

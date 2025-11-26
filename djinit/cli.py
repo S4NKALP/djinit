@@ -6,10 +6,10 @@ Coordinates between different managers to create a complete Django project.
 import os
 from typing import Callable, List, Tuple
 
-from djinit.scripts.console_ui import UIFormatter
-from djinit.scripts.files import FileManager
-from djinit.scripts.project import ProjectManager
-from djinit.scripts.secretkey_generator import generate_secret_command
+from djinit.services.files import FileManager
+from djinit.services.project import ProjectManager
+from djinit.ui.console import UIFormatter
+from djinit.utils.security import generate_secret_command
 
 
 class Cli:

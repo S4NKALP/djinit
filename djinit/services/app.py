@@ -6,9 +6,8 @@ Handles creation of Django apps and updating settings.
 import os
 from typing import Optional
 
-from djinit.scripts.console_ui import UIFormatter
-from djinit.scripts.django_helper import DjangoHelper
-from djinit.utils import (
+from djinit.ui.console import UIFormatter
+from djinit.utils.common import (
     calculate_app_module_path,
     create_directory_with_init,
     create_file_from_template,
@@ -20,6 +19,7 @@ from djinit.utils import (
     insert_apps_into_user_defined_apps,
     is_django_project,
 )
+from djinit.utils.django import DjangoHelper
 
 
 class AppManager:

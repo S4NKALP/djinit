@@ -20,6 +20,7 @@ class TemplateEngine:
             template_dir: Path to templates directory. If None, uses default.
         """
         if template_dir is None:
+            # djinit/services/templates.py -> djinit/services -> djinit -> templates
             template_dir = Path(__file__).resolve().parent.parent / "templates"
 
         if not template_dir.exists():

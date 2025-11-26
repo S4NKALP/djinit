@@ -5,12 +5,9 @@ Handles validation of project names, app names, and other user inputs.
 
 import keyword
 import re
-import sys
 from typing import Any, Callable, Tuple
 
-DJANGO_RESERVED = {"django", "test", "site-packages", "admin"}
-
-PYTHON_BUILTINS = set(sys.builtin_module_names)
+from djinit.core.config import PYTHON_BUILTINS
 
 NAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 

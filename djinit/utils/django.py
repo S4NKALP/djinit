@@ -6,8 +6,9 @@ This module provides functions to create Django projects and apps without requir
 
 import os
 
-from djinit.scripts.console_ui import UIFormatter
-from djinit.utils import (
+from djinit.core.config import DJANGO_VERSION
+from djinit.ui.console import UIFormatter
+from djinit.utils.common import (
     create_directory_with_init,
     create_file_from_template,
     create_files_from_templates,
@@ -16,7 +17,7 @@ from djinit.utils import (
 
 
 class DjangoHelper:
-    DJANGO_VERSION = "5.2"
+    DJANGO_VERSION = DJANGO_VERSION
 
     @staticmethod
     def startproject(project_name: str, directory: str, unified: bool = False) -> bool:

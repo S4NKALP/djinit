@@ -8,9 +8,9 @@ import subprocess
 import sys
 
 from djinit.cli import Cli
-from djinit.scripts.command_handler import handle_app_command, handle_secret_command, parse_arguments
-from djinit.scripts.console_ui import UIFormatter, console
-from djinit.scripts.input_handler import confirm_setup, get_user_input
+from djinit.commands.handler import handle_app_command, handle_secret_command, parse_arguments
+from djinit.ui.console import UIFormatter, console
+from djinit.ui.input import confirm_setup, get_user_input
 
 
 def clear_screen() -> None:

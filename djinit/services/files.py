@@ -5,14 +5,13 @@ Handles creation and modification of project files.
 
 import os
 
-from djinit.scripts.template_engine import template_engine
-from djinit.utils import (
+from djinit.services.templates import template_engine
+from djinit.utils.common import (
     calculate_app_module_paths,
     change_cwd,
     create_directory_with_init,
     create_file_from_template,
     create_file_with_content,
-    create_files_from_templates,
     get_package_name,
 )
 
@@ -200,19 +199,26 @@ class FileManager:
         return True
 
     def create_unified_structure(self) -> bool:
+        # 1. Create 'core' directory (Project Config)
         core_dir = os.path.join(self.project_root, "core")
         create_directory_with_init(core_dir, "Created core/__init__.py")
 
         settings_dir = os.path.join(core_dir, "settings")
         create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
 
-        from djinit.scripts.secretkey_generator import generate_secret_key
+        from djinit.utils.security import generate_secret_key
 
         secret_key = generate_secret_key()
 
+        # In this new structure, 'apps' is the main app.
+        # We assume the user wants 'apps' to be the app label.
+        # Or perhaps 'apps' is just a container and the components inside are what matters?
+        # Given the structure: apps/models, apps/views etc.
+        # It seems 'apps' is acting as the app.
+
         base_context = {
-            "project_name": "core",  # Use "core" as the module name
-            "app_names": ["apps.core", "apps.api"] + [f"apps.{app}" for app in self.app_names],
+            "project_name": "core",  # Project module is 'core'
+            "app_names": ["apps"],  # 'apps' is the main app
             "use_database_url": self.metadata.get("use_database_url", True),
         }
         dev_context = {"secret_key": secret_key}
@@ -237,43 +243,38 @@ class FileManager:
             filepath = os.path.join(core_dir, filename)
             create_file_from_template(filepath, template, context, f"Created core/{filename}", should_format=True)
 
+        # 2. Create 'apps' directory (The Main App)
         apps_dir = os.path.join(self.project_root, "apps")
         create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
-        apps_core_dir = os.path.join(apps_dir, "core")
-        create_directory_with_init(apps_core_dir, "Created apps/core/__init__.py")
+        # Create apps.py for the 'apps' app
+        self._create_apps_py(apps_dir, "apps", "Created apps/apps.py", should_format=True)
 
-        self._create_apps_py(apps_core_dir, "", "Created apps/core/apps.py", should_format=True)
+        # Create sub-components as directories with __init__.py
+        components = ["admin", "models", "serializers", "tests", "urls", "views"]
+        self._create_subdirectories_with_init(apps_dir, components, "apps/")
 
-        models_dir = os.path.join(apps_core_dir, "models")
-        model_files = [
-            ("__init__.py", "components/models.j2"),
-            ("base.py", "presets/unified/apps/core/models/base.py.j2"),
-            ("mixins.py", "presets/unified/apps/core/models/mixins.py.j2"),
-        ]
-        os.makedirs(models_dir, exist_ok=True)
-        create_files_from_templates(
-            models_dir, [(f, t, {}) for f, t in model_files], "apps/core/models/", should_format=True
+        # Create 'api' directory with v1
+        api_dir = os.path.join(apps_dir, "api")
+        create_directory_with_init(api_dir, "Created apps/api/__init__.py")
+
+        create_file_from_template(
+            os.path.join(api_dir, "urls.py"),
+            "presets/predefined/api/urls.j2",
+            {},
+            "Created apps/api/urls.py",
+            should_format=True,
         )
 
-        utils_dir = os.path.join(apps_core_dir, "utils")
-        utils_files = [
-            ("__init__.py", "presets/unified/apps/core/utils/__init__.py.j2"),
-            ("responses.py", "presets/unified/apps/core/utils/responses.py.j2"),
-        ]
-        os.makedirs(utils_dir, exist_ok=True)
-        create_files_from_templates(
-            utils_dir, [(f, t, {}) for f, t in utils_files], "apps/core/utils/", should_format=True
-        )
+        api_v1_dir = os.path.join(api_dir, "v1")
+        create_directory_with_init(api_v1_dir, "Created apps/api/v1/__init__.py")
 
-        self._create_subdirectories_with_init(apps_core_dir, ["permissions", "middleware"], "apps/core/")
-
-        apps_api_dir = os.path.join(apps_dir, "api")
-        create_directory_with_init(apps_api_dir, "Created apps/api/__init__.py")
-        self._create_apps_py(apps_api_dir, "apps.api", "Created apps/api/apps.py", should_format=True)
-
-        self._create_subdirectories_with_init(
-            apps_api_dir, ["models", "serializers", "views", "services", "tests", "urls", "admin"], "apps/api/"
+        create_file_from_template(
+            os.path.join(api_v1_dir, "urls.py"),
+            "presets/predefined/api/v1/urls.j2",
+            {},
+            "Created apps/api/v1/urls.py",
+            should_format=True,
         )
 
         return True
@@ -285,7 +286,7 @@ class FileManager:
         settings_dir = os.path.join(project_dir, "settings")
         create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
 
-        from djinit.scripts.secretkey_generator import generate_secret_key
+        from djinit.utils.security import generate_secret_key
 
         secret_key = generate_secret_key()
 

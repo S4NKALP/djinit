@@ -114,36 +114,35 @@ Run `just` to see all available commands, including:
 └── README.md
 {% elif unified_structure %}
 {{ project_name }}/
+├── apps/
+│   ├── admin/
+│   │   └── __init__.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── urls.py
+│   │   └── v1/
+│   │       ├── __init__.py
+│   │       └── urls.py
+│   ├── models/
+│   │   └── __init__.py
+│   ├── serializers/
+│   │   └── __init__.py
+│   ├── tests/
+│   │   └── __init__.py
+│   ├── urls/
+│   │   └── __init__.py
+│   └── views/
+│       └── __init__.py
 ├── core/
+│   ├── asgi.py
+│   ├── __init__.py
 │   ├── settings/
 │   │   ├── base.py
 │   │   ├── development.py
+│   │   ├── __init__.py
 │   │   └── production.py
 │   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-├── apps/
-│   ├── core/
-│   │   ├── apps.py
-│   │   ├── models/
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py
-│   │   │   └── mixins.py
-│   │   ├── utils/
-│   │   │   ├── __init__.py
-│   │   │   └── responses.py
-│   │   ├── permissions/
-│   │   ├── middleware/
-│   │   └── __init__.py
-│   └── api/
-│       ├── apps.py
-│       ├── models/
-│       ├── serializers/
-│       ├── views/
-│       ├── services/
-│       ├── tests/
-│       ├── urls/
-│       └── admin/
+│   └── wsgi.py
 ├── manage.py
 ├── requirements.txt
 ├── pyproject.toml

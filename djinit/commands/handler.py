@@ -9,10 +9,10 @@ import sys
 from rich.panel import Panel
 from rich.text import Text
 
-from djinit.scripts.app_generator import AppManager
-from djinit.scripts.console_ui import UIColors, UIFormatter, console
-from djinit.scripts.name_validator import validate_app_name
-from djinit.scripts.secretkey_generator import display_secret_keys, generate_multiple_keys
+from djinit.services.app import AppManager
+from djinit.ui.console import UIColors, UIFormatter, console
+from djinit.utils.security import display_secret_keys, generate_multiple_keys
+from djinit.utils.validators import validate_app_name
 
 
 def parse_arguments() -> argparse.Namespace:

@@ -5,9 +5,8 @@ Handles creation of Django projects and apps.
 
 import os
 
-from djinit.scripts.console_ui import UIFormatter
-from djinit.scripts.django_helper import DjangoHelper
-from djinit.utils import (
+from djinit.ui.console import UIFormatter
+from djinit.utils.common import (
     calculate_app_module_paths,
     create_directory_with_init,
     extract_existing_apps,
@@ -15,6 +14,7 @@ from djinit.utils import (
     insert_apps_into_user_defined_apps,
     read_base_settings,
 )
+from djinit.utils.django import DjangoHelper
 
 
 class ProjectManager:
@@ -110,11 +110,26 @@ class ProjectManager:
 
         apps_base_dir = self._get_apps_base_dir()
 
-        if (
-            not self.metadata.get("predefined_structure")
-            and not self.metadata.get("unified_structure")
-            and not self.metadata.get("single_structure")
-        ):
+        if self.metadata.get("unified_structure"):
+            # Validate Unified Structure
+            apps_dir = os.path.join(self.project_root, "apps")
+            unified_files = [
+                os.path.join(apps_dir, "__init__.py"),
+                os.path.join(apps_dir, "apps.py"),
+                os.path.join(apps_dir, "admin", "__init__.py"),
+                os.path.join(apps_dir, "api", "__init__.py"),
+                os.path.join(apps_dir, "api", "urls.py"),
+                os.path.join(apps_dir, "api", "v1", "__init__.py"),
+                os.path.join(apps_dir, "api", "v1", "urls.py"),
+                os.path.join(apps_dir, "models", "__init__.py"),
+                os.path.join(apps_dir, "serializers", "__init__.py"),
+                os.path.join(apps_dir, "tests", "__init__.py"),
+                os.path.join(apps_dir, "urls", "__init__.py"),
+                os.path.join(apps_dir, "views", "__init__.py"),
+            ]
+            required_files.extend(unified_files)
+
+        elif not self.metadata.get("predefined_structure") and not self.metadata.get("single_structure"):
             for app_name in self.app_names:
                 app_files = [
                     os.path.join(apps_base_dir, app_name, "__init__.py"),

@@ -26,6 +26,7 @@ class UIColors:
     HIGHLIGHT = "bold cyan"
     MUTED = "dim white"
     ACCENT = "bold magenta"
+    CODE = "bold white"
 
 
 class Icons:
