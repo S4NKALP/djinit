@@ -80,17 +80,17 @@ That's it! Your project will be ready with everything configured.
 
 Every project includes:
 
-✅ **Split settings** for development and production
-✅ **Django REST Framework** with JWT authentication
-✅ **API documentation** (Swagger UI at `/docs/`)
-✅ **CORS** configured for local development
-✅ **WhiteNoise** for serving static files
-✅ **PostgreSQL** support (SQLite for dev)
-✅ **Modern admin** interface (django-jazzmin)
-✅ **Deployment ready** with Procfile and runtime.txt
-✅ **Development tools** (Justfile with common commands)
-✅ **Environment template** (.env.sample)
-✅ **Git ready** (.gitignore included)
+- **Split settings** for development and production
+- **Django REST Framework** with JWT authentication
+- **API documentation** (Swagger UI at `/docs/`)
+- **CORS** configured for local development
+- **WhiteNoise** for serving static files
+- **PostgreSQL** support (SQLite for dev)
+- **Modern admin** interface (django-jazzmin)
+- **Deployment ready** with Procfile and runtime.txt
+- **Development tools** (Justfile with common commands)
+- **Environment template** (.env.sample)
+- **Git ready** (.gitignore included)
 
 ## Commands
 
