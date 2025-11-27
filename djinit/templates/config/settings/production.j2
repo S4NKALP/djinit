@@ -18,12 +18,18 @@ DATABASES = {
 # Using individual database parameters
 DATABASES = {
     'default': {
+        {% if database_type == 'mysql' %}
+        'ENGINE': 'django.db.backends.mysql',
+        'PORT': os.getenv('DB_PORT', '3306'),
+        {% else %}
         'ENGINE': 'django.db.backends.postgresql',
+        'PORT': os.getenv('DB_PORT', '5432'),
+        {% endif %}
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'HOST': os.getenv('DB_HOST'),
     }
 }
 {% endif %}

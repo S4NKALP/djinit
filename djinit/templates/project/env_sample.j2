@@ -5,7 +5,11 @@ ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
 
 {% if use_database_url %}
 # Database URL (recommended for production)
-DATABASE_URL=postgres://user:password@host:port/database_name
+{% if database_type == 'mysql' %}
+DATABASE_URL=mysql://user:password@localhost:3306/{{ project_name }}
+{% else %}
+DATABASE_URL=postgres://user:password@localhost:5432/{{ project_name }}
+{% endif %}
 {% else %}
 # Database (individual parameters)
 DB_NAME=

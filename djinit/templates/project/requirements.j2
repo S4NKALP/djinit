@@ -10,6 +10,10 @@ djangorestframework_simplejwt
 drf-spectacular
 django-cors-headers
 whitenoise
-psycopg2-binary
+{% if database_type == 'mysql' %}
+mysqlclient
+{% else %}
+psycopg[binary]
+{% endif %}
 gunicorn
 {% if use_database_url %}dj-database-url{% endif %}

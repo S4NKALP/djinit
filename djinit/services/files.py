@@ -70,7 +70,10 @@ class FileManager:
         return self._render_and_create_file(".gitignore", "project/gitignore.j2", {}, "Created .gitignore file")
 
     def create_requirements(self) -> bool:
-        context = {"use_database_url": self.metadata.get("use_database_url", True)}
+        context = {
+            "use_database_url": self.metadata.get("use_database_url", True),
+            "database_type": self.metadata.get("database_type", "postgresql"),
+        }
         return self._render_and_create_file(
             "requirements.txt",
             "project/requirements.j2",
@@ -93,6 +96,7 @@ class FileManager:
         context = {
             "project_name": self.module_name,
             "use_database_url": self.metadata.get("use_database_url", True),
+            "database_type": self.metadata.get("database_type", "postgresql"),
         }
         return self._render_and_create_file(
             ".env.sample",
@@ -220,6 +224,7 @@ class FileManager:
             "project_name": "core",  # Project module is 'core'
             "app_names": ["apps"],  # 'apps' is the main app
             "use_database_url": self.metadata.get("use_database_url", True),
+            "database_type": self.metadata.get("database_type", "postgresql"),
         }
         dev_context = {"secret_key": secret_key}
 
@@ -294,6 +299,7 @@ class FileManager:
             "project_name": self.module_name,
             "app_names": [self.module_name],  # Project acts as the app
             "use_database_url": self.metadata.get("use_database_url", True),
+            "database_type": self.metadata.get("database_type", "postgresql"),
         }
         dev_context = {"secret_key": secret_key}
 

@@ -158,7 +158,7 @@ class InputCollector:
 
     def get_cicd_choice(self) -> Tuple[bool, bool]:
         UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Step 3: CI/CD Pipeline[/{UIColors.INFO}]\n")
+        console.print(f"\n[{UIColors.INFO}]CI/CD Pipeline[/{UIColors.INFO}]\n")
         console.print()
 
         for option in CICDOption:
@@ -201,13 +201,28 @@ class InputCollector:
 
     def get_database_config_choice(self) -> bool:
         UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Database Configuration[/{UIColors.INFO}]\n")
         console.print()
         console.print(f"  [{UIColors.SUCCESS}]Y[/{UIColors.SUCCESS}]  Use DATABASE_URL (recommended for production)")
         console.print(f"  [{UIColors.SUCCESS}]N[/{UIColors.SUCCESS}]  Use individual database parameters")
         console.print()
 
         return CharReader.get_yes_no(f"[{UIColors.HIGHLIGHT}]Use DATABASE_URL? (Y/n):[/{UIColors.HIGHLIGHT}]") == "y"
+
+    def get_database_type_choice(self) -> str:
+        console.print()
+        console.print(f"[{UIColors.INFO}]Select Database Type[/{UIColors.INFO}]\n")
+        console.print(f"  [{UIColors.SUCCESS}]1[/{UIColors.SUCCESS}]  PostgreSQL")
+        console.print(f"  [{UIColors.SUCCESS}]2[/{UIColors.SUCCESS}]  MySQL")
+        console.print()
+
+        choice = CharReader.get_validated_char_input(
+            f"[{UIColors.HIGHLIGHT}]Choose database (1/2):[/{UIColors.HIGHLIGHT}]",
+            valid_keys=["1", "2"],
+            default=None,
+            error_message="Invalid input '{response}'. Please enter '1' or '2'.",
+        )
+
+        return "mysql" if choice == "2" else "postgresql"
 
     def _get_structure_metadata(
         self,
@@ -221,11 +236,14 @@ class InputCollector:
         project_name = project_dir
         app_names: list[str] = []
 
-        # Ask for workflows so shared templates for CI/CD can be added
-        use_github, use_gitlab = self.get_cicd_choice()
-
-        # Ask database configuration
+        # Step 2: Database Configuration
+        console.print(f"\n[{UIColors.INFO}]Step 2: Database Configuration[/{UIColors.INFO}]")
+        database_type = self.get_database_type_choice()
         use_database_url = self.get_database_config_choice()
+
+        # Step 3: CI/CD
+        console.print(f"\n[{UIColors.INFO}]Step 3: CI/CD Pipeline[/{UIColors.INFO}]")
+        use_github, use_gitlab = self.get_cicd_choice()
 
         # Default package_name to "backend" if project_dir is "." or empty
         package_name = get_package_name(project_dir)
@@ -242,6 +260,7 @@ class InputCollector:
             nested_apps=True,
             nested_dir="apps",
             use_database_url=use_database_url,
+            database_type=database_type,
             predefined_structure=predefined,
             unified_structure=unified,
             single_structure=single,
@@ -277,10 +296,10 @@ class CharReader:
         return default.lower()
 
     @staticmethod
-    def _get_validated_char_input(
+    def get_validated_char_input(
         prompt: str,
         valid_keys: list[str],
-        default: str,
+        default: str | None,
         error_message: str,
     ) -> str:
         attempt = 0
@@ -292,7 +311,9 @@ class CharReader:
 
                 # Handle Enter key (default)
                 if CharReader._is_enter_key(response):
-                    return CharReader._handle_default(default)
+                    if default is not None:
+                        return CharReader._handle_default(default)
+                    # If default is None, treat as invalid input (fall through)
 
                 response = response.lower()
 
@@ -312,18 +333,31 @@ class CharReader:
                         )
                         console.print()
                 else:
-                    # Control character entered, treat as Enter
-                    return CharReader._handle_default(default)
+                    # Control character entered (e.g. Enter with no default)
+                    if default is not None:
+                        return CharReader._handle_default(default)
+                    
+                    UIFormatter.print_error("Input required.")
+                    attempt += 1
+                    if attempt < CharReader.MAX_ATTEMPTS:
+                        console.print(
+                            f"[{UIColors.MUTED}]Please try again ({attempt}/{CharReader.MAX_ATTEMPTS}).[/{UIColors.MUTED}]"
+                        )
+                        console.print()
 
             except KeyboardInterrupt:
                 console.print()
                 UIFormatter.print_info("\nOperation cancelled by user.")
                 raise
 
-        # Max attempts reached - use default
+        # Max attempts reached
         console.print()
-        UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
-        return default.lower()
+        if default is not None:
+            UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
+            return default.lower()
+        
+        UIFormatter.print_error("Maximum attempts reached. Exiting.")
+        sys.exit(1)
 
     @staticmethod
     def get_yes_no(prompt: str, default: str = None) -> str:
@@ -335,7 +369,7 @@ class CharReader:
             else:
                 default = "y"
 
-        return CharReader._get_validated_char_input(
+        return CharReader.get_validated_char_input(
             prompt=prompt,
             valid_keys=["y", "n"],
             default=default,
@@ -345,7 +379,7 @@ class CharReader:
     @staticmethod
     def get_cicd_choice(prompt: str, valid_keys: list[str], default: str = "n") -> str:
         valid_keys_str = ", ".join(f"'{k}'" for k in valid_keys)
-        return CharReader._get_validated_char_input(
+        return CharReader.get_validated_char_input(
             prompt=prompt,
             valid_keys=valid_keys,
             default=default,
@@ -355,7 +389,7 @@ class CharReader:
     @staticmethod
     def get_structure_choice() -> str:
         """Get structure type choice without requiring Enter key."""
-        return CharReader._get_validated_char_input(
+        return CharReader.get_validated_char_input(
             prompt=f"[{UIColors.HIGHLIGHT}]Choose structure type (1/2/3/4) [default: 1]:[/{UIColors.HIGHLIGHT}]",
             valid_keys=["1", "2", "3", "4"],
             default="1",
@@ -488,14 +522,19 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         console.print()
         UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Step 2: Django Apps[/{UIColors.INFO}]\n")
+        console.print(f"\n[{UIColors.INFO}]Step 2: Database Configuration[/{UIColors.INFO}]")
+        database_type = collector.get_database_type_choice()
+        use_database_url = collector.get_database_config_choice()
+
+        console.print()
+        UIFormatter.print_separator()
+        console.print(f"\n[{UIColors.INFO}]Step 3: Django Apps[/{UIColors.INFO}]\n")
         nested, nested_dir = collector.get_nested_apps_config()
         app_names = collector.get_app_names()
         console.print()
 
+        console.print(f"\n[{UIColors.INFO}]Step 4: CI/CD Pipeline[/{UIColors.INFO}]")
         use_github, use_gitlab = collector.get_cicd_choice()
-
-        use_database_url = collector.get_database_config_choice()
 
         package_name = get_package_name(project_dir)
         metadata = ProjectMetadata(
@@ -505,6 +544,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             nested_apps=nested,
             nested_dir=nested_dir,
             use_database_url=use_database_url,
+            database_type=database_type,
         )
 
         console.print()
@@ -532,6 +572,9 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
     console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
+    
+    db_type = metadata.get("database_type", "postgresql").capitalize()
+    console.print(f"[{UIColors.HIGHLIGHT}]Database Type:[/{UIColors.HIGHLIGHT}] {db_type}")
 
     console.print()
     UIFormatter.print_separator()

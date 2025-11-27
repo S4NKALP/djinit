@@ -14,6 +14,7 @@ class ProjectMetadata:
     nested_apps: bool = False
     nested_dir: str | None = None
     use_database_url: bool = False
+    database_type: str = "postgresql"
     predefined_structure: bool = False
     unified_structure: bool = False
     single_structure: bool = False
@@ -27,6 +28,7 @@ class ProjectMetadata:
             "nested_apps": self.nested_apps,
             "nested_dir": self.nested_dir,
             "use_database_url": self.use_database_url,
+            "database_type": self.database_type,
             "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,
