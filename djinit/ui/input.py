@@ -331,7 +331,7 @@ class CharReader:
                     # Control character entered (e.g. Enter with no default)
                     if default is not None:
                         return CharReader._handle_default(default)
-                    
+
                     UIFormatter.print_error("Input required.")
                     attempt += 1
                     if attempt < CharReader.MAX_ATTEMPTS:
@@ -350,7 +350,7 @@ class CharReader:
         if default is not None:
             UIFormatter.print_warning(f"Maximum attempts reached. Using default: '{default.upper()}'.")
             return default.lower()
-        
+
         UIFormatter.print_error("Maximum attempts reached. Exiting.")
         sys.exit(1)
 
@@ -466,7 +466,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
         console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
-        
+
         project_dir = collector._get_project_directory()
         if project_dir is None:
             UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
@@ -474,7 +474,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         project_name = project_dir
         single_module_name = None
-        
+
         if use_standard:
             console.print()
             console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
@@ -505,7 +505,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         nested = False
         nested_dir = None
         app_names = []
-        
+
         if use_standard:
             console.print()
             UIFormatter.print_separator()
@@ -567,7 +567,7 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
     console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
-    
+
     db_type = metadata.get("database_type", "postgresql").capitalize()
     console.print(f"[{UIColors.HIGHLIGHT}]Database Type:[/{UIColors.HIGHLIGHT}] {db_type}")
 
