@@ -178,3 +178,20 @@ class UIFormatter:
             message = f"{message} [{default}]"
         response = console.input(f"[bold cyan]?[/bold cyan] {message}: ").strip()
         return response or default or ""
+
+    @staticmethod
+    def handle_exception(e: Exception):
+        """Handle and display exceptions gracefully"""
+        from djinit.utils.exceptions import DjinitError
+
+        if isinstance(e, DjinitError):
+            UIFormatter.print_error(e.message, details=e.details)
+        else:
+            console.print("\n")
+            console.print(f"[bold red]{'═' * 70}[/bold red]")
+            console.print(f"[bold red]{'💥 UNEXPECTED ERROR'.center(70)}[/bold red]")
+            console.print(f"[bold red]{'═' * 70}[/bold red]\n")
+            console.print(f"[red]An unexpected error occurred: {str(e)}[/red]")
+            console.print("[dim]Please report this issue on GitHub.[/dim]\n")
+            # Optionally print traceback for debugging if needed, or log it
+            # console.print_exception()

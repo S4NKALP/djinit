@@ -35,12 +35,12 @@ class FileManager:
         message: str,
         base_dir: str = None,
         should_format: bool = False,
-    ) -> bool:
+    ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
         with change_cwd(target_dir):
             content = template_engine.render_template(template_path, context)
-            return create_file_with_content(filepath, content, message, should_format=should_format)
+            create_file_with_content(filepath, content, message, should_format=should_format)
 
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
@@ -66,22 +66,22 @@ class FileManager:
             message = f"Created {prefix}{subdir}/__init__.py" if prefix else f"Created {subdir}/__init__.py"
             create_directory_with_init(subdir_path, message)
 
-    def create_gitignore(self) -> bool:
-        return self._render_and_create_file(".gitignore", "project/gitignore.j2", {}, "Created .gitignore file")
+    def create_gitignore(self) -> None:
+        self._render_and_create_file(".gitignore", "project/gitignore.j2", {}, "Created .gitignore file")
 
-    def create_requirements(self) -> bool:
+    def create_requirements(self) -> None:
         context = {
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "requirements.txt",
             "project/requirements.j2",
             context,
             "Created requirements.txt with Django dependencies",
         )
 
-    def create_readme(self) -> bool:
+    def create_readme(self) -> None:
         context = {
             "project_name": self.project_name,
             "app_names": self.app_names,
@@ -89,41 +89,41 @@ class FileManager:
             "unified_structure": bool(self.metadata.get("unified_structure")),
             "module_name": self.module_name,
         }
-        return self._render_and_create_file("README.md", "project/readme.j2", context, "Created README.md file")
+        self._render_and_create_file("README.md", "project/readme.j2", context, "Created README.md file")
 
-    def create_env_file(self) -> bool:
+    def create_env_file(self) -> None:
         """Create .env.sample file with environment variables."""
         context = {
             "project_name": self.module_name,
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
-        return self._render_and_create_file(
+        self._render_and_create_file(
             ".env.sample",
             "project/env_sample.j2",
             context,
             "Created .env.sample file with generated secret key",
         )
 
-    def create_pyproject_toml(self, metadata: dict) -> bool:
+    def create_pyproject_toml(self, metadata: dict) -> None:
         package_name = metadata.get("package_name", "backend")
         package_name = get_package_name(package_name)
         context = {"package_name": package_name, "project_name": self.project_name}
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "pyproject.toml",
             "project/pyproject_toml.j2",
             context,
             "Created pyproject.toml file for uv",
         )
 
-    def create_project_urls(self) -> bool:
+    def create_project_urls(self) -> None:
         """Create project urls.py using project_urls.j2 template (replaces update_project_urls)."""
         effective_app_modules = calculate_app_module_paths(self.app_names, self.metadata)
         context = {
             "project_name": self.project_name,
             "app_names": effective_app_modules,
         }
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "urls.py",
             "config/urls/with_apps.j2",
             context,
@@ -132,16 +132,16 @@ class FileManager:
             should_format=True,
         )
 
-    def create_justfile(self) -> bool:
+    def create_justfile(self) -> None:
         context = {"project_name": self.project_name}
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "justfile",
             "project/justfile.j2",
             context,
             "Created justfile with Django development tasks",
         )
 
-    def create_predefined_structure(self) -> bool:
+    def create_predefined_structure(self) -> None:
         apps_dir = os.path.join(self.project_root, "apps")
         create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
@@ -200,9 +200,7 @@ class FileManager:
             should_format=True,
         )
 
-        return True
-
-    def create_unified_structure(self) -> bool:
+    def create_unified_structure(self) -> None:
         # 1. Create 'core' directory (Project Config)
         core_dir = os.path.join(self.project_root, "core")
         create_directory_with_init(core_dir, "Created core/__init__.py")
@@ -282,9 +280,7 @@ class FileManager:
             should_format=True,
         )
 
-        return True
-
-    def create_single_structure(self) -> bool:
+    def create_single_structure(self) -> None:
         project_dir = os.path.join(self.project_root, self.module_name)
         create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
 
@@ -360,32 +356,30 @@ class FileManager:
             f"Created {self.module_name}/models/README.md",
         )
 
-        return True
-
-    def create_procfile(self) -> bool:
+    def create_procfile(self) -> None:
         context = {"project_name": self.project_name}
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "Procfile",
             "project/procfile.j2",
             context,
             "Created Procfile with Gunicorn configuration",
         )
 
-    def create_runtime_txt(self) -> bool:
+    def create_runtime_txt(self) -> None:
         context = {"python_version": "3.13"}
-        return self._render_and_create_file(
+        self._render_and_create_file(
             "runtime.txt",
             "project/runtime_txt.j2",
             context,
             "Created runtime.txt with Python version specification",
         )
 
-    def create_github_actions(self) -> bool:
+    def create_github_actions(self) -> None:
         github_dir = os.path.join(self.project_root, ".github", "workflows")
         os.makedirs(github_dir, exist_ok=True)
         context = {"project_name": self.project_name, "module_name": self.module_name}
         workflow_file = os.path.join(github_dir, "ci.yml")
-        return self._render_and_create_file(
+        self._render_and_create_file(
             workflow_file,
             "project/ci/github_actions.j2",
             context,
@@ -393,9 +387,9 @@ class FileManager:
             base_dir=self.project_root,
         )
 
-    def create_gitlab_ci(self) -> bool:
+    def create_gitlab_ci(self) -> None:
         context = {"project_name": self.project_name, "module_name": self.module_name}
-        return self._render_and_create_file(
+        self._render_and_create_file(
             ".gitlab-ci.yml",
             "project/ci/gitlab_ci.j2",
             context,

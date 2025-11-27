@@ -20,7 +20,7 @@ class DjangoHelper:
     DJANGO_VERSION = DJANGO_VERSION
 
     @staticmethod
-    def startproject(project_name: str, directory: str, unified: bool = False) -> bool:
+    def startproject(project_name: str, directory: str, unified: bool = False) -> None:
         try:
             os.makedirs(directory, exist_ok=True)
 
@@ -29,7 +29,7 @@ class DjangoHelper:
             os.chmod(manage_py_path, 0o755)
 
             if unified:
-                return True
+                return
 
             project_config_dir = os.path.join(directory, project_name)
             create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
@@ -53,14 +53,12 @@ class DjangoHelper:
             ]
             create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
-            return True
-
         except Exception as e:
-            UIFormatter.print_error(f"Error creating Django project: {e}")
-            return False
+            from djinit.utils.exceptions import DjinitError
+            raise DjinitError(f"Error creating Django project: {e}", details=str(e))
 
     @staticmethod
-    def startapp(app_name: str, directory: str) -> bool:
+    def startapp(app_name: str, directory: str) -> None:
         try:
             app_dir = os.path.join(directory, app_name)
             os.makedirs(app_dir, exist_ok=True)
@@ -85,8 +83,6 @@ class DjangoHelper:
             migrations_dir = os.path.join(app_dir, "migrations")
             create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
 
-            return True
-
         except Exception as e:
-            UIFormatter.print_error(f"Error creating Django app: {e}")
-            return False
+            from djinit.utils.exceptions import DjinitError
+            raise DjinitError(f"Error creating Django app: {e}", details=str(e))

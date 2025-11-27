@@ -50,7 +50,7 @@ class Cli:
                 self.app_names = []
                 self.project_manager.app_names = self.app_names
 
-        steps: List[Tuple[str, Callable[[], bool]]] = []
+        steps: List[Tuple[str, Callable[[], None]]] = []
 
         steps.append(("Creating Django project", self.project_manager.create_project))
 
@@ -77,23 +77,24 @@ class Cli:
         )
 
         total_steps = len(steps)
+        total_steps = len(steps)
         success = True
 
         progress, task = UIFormatter.create_live_progress(description="Setup Progress", total_steps=total_steps)
 
-        with progress:
-            for step_number, (description, step_func) in enumerate(steps, 1):
-                result = step_func()
-                if not result:
-                    success = False
-                    UIFormatter.print_error(f"Step {step_number} failed: {description}")
-                    break
+        try:
+            with progress:
+                for step_number, (description, step_func) in enumerate(steps, 1):
+                    step_func()
+                    progress.update(task, advance=1, description=f"Step {step_number}/{total_steps}")
 
-                progress.update(task, advance=1, description=f"Step {step_number}/{total_steps}")
+        except Exception as e:
+            success = False
+            UIFormatter.handle_exception(e)
 
         return success
 
-    def _create_utility_files(self) -> bool:
+    def _create_utility_files(self) -> None:
         utility_steps = [
             self.file_manager.create_gitignore,
             self.file_manager.create_requirements,
@@ -103,25 +104,16 @@ class Cli:
         ]
 
         for step_func in utility_steps:
-            result = step_func()
-            if not result:
-                return False
+            step_func()
 
         UIFormatter.print_success("Created all utility files successfully!")
-        return True
 
-    def _create_cicd_pipelines(self) -> bool:
+    def _create_cicd_pipelines(self) -> None:
         if self.metadata.get("use_github_actions", True):
-            result = self.file_manager.create_github_actions()
-            if not result:
-                return False
+            self.file_manager.create_github_actions()
 
         if self.metadata.get("use_gitlab_ci", True):
-            result = self.file_manager.create_gitlab_ci()
-            if not result:
-                return False
-
-        return True
+            self.file_manager.create_gitlab_ci()
 
     def generate_secret_keys(self) -> bool:
         generate_secret_command()

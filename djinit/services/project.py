@@ -26,16 +26,12 @@ class ProjectManager:
         self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
         self.module_name = metadata.get("project_module_name") or self.project_name
 
-    def create_project(self) -> bool:
+    def create_project(self) -> None:
         os.makedirs(self.project_root, exist_ok=True)
 
         unified = self.metadata.get("unified_structure", False)
-        success = DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
-        if success:
-            UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
-        else:
-            UIFormatter.print_error(f"Failed to create Django project '{self.project_name}'")
-        return success
+        DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
+        UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
 
     def _get_apps_base_dir(self) -> str:
         """Get the base directory for apps, considering nested structure."""
@@ -44,36 +40,30 @@ class ProjectManager:
             apps_base_dir = os.path.join(self.project_root, self.metadata.get("nested_dir"))
         return apps_base_dir
 
-    def create_apps(self) -> bool:
+    def create_apps(self) -> None:
         apps_base_dir = self._get_apps_base_dir()
 
         if apps_base_dir != self.project_root:
             create_directory_with_init(apps_base_dir, f"Created {os.path.basename(apps_base_dir)}/__init__.py")
 
         for app_name in self.app_names:
-            success = DjangoHelper.startapp(app_name, apps_base_dir)
-            if not success:
-                UIFormatter.print_error(f"Failed to create Django app '{app_name}'")
-                return False
+            DjangoHelper.startapp(app_name, apps_base_dir)
             UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
 
-        if not self.add_apps_to_settings():
-            return False
+        self.add_apps_to_settings()
 
-        return True
-
-    def add_apps_to_settings(self) -> bool:
+    def add_apps_to_settings(self) -> None:
         """Add all apps to USER_DEFINED_APPS in base.py settings file."""
         base_settings_path = get_base_settings_path(self.project_root, self.module_name)
 
         if not os.path.exists(base_settings_path):
-            UIFormatter.print_error("Could not find base.py settings file")
-            return False
+            from djinit.utils.exceptions import ConfigError
+            raise ConfigError("Could not find base.py settings file")
 
         content = read_base_settings(self.project_root, self.module_name)
         if content is None:
-            UIFormatter.print_error("Could not read base.py settings file")
-            return False
+            from djinit.utils.exceptions import ConfigError
+            raise ConfigError("Could not read base.py settings file")
 
         app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
 
@@ -82,20 +72,20 @@ class ProjectManager:
 
         if not apps_to_add:
             UIFormatter.print_success("All apps already configured in USER_DEFINED_APPS")
-            return True
+            return
 
         updated_content = insert_apps_into_user_defined_apps(content, apps_to_add)
         if not updated_content:
-            return False
+            from djinit.utils.exceptions import ConfigError
+            raise ConfigError("Could not update USER_DEFINED_APPS in base.py")
 
         with open(base_settings_path, "w") as f:
             f.write(updated_content)
 
         added_apps_str = ", ".join(apps_to_add)
         UIFormatter.print_success(f"Added apps to USER_DEFINED_APPS: {added_apps_str}")
-        return True
 
-    def validate_project_structure(self) -> bool:
+    def validate_project_structure(self) -> None:
         required_files = [
             os.path.join(self.project_root, "manage.py"),
             os.path.join(self.project_root, self.module_name, "__init__.py"),
@@ -154,9 +144,11 @@ class ProjectManager:
 
         if not missing_files:
             UIFormatter.print_success("Project structure validation passed")
-            return True
+            return
 
         UIFormatter.print_error("Project structure validation failed:")
         for file_path in missing_files:
             UIFormatter.print_error(f"  Missing: {file_path}")
-        return False
+        
+        from djinit.utils.exceptions import ConfigError
+        raise ConfigError("Project structure validation failed", details=f"Missing files: {missing_files}")
