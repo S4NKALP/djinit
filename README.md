@@ -57,22 +57,25 @@ The tool will ask you a few questions:
 
 1. **What structure do you want?**
    - **Standard**: Classic Django layout with split settings
-   - **Single Folder**: All apps in one configurable folder (simple and flat)
    - **Predefined**: Organized with `apps/` and `api/` folders (great for larger projects)
    - **Unified**: Everything under `core/` and `apps/` (clean and minimal)
+   - **Single Folder**: All apps in one configurable folder (simple and flat)
 
-2. **Project details**:
+2. **Project Setup**:
    - Where to create it (use `.` for current directory)
-   - Project name
+   - Project name (or directory name for Single Folder)
+
+3. **Database Configuration**:
+   - Use `DATABASE_URL` (cleaner, recommended)
+   - Or separate DB variables
+   - Choose between PostgreSQL or MySQL
+
+4. **Django Apps** (Standard Structure only):
    - Whether to use an `apps/` folder
    - Which apps to create
 
-3. **CI/CD setup** (optional):
+5. **CI/CD Pipeline**:
    - GitHub Actions, GitLab CI, both, or skip it
-
-4. **Database config**:
-   - Use `DATABASE_URL` (cleaner, recommended)
-   - Or separate DB variables
 
 That's it! Your project will be ready with everything configured.
 
@@ -150,7 +153,6 @@ myproject/
 │   │       ├── serializers.py
 │   │       └── urls.py
 │   └── wsgi.py
-└── static/
 ```
 
 ### Predefined Structure
@@ -180,9 +182,13 @@ myproject/
 ├── core/               # Django config
 │   ├── settings/
 │   └── urls.py
-└── apps/               # Everything else
-    ├── core/
-    └── api/
+└── apps/               # Main application package
+    ├── admin/
+    ├── models/
+    ├── serializers/
+    ├── views/
+    ├── urls/
+    └── api/            # API routes
 ```
 
 ## Development Workflow
