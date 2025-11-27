@@ -1,10 +1,12 @@
 """generated with djinit"""
 
 import os
-from dotenv import load_dotenv
+import environ
 from django.core.wsgi import get_wsgi_application
 
-load_dotenv()
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.getenv("DJANGO_SETTINGS_MODULE", "core.settings.production"))
+env = environ.Env()
+environ.Env.read_env()
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", env("DJANGO_SETTINGS_MODULE", default="core.settings.production"))
 
 application = get_wsgi_application()

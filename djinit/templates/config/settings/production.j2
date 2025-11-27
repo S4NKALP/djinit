@@ -1,18 +1,17 @@
 """generated with djinit"""
 
 from .base import *
-import os
 import dj_database_url
 
 DEBUG = False
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+SECRET_KEY = env('SECRET_KEY')
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Database
 {% if use_database_url %}
 # Using dj_database_url (recommended for production)
 DATABASES = {
-    'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
+    'default': env.db('DATABASE_URL')
 }
 {% else %}
 # Using individual database parameters
@@ -20,26 +19,22 @@ DATABASES = {
     'default': {
         {% if database_type == 'mysql' %}
         'ENGINE': 'django.db.backends.mysql',
-        'PORT': os.getenv('DB_PORT', '3306'),
+        'PORT': env('DB_PORT', default='3306'),
         {% else %}
         'ENGINE': 'django.db.backends.postgresql',
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'PORT': env('DB_PORT', default='5432'),
         {% endif %}
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'HOST': os.getenv('DB_HOST'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
     }
 }
 {% endif %}
 
 # CORS settings for production
 # Filter out empty strings from FRONTEND_URL
-frontend_urls = os.getenv("FRONTEND_URL", "")
-CORS_ALLOWED_ORIGINS = [
-    origin.strip() for origin in frontend_urls.split(",") if origin.strip()
-]
+CORS_ALLOWED_ORIGINS = env.list('FRONTEND_URL', default=[])
 CORS_ALLOW_CREDENTIALS = True
 
 # Additional CORS security for production
@@ -47,13 +42,13 @@ CORS_ALLOW_PRIVATE_NETWORK = False
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
-SERVER_EMAIL = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER')
+SERVER_EMAIL = env('EMAIL_HOST_USER')
 
 # Security settings for production
 SECURE_SSL_REDIRECT = True

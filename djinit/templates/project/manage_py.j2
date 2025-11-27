@@ -6,7 +6,7 @@
 import os
 import sys
 
-from dotenv import load_dotenv
+import environ
 
 
 def main():
@@ -25,5 +25,8 @@ def main():
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    env = environ.Env()
+    # Read .env file, if it exists
+    environ.Env.read_env()
+
     main()
