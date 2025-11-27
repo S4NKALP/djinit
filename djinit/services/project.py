@@ -58,11 +58,13 @@ class ProjectManager:
 
         if not os.path.exists(base_settings_path):
             from djinit.utils.exceptions import ConfigError
+
             raise ConfigError("Could not find base.py settings file")
 
         content = read_base_settings(self.project_root, self.module_name)
         if content is None:
             from djinit.utils.exceptions import ConfigError
+
             raise ConfigError("Could not read base.py settings file")
 
         app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
@@ -77,6 +79,7 @@ class ProjectManager:
         updated_content = insert_apps_into_user_defined_apps(content, apps_to_add)
         if not updated_content:
             from djinit.utils.exceptions import ConfigError
+
             raise ConfigError("Could not update USER_DEFINED_APPS in base.py")
 
         with open(base_settings_path, "w") as f:
@@ -149,6 +152,7 @@ class ProjectManager:
         UIFormatter.print_error("Project structure validation failed:")
         for file_path in missing_files:
             UIFormatter.print_error(f"  Missing: {file_path}")
-        
+
         from djinit.utils.exceptions import ConfigError
+
         raise ConfigError("Project structure validation failed", details=f"Missing files: {missing_files}")

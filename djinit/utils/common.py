@@ -24,7 +24,7 @@ def create_file_with_content(filename: str, content: str, success_message: str, 
         with open(filename, "w") as file:
             file.write(content)
     except OSError as e:
-        raise FileError(f"Failed to write file: {filename}", details=str(e))
+        raise FileError(f"Failed to write file: {filename}", details=str(e)) from e
 
     if should_format:
         format_file(filename)
@@ -43,7 +43,8 @@ def create_file_from_template(
         content = template_engine.render_template(template_path, context)
     except Exception as e:
         from djinit.utils.exceptions import TemplateError
-        raise TemplateError(f"Failed to render template: {template_path}", details=str(e))
+
+        raise TemplateError(f"Failed to render template: {template_path}", details=str(e)) from e
 
     create_file_with_content(file_path, content, success_message, should_format=should_format)
 

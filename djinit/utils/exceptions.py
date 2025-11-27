@@ -14,14 +14,17 @@ class DjinitError(Exception):
 
 class ConfigError(DjinitError):
     """Raised when there is a configuration or metadata error."""
+
     pass
 
 
 class FileError(DjinitError):
     """Raised when a file operation fails."""
+
     pass
 
 
 class TemplateError(DjinitError):
     """Raised when template rendering fails."""
+
     pass

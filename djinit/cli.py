@@ -84,7 +84,7 @@ class Cli:
 
         try:
             with progress:
-                for step_number, (description, step_func) in enumerate(steps, 1):
+                for step_number, (_, step_func) in enumerate(steps, 1):
                     step_func()
                     progress.update(task, advance=1, description=f"Step {step_number}/{total_steps}")
 

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="djinitx",
-    version="0.2.1",
+    version="0.3.0",
     description="A CLI tool to setup Django projects",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

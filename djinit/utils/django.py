@@ -7,7 +7,6 @@ This module provides functions to create Django projects and apps without requir
 import os
 
 from djinit.core.config import DJANGO_VERSION
-from djinit.ui.console import UIFormatter
 from djinit.utils.common import (
     create_directory_with_init,
     create_file_from_template,
@@ -55,7 +54,8 @@ class DjangoHelper:
 
         except Exception as e:
             from djinit.utils.exceptions import DjinitError
-            raise DjinitError(f"Error creating Django project: {e}", details=str(e))
+
+            raise DjinitError(f"Error creating Django project: {e}", details=str(e)) from e
 
     @staticmethod
     def startapp(app_name: str, directory: str) -> None:
@@ -85,4 +85,5 @@ class DjangoHelper:
 
         except Exception as e:
             from djinit.utils.exceptions import DjinitError
-            raise DjinitError(f"Error creating Django app: {e}", details=str(e))
+
+            raise DjinitError(f"Error creating Django app: {e}", details=str(e)) from e
