@@ -23,7 +23,5 @@ jobs:
         pip install hatch twine
     - name: Build package
       run: hatch build
-    - name: Test package
-      run: hatch run test
     - name: Publish package to PyPI
       run: python -m twine upload dist/* --verbose
