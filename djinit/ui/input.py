@@ -231,19 +231,14 @@ class InputCollector:
         unified: bool = False,
         single: bool = False,
         single_module_name: str = None,
+        database_type: str = "postgresql",
+        use_database_url: bool = True,
+        use_github: bool = False,
+        use_gitlab: bool = False,
     ) -> Tuple[str, str, list[str], dict]:
-        """Helper method to get metadata for predefined/unified structures."""
+        """Helper method to generate metadata dictionary."""
         project_name = project_dir
         app_names: list[str] = []
-
-        # Step 2: Database Configuration
-        console.print(f"\n[{UIColors.INFO}]Step 2: Database Configuration[/{UIColors.INFO}]")
-        database_type = self.get_database_type_choice()
-        use_database_url = self.get_database_config_choice()
-
-        # Step 3: CI/CD
-        console.print(f"\n[{UIColors.INFO}]Step 3: CI/CD Pipeline[/{UIColors.INFO}]")
-        use_github, use_gitlab = self.get_cicd_choice()
 
         # Default package_name to "backend" if project_dir is "." or empty
         package_name = get_package_name(project_dir)
@@ -462,94 +457,94 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         structure_choice = CharReader.get_structure_choice()
 
+        use_standard = structure_choice == "1"
         use_predefined = structure_choice == "2"
         use_unified = structure_choice == "3"
         use_single = structure_choice == "4"
 
-        if use_predefined or use_unified or use_single:
-            UIFormatter.print_separator()
-            console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
-            console.print(
-                f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]"
-            )
-            project_dir = collector._get_project_directory()
-            if project_dir is None:
-                UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
-                sys.exit(1)
-
-            single_module_name = None
-            if use_single:
-                console.print()
-                console.print(f"[{UIColors.MUTED}]Common names: project, core, app[/{UIColors.MUTED}]")
-                single_module_name = (
-                    collector.get_validated_input(
-                        "Enter project configuration directory name (default: project)",
-                        validate_project_name,
-                        "directory name",
-                        allow_empty=True,
-                    )
-                    or "project"
-                )
-                console.print()
-
-            project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(
-                project_dir,
-                predefined=use_predefined,
-                unified=use_unified,
-                single=use_single,
-                single_module_name=single_module_name,
-            )
-
-            return project_dir, project_name, primary_app, app_names, metadata_dict
-
+        # Step 1: Project Setup
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 1: Project Setup[/{UIColors.INFO}]\n")
         console.print(f"[{UIColors.MUTED}]Press Enter or enter '.' to create in current directory[/{UIColors.MUTED}]")
-
+        
         project_dir = collector._get_project_directory()
-
         if project_dir is None:
             UIFormatter.print_error("Maximum attempts reached for project directory name. Exiting.")
             sys.exit(1)
 
-        console.print()
+        project_name = project_dir
+        single_module_name = None
+        
+        if use_standard:
+            console.print()
+            console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
+            project_name = collector.get_validated_input(
+                "Enter Django project name", validate_project_name, "Django project name"
+            )
+        elif use_single:
+            console.print()
+            console.print(f"[{UIColors.MUTED}]Common names: project, core, app[/{UIColors.MUTED}]")
+            single_module_name = (
+                collector.get_validated_input(
+                    "Enter project configuration directory name (default: project)",
+                    validate_project_name,
+                    "directory name",
+                    allow_empty=True,
+                )
+                or "project"
+            )
 
-        console.print(f"[{UIColors.MUTED}]Common names: config, core, settings[/{UIColors.MUTED}]")
-        project_name = collector.get_validated_input(
-            "Enter Django project name", validate_project_name, "Django project name"
-        )
-        console.print()
-
+        # Step 2: Database Configuration
         console.print()
         UIFormatter.print_separator()
         console.print(f"\n[{UIColors.INFO}]Step 2: Database Configuration[/{UIColors.INFO}]")
         database_type = collector.get_database_type_choice()
         use_database_url = collector.get_database_config_choice()
 
-        console.print()
-        UIFormatter.print_separator()
-        console.print(f"\n[{UIColors.INFO}]Step 3: Django Apps[/{UIColors.INFO}]\n")
-        nested, nested_dir = collector.get_nested_apps_config()
-        app_names = collector.get_app_names()
-        console.print()
+        # Step 3: Django Apps (Standard only)
+        nested = False
+        nested_dir = None
+        app_names = []
+        
+        if use_standard:
+            console.print()
+            UIFormatter.print_separator()
+            console.print(f"\n[{UIColors.INFO}]Step 3: Django Apps[/{UIColors.INFO}]\n")
+            nested, nested_dir = collector.get_nested_apps_config()
+            app_names = collector.get_app_names()
 
-        console.print(f"\n[{UIColors.INFO}]Step 4: CI/CD Pipeline[/{UIColors.INFO}]")
+        # Step 3/4: CI/CD Pipeline
+        step_num = 4 if use_standard else 3
+        console.print(f"\n[{UIColors.INFO}]Step {step_num}: CI/CD Pipeline[/{UIColors.INFO}]")
         use_github, use_gitlab = collector.get_cicd_choice()
 
-        package_name = get_package_name(project_dir)
-        metadata = ProjectMetadata(
-            package_name=package_name,
-            use_github_actions=use_github,
-            use_gitlab_ci=use_gitlab,
-            nested_apps=nested,
-            nested_dir=nested_dir,
-            use_database_url=use_database_url,
-            database_type=database_type,
-        )
+        # Generate Metadata
+        if use_standard:
+            package_name = get_package_name(project_dir)
+            metadata = ProjectMetadata(
+                package_name=package_name,
+                use_github_actions=use_github,
+                use_gitlab_ci=use_gitlab,
+                nested_apps=nested,
+                nested_dir=nested_dir,
+                use_database_url=use_database_url,
+                database_type=database_type,
+            )
+            return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
+        else:
+            project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(
+                project_dir,
+                predefined=use_predefined,
+                unified=use_unified,
+                single=use_single,
+                single_module_name=single_module_name,
+                database_type=database_type,
+                use_database_url=use_database_url,
+                use_github=use_github,
+                use_gitlab=use_gitlab,
+            )
+            return project_dir, project_name, primary_app, app_names, metadata_dict
 
-        console.print()
-
-        return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
     except KeyboardInterrupt:
         UIFormatter.print_info("\nSetup cancelled by user.")
         sys.exit(0)
