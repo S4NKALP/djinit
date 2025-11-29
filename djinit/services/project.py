@@ -89,23 +89,25 @@ class ProjectManager:
         UIFormatter.print_success(f"Added apps to USER_DEFINED_APPS: {added_apps_str}")
 
     def validate_project_structure(self) -> None:
+        join = lambda *args: os.path.join(self.project_root, *args)
+        
         required_files = [
-            os.path.join(self.project_root, "manage.py"),
-            os.path.join(self.project_root, self.module_name, "__init__.py"),
-            os.path.join(self.project_root, self.module_name, "settings", "__init__.py"),
-            os.path.join(self.project_root, self.module_name, "settings", "base.py"),
-            os.path.join(self.project_root, self.module_name, "settings", "development.py"),
-            os.path.join(self.project_root, self.module_name, "settings", "production.py"),
-            os.path.join(self.project_root, self.module_name, "urls.py"),
-            os.path.join(self.project_root, self.module_name, "wsgi.py"),
-            os.path.join(self.project_root, self.module_name, "asgi.py"),
+            join("manage.py"),
+            join(self.module_name, "__init__.py"),
+            join(self.module_name, "settings", "__init__.py"),
+            join(self.module_name, "settings", "base.py"),
+            join(self.module_name, "settings", "development.py"),
+            join(self.module_name, "settings", "production.py"),
+            join(self.module_name, "urls.py"),
+            join(self.module_name, "wsgi.py"),
+            join(self.module_name, "asgi.py"),
         ]
 
         apps_base_dir = self._get_apps_base_dir()
 
         if self.metadata.get("unified_structure"):
             # Validate Unified Structure
-            apps_dir = os.path.join(self.project_root, "apps")
+            apps_dir = join("apps")
             unified_files = [
                 os.path.join(apps_dir, "__init__.py"),
                 os.path.join(apps_dir, "apps.py"),
@@ -124,16 +126,17 @@ class ProjectManager:
 
         elif not self.metadata.get("predefined_structure") and not self.metadata.get("single_structure"):
             for app_name in self.app_names:
+                app_path = lambda f: os.path.join(apps_base_dir, app_name, f)
                 app_files = [
-                    os.path.join(apps_base_dir, app_name, "__init__.py"),
-                    os.path.join(apps_base_dir, app_name, "apps.py"),
-                    os.path.join(apps_base_dir, app_name, "models.py"),
-                    os.path.join(apps_base_dir, app_name, "views.py"),
-                    os.path.join(apps_base_dir, app_name, "serializers.py"),
-                    os.path.join(apps_base_dir, app_name, "routes.py"),
-                    os.path.join(apps_base_dir, app_name, "tests.py"),
-                    os.path.join(apps_base_dir, app_name, "migrations"),
-                    os.path.join(apps_base_dir, app_name, "admin.py"),
+                    app_path("__init__.py"),
+                    app_path("apps.py"),
+                    app_path("models.py"),
+                    app_path("views.py"),
+                    app_path("serializers.py"),
+                    app_path("routes.py"),
+                    app_path("tests.py"),
+                    app_path("migrations"),
+                    app_path("admin.py"),
                 ]
                 required_files.extend(app_files)
 

@@ -10,5 +10,6 @@
 ## Enhancements
 
 - [ ] Add more project structure templates
-- [ ] Add interactive configuration wizard
+- [x] Add interactive configuration wizard
 - [ ] Add testing framework setup (pytest, coverage)
+- [x] Improve structure detection

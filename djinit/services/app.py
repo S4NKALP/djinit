@@ -16,6 +16,7 @@ from djinit.utils.common import (
     extract_existing_apps,
     find_project_dir,
     find_settings_path,
+    get_djinit_config,
     insert_apps_into_user_defined_apps,
     is_django_project,
 )
@@ -27,6 +28,7 @@ class AppManager:
         self.app_name = app_name
         self.current_dir = os.getcwd()
         self.manage_py_path = os.path.join(self.current_dir, "manage.py")
+        self.config = get_djinit_config(self.current_dir)
         self._project_structure_cache = None
 
     def create_app(self) -> bool:
@@ -126,36 +128,58 @@ class AppManager:
     def _get_project_structure(self) -> tuple[bool, Optional[str], str]:
         """Get project structure with caching to avoid repeated detection."""
         if self._project_structure_cache is None:
-            project_dir, settings_base_path = find_project_dir(self.current_dir)
-
-            if project_dir is None:
-                self._project_structure_cache = (False, None, self.current_dir)
+            if self.config:
+                apps_config = self.config.get("apps", {})
+                nested = apps_config.get("nested", False)
+                nested_dir = apps_config.get("nested_dir")
+                
+                # Determine base dir for apps
+                if nested and nested_dir:
+                    apps_base_dir = os.path.join(self.current_dir, nested_dir)
+                else:
+                    apps_base_dir = self.current_dir
+                    
+                self._project_structure_cache = (nested, nested_dir, apps_base_dir)
             else:
-                self._project_structure_cache = detect_nested_structure_from_settings(
-                    settings_base_path, self.current_dir
-                )
+                # Fallback to old detection method
+                project_dir, settings_base_path = find_project_dir(self.current_dir)
+
+                if project_dir is None:
+                    self._project_structure_cache = (False, None, self.current_dir)
+                else:
+                    self._project_structure_cache = detect_nested_structure_from_settings(
+                        settings_base_path, self.current_dir
+                    )
         return self._project_structure_cache
 
     def _is_predefined_structure(self) -> bool:
+        if self.config:
+            return self.config.get("structure", {}).get("predefined", False)
+            
         apps_dir = os.path.join(self.current_dir, "apps")
         api_dir = os.path.join(self.current_dir, "api")
         return os.path.isdir(apps_dir) and os.path.isdir(api_dir)
 
     def _is_restricted_structure(self) -> bool:
         """Check if the project structure is Unified or Single Folder."""
-        apps_api_dir = os.path.join(self.current_dir, "apps", "api")
-        if os.path.isdir(apps_api_dir):
+        if self.config:
+            structure = self.config.get("structure", {})
+            return structure.get("unified", False) or structure.get("single", False)
+
+        # Check for Unified structure (apps/api exists)
+        if os.path.isdir(os.path.join(self.current_dir, "apps", "api")):
             return True
 
-        apps_dir = os.path.join(self.current_dir, "apps")
-        if os.path.isdir(apps_dir):
+        # Check for Predefined structure (apps/ exists but not apps/api)
+        if os.path.isdir(os.path.join(self.current_dir, "apps")):
             return False
 
+        # Check for Single Folder structure (models/ and api/ exist in project dir)
         project_dir, _ = find_project_dir(self.current_dir)
         if project_dir:
-            models_dir = os.path.join(project_dir, "models")
-            api_dir = os.path.join(project_dir, "api")
-            if os.path.isdir(models_dir) and os.path.isdir(api_dir):
+            has_models = os.path.isdir(os.path.join(project_dir, "models"))
+            has_api = os.path.isdir(os.path.join(project_dir, "api"))
+            if has_models and has_api:
                 return True
 
         return False

@@ -38,22 +38,6 @@ def display_secret_keys(keys: list[str]) -> None:
     console.print()
 
 
-def generate_secret_command():
+if __name__ == "__main__":
     keys = generate_multiple_keys(3, 50)
     display_secret_keys(keys)
-
-    instructions = Text()
-    instructions.append("📋 Usage Instructions:\n", style=UIColors.ACCENT)
-    instructions.append("1. Copy the appropriate secret key for your environment\n")
-    instructions.append("2. Add it to your .env file:\n")
-    instructions.append("   SECRET_KEY=your_secret_key_here\n", style=UIColors.CODE)
-    instructions.append("3. Or set it as an environment variable:\n")
-    instructions.append("   export SECRET_KEY=your_secret_key_here\n", style=UIColors.CODE)
-    instructions.append("4. Never commit secret keys to version control!\n", style=UIColors.WARNING)
-
-    console.print(Panel(instructions, title="💡 How to Use", border_style="blue"))
-    console.print()
-
-
-if __name__ == "__main__":
-    generate_secret_command()

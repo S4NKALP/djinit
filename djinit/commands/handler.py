@@ -11,7 +11,7 @@ from rich.text import Text
 
 from djinit.services.app import AppManager
 from djinit.ui.console import UIColors, UIFormatter, console
-from djinit.utils.security import display_secret_keys, generate_multiple_keys
+from djinit.utils.secretkey import display_secret_keys, generate_multiple_keys
 from djinit.utils.validators import validate_app_name
 
 
@@ -67,27 +67,23 @@ def handle_app_command(args: argparse.Namespace) -> None:
     UIFormatter.print_header("Django App Creation")
     UIFormatter.print_info("")
 
-    tokens = args.app_name if isinstance(args.app_name, list) else [args.app_name]
-    pieces = []
-    for token in tokens:
-        if token is None:
-            continue
-        for part in str(token).split(","):
-            part = part.strip()
-            if part:
-                pieces.append(part)
-    app_names = pieces
+    raw_tokens = args.app_name if isinstance(args.app_name, list) else [args.app_name]
+    
+    # Flatten and clean tokens
+    app_names = [
+        part.strip()
+        for token in raw_tokens
+        if token
+        for part in str(token).split(",")
+        if part.strip()
+    ]
 
     if not app_names:
         UIFormatter.print_error("App name cannot be empty")
         sys.exit(1)
 
-    seen = set()
-    deduped_names = []
-    for name in app_names:
-        if name not in seen:
-            deduped_names.append(name)
-            seen.add(name)
+    # Deduplicate while preserving order
+    deduped_names = list(dict.fromkeys(app_names))
 
     for name in deduped_names:
         is_valid, error_msg = validate_app_name(name)

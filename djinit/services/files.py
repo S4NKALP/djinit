@@ -45,10 +45,12 @@ class FileManager:
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
         base_context = base_context or {}
-        for folder, files in folder_specs.items():
-            folder_path = os.path.join(base_dir, folder)
+        
+        for folder_name, file_templates in folder_specs.items():
+            folder_path = os.path.join(base_dir, folder_name)
             create_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
-            for filename, template_path in files:
+            
+            for filename, template_path in file_templates:
                 file_path = os.path.join(folder_path, filename)
                 create_file_from_template(file_path, template_path, base_context, f"Created {file_path}")
 
@@ -65,6 +67,52 @@ class FileManager:
             subdir_path = os.path.join(base_dir, subdir)
             message = f"Created {prefix}{subdir}/__init__.py" if prefix else f"Created {subdir}/__init__.py"
             create_directory_with_init(subdir_path, message)
+
+    def _create_settings_package(self, settings_dir: str, base_context: dict, prefix: str) -> None:
+        """Helper to create settings package files (base, development, production)."""
+        from djinit.utils.secretkey import generate_secret_key
+
+        secret_key = generate_secret_key()
+        dev_context = {"secret_key": secret_key}
+
+        for filename, context in [
+            ("base.py", base_context),
+            ("development.py", dev_context),
+            ("production.py", base_context),
+        ]:
+            filepath = os.path.join(settings_dir, filename)
+            template_path = f"config/settings/{filename.replace('.py', '')}.j2"
+            self._render_and_create_file(
+                filepath,
+                template_path,
+                context,
+                f"Created {prefix}/settings/{filename}",
+                base_dir=os.path.dirname(settings_dir),  # Not strictly used by _render_and_create_file but good for context
+                should_format=True
+            )
+
+    def _create_lifecycle_files(self, target_dir: str, prefix: str, api_module: str = None, comment_out_api: bool = False) -> None:
+        """Helper to create urls.py, wsgi.py, and asgi.py."""
+        
+        urls_context = {"api_module": api_module}
+        if comment_out_api:
+            urls_context["comment_out_api_url"] = True
+
+        files = [
+            ("urls.py", "config/urls/with_api.j2", urls_context),
+            ("wsgi.py", "config/wsgi.j2", {}),
+            ("asgi.py", "config/asgi.j2", {}),
+        ]
+        
+        for filename, template, context in files:
+            filepath = os.path.join(target_dir, filename)
+            self._render_and_create_file(
+                filepath,
+                template,
+                context,
+                f"Created {prefix}/{filename}",
+                should_format=True
+            )
 
     def create_gitignore(self) -> None:
         self._render_and_create_file(".gitignore", "project/gitignore.j2", {}, "Created .gitignore file")
@@ -208,43 +256,17 @@ class FileManager:
         settings_dir = os.path.join(core_dir, "settings")
         create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
 
-        from djinit.utils.security import generate_secret_key
-
-        secret_key = generate_secret_key()
-
-        # In this new structure, 'apps' is the main app.
-        # We assume the user wants 'apps' to be the app label.
-        # Or perhaps 'apps' is just a container and the components inside are what matters?
-        # Given the structure: apps/models, apps/views etc.
-        # It seems 'apps' is acting as the app.
-
+        # Create settings files
         base_context = {
-            "project_name": "core",  # Project module is 'core'
-            "app_names": ["apps"],  # 'apps' is the main app
+            "project_name": "core",
+            "app_names": ["apps"],
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
-        dev_context = {"secret_key": secret_key}
+        self._create_settings_package(settings_dir, base_context, "core")
 
-        for filename, context in [
-            ("base.py", base_context),
-            ("development.py", dev_context),
-            ("production.py", base_context),
-        ]:
-            filepath = os.path.join(settings_dir, filename)
-            template_path = f"config/settings/{filename.replace('.py', '')}.j2"
-            create_file_from_template(
-                filepath, template_path, context, f"Created core/settings/{filename}", should_format=True
-            )
-
-        core_files = [
-            ("urls.py", "config/urls/with_api.j2", {"api_module": "apps.api"}),
-            ("wsgi.py", "config/wsgi.j2", {}),
-            ("asgi.py", "config/asgi.j2", {}),
-        ]
-        for filename, template, context in core_files:
-            filepath = os.path.join(core_dir, filename)
-            create_file_from_template(filepath, template, context, f"Created core/{filename}", should_format=True)
+        # Create lifecycle files (urls, wsgi, asgi)
+        self._create_lifecycle_files(core_dir, "core", api_module="apps.api")
 
         # 2. Create 'apps' directory (The Main App)
         apps_dir = os.path.join(self.project_root, "apps")
@@ -287,43 +309,22 @@ class FileManager:
         settings_dir = os.path.join(project_dir, "settings")
         create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
 
-        from djinit.utils.security import generate_secret_key
-
-        secret_key = generate_secret_key()
-
+        # Create settings files
         base_context = {
             "project_name": self.module_name,
-            "app_names": [self.module_name],  # Project acts as the app
+            "app_names": [self.module_name],
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
-        dev_context = {"secret_key": secret_key}
+        self._create_settings_package(settings_dir, base_context, self.module_name)
 
-        for filename, context in [
-            ("base.py", base_context),
-            ("development.py", dev_context),
-            ("production.py", base_context),
-        ]:
-            filepath = os.path.join(settings_dir, filename)
-            template_path = f"config/settings/{filename.replace('.py', '')}.j2"
-            create_file_from_template(
-                filepath, template_path, context, f"Created {self.module_name}/settings/{filename}", should_format=True
-            )
-
-        project_files = [
-            (
-                "urls.py",
-                "config/urls/with_api.j2",
-                {"api_module": f"{self.module_name}.api", "comment_out_api_url": True},
-            ),
-            ("wsgi.py", "config/wsgi.j2", {}),
-            ("asgi.py", "config/asgi.j2", {}),
-        ]
-        for filename, template, context in project_files:
-            filepath = os.path.join(project_dir, filename)
-            create_file_from_template(
-                filepath, template, context, f"Created {self.module_name}/{filename}", should_format=True
-            )
+        # Create lifecycle files (urls, wsgi, asgi)
+        self._create_lifecycle_files(
+            project_dir, 
+            self.module_name, 
+            api_module=f"{self.module_name}.api", 
+            comment_out_api=True
+        )
 
         components = ["admin", "api", "models", "tests"]
         self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
@@ -394,4 +395,42 @@ class FileManager:
             "project/ci/gitlab_ci.j2",
             context,
             "Created GitLab CI configuration (.gitlab-ci.yml)",
+        )
+
+    def create_djinit_config(self) -> None:
+        """Create .djinit configuration file."""
+        import json
+        
+        is_predefined = self.metadata.get("predefined_structure", False)
+        is_unified = self.metadata.get("unified_structure", False)
+        is_single = self.metadata.get("single_structure", False)
+        is_standard = not (is_predefined or is_unified or is_single)
+
+        config = {
+            "project_name": self.project_name,
+            "structure": {
+                "standard": is_standard,
+                "predefined": is_predefined,
+                "unified": is_unified,
+                "single": is_single,
+            },
+            "apps": {
+                "nested": self.metadata.get("nested_apps", False),
+                "nested_dir": self.metadata.get("nested_dir"),
+            },
+            "settings": {
+                "use_database_url": self.metadata.get("use_database_url", True),
+                "database_type": self.metadata.get("database_type", "postgresql"),
+            },
+            "cicd": {
+                "github": self.metadata.get("use_github_actions", False),
+                "gitlab": self.metadata.get("use_gitlab_ci", False),
+            }
+        }
+        
+        filepath = os.path.join(self.project_root, ".djinit")
+        create_file_with_content(
+            filepath, 
+            json.dumps(config, indent=4), 
+            "Created .djinit configuration file"
         )

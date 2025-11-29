@@ -9,7 +9,6 @@ from typing import Callable, List, Tuple
 from djinit.services.files import FileManager
 from djinit.services.project import ProjectManager
 from djinit.ui.console import UIFormatter
-from djinit.utils.security import generate_secret_command
 
 
 class Cli:
@@ -27,7 +26,8 @@ class Cli:
         self.project_manager = ProjectManager(project_dir, project_name, app_names, metadata)
         self.file_manager = FileManager(self.project_root, project_name, app_names, metadata)
 
-    def run_setup(self) -> bool:
+    def _normalize_metadata(self) -> None:
+        """Normalize metadata and app names based on structure type."""
         if self.metadata.get("predefined_structure"):
             self.metadata.setdefault("project_module_name", "config")
             self.metadata.setdefault("nested_apps", True)
@@ -36,7 +36,7 @@ class Cli:
                 self.app_names = ["users", "core"]
                 self.project_manager.app_names = self.app_names
 
-        if self.metadata.get("unified_structure"):
+        elif self.metadata.get("unified_structure"):
             self.metadata.setdefault("project_module_name", "core")
             self.metadata.setdefault("nested_apps", True)
             self.metadata.setdefault("nested_dir", "apps")
@@ -44,11 +44,14 @@ class Cli:
                 self.app_names = []
                 self.project_manager.app_names = self.app_names
 
-        if self.metadata.get("single_structure"):
+        elif self.metadata.get("single_structure"):
             self.metadata.setdefault("nested_apps", False)
             if not self.app_names:
                 self.app_names = []
                 self.project_manager.app_names = self.app_names
+
+    def run_setup(self) -> bool:
+        self._normalize_metadata()
 
         steps: List[Tuple[str, Callable[[], None]]] = []
 
@@ -100,6 +103,7 @@ class Cli:
             self.file_manager.create_requirements,
             self.file_manager.create_readme,
             self.file_manager.create_env_file,
+            self.file_manager.create_djinit_config,
             lambda: self.file_manager.create_pyproject_toml(self.metadata),
         ]
 
@@ -115,6 +119,3 @@ class Cli:
         if self.metadata.get("use_gitlab_ci", True):
             self.file_manager.create_gitlab_ci()
 
-    def generate_secret_keys(self) -> bool:
-        generate_secret_command()
-        return True

@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
+import questionary
 
 console = Console()
 
@@ -164,20 +165,28 @@ class UIFormatter:
 
     @staticmethod
     def confirm(prompt: str, default: bool = True) -> bool:
-        """Display a confirmation prompt"""
-        default_str = "Y/n" if default else "y/N"
-        response = console.input(f"[bold cyan]?[/bold cyan] {prompt} [{default_str}]: ").strip().lower()
-        if not response:
-            return default
-        return response in ("y", "yes")
+        """Display a confirmation prompt as a selectable list"""
+        choices = [
+            questionary.Choice("Yes", value=True),
+            questionary.Choice("No", value=False),
+        ]
+        default_choice = choices[0] if default else choices[1]
+        
+        result = questionary.select(
+            prompt,
+            choices=choices,
+            default=default_choice,
+        ).ask()
+        
+        if result is None:
+            raise KeyboardInterrupt
+            
+        return result
 
     @staticmethod
     def prompt(message: str, default: Optional[str] = None) -> str:
         """Display an input prompt"""
-        if default:
-            message = f"{message} [{default}]"
-        response = console.input(f"[bold cyan]?[/bold cyan] {message}: ").strip()
-        return response or default or ""
+        return questionary.text(message, default=default or "").ask()
 
     @staticmethod
     def handle_exception(e: Exception):
