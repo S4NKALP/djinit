@@ -118,4 +118,3 @@ class Cli:
 
         if self.metadata.get("use_gitlab_ci", True):
             self.file_manager.create_gitlab_ci()
-

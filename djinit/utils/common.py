@@ -283,10 +283,10 @@ def detect_nested_structure_from_settings(
 def get_djinit_config(project_root: str = None) -> dict | None:
     """Read .djinit configuration file."""
     import json
-    
+
     if project_root is None:
         project_root = os.getcwd()
-        
+
     config_path = os.path.join(project_root, ".djinit")
     if not os.path.exists(config_path):
         # Try finding it in parent directories
@@ -294,7 +294,7 @@ def get_djinit_config(project_root: str = None) -> dict | None:
         if parent and parent != project_root:
             return get_djinit_config(parent)
         return None
-        
+
     try:
         with open(config_path) as f:
             return json.load(f)

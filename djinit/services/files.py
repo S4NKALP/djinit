@@ -45,11 +45,11 @@ class FileManager:
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
         base_context = base_context or {}
-        
+
         for folder_name, file_templates in folder_specs.items():
             folder_path = os.path.join(base_dir, folder_name)
             create_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
-            
+
             for filename, template_path in file_templates:
                 file_path = os.path.join(folder_path, filename)
                 create_file_from_template(file_path, template_path, base_context, f"Created {file_path}")
@@ -87,13 +87,17 @@ class FileManager:
                 template_path,
                 context,
                 f"Created {prefix}/settings/{filename}",
-                base_dir=os.path.dirname(settings_dir),  # Not strictly used by _render_and_create_file but good for context
-                should_format=True
+                base_dir=os.path.dirname(
+                    settings_dir
+                ),  # Not strictly used by _render_and_create_file but good for context
+                should_format=True,
             )
 
-    def _create_lifecycle_files(self, target_dir: str, prefix: str, api_module: str = None, comment_out_api: bool = False) -> None:
+    def _create_lifecycle_files(
+        self, target_dir: str, prefix: str, api_module: str = None, comment_out_api: bool = False
+    ) -> None:
         """Helper to create urls.py, wsgi.py, and asgi.py."""
-        
+
         urls_context = {"api_module": api_module}
         if comment_out_api:
             urls_context["comment_out_api_url"] = True
@@ -103,15 +107,11 @@ class FileManager:
             ("wsgi.py", "config/wsgi.j2", {}),
             ("asgi.py", "config/asgi.j2", {}),
         ]
-        
+
         for filename, template, context in files:
             filepath = os.path.join(target_dir, filename)
             self._render_and_create_file(
-                filepath,
-                template,
-                context,
-                f"Created {prefix}/{filename}",
-                should_format=True
+                filepath, template, context, f"Created {prefix}/{filename}", should_format=True
             )
 
     def create_gitignore(self) -> None:
@@ -320,10 +320,7 @@ class FileManager:
 
         # Create lifecycle files (urls, wsgi, asgi)
         self._create_lifecycle_files(
-            project_dir, 
-            self.module_name, 
-            api_module=f"{self.module_name}.api", 
-            comment_out_api=True
+            project_dir, self.module_name, api_module=f"{self.module_name}.api", comment_out_api=True
         )
 
         components = ["admin", "api", "models", "tests"]
@@ -400,7 +397,7 @@ class FileManager:
     def create_djinit_config(self) -> None:
         """Create .djinit configuration file."""
         import json
-        
+
         is_predefined = self.metadata.get("predefined_structure", False)
         is_unified = self.metadata.get("unified_structure", False)
         is_single = self.metadata.get("single_structure", False)
@@ -425,12 +422,8 @@ class FileManager:
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),
                 "gitlab": self.metadata.get("use_gitlab_ci", False),
-            }
+            },
         }
-        
+
         filepath = os.path.join(self.project_root, ".djinit")
-        create_file_with_content(
-            filepath, 
-            json.dumps(config, indent=4), 
-            "Created .djinit configuration file"
-        )
+        create_file_with_content(filepath, json.dumps(config, indent=4), "Created .djinit configuration file")

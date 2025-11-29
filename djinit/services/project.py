@@ -90,7 +90,7 @@ class ProjectManager:
 
     def validate_project_structure(self) -> None:
         join = lambda *args: os.path.join(self.project_root, *args)
-        
+
         required_files = [
             join("manage.py"),
             join(self.module_name, "__init__.py"),
@@ -126,7 +126,7 @@ class ProjectManager:
 
         elif not self.metadata.get("predefined_structure") and not self.metadata.get("single_structure"):
             for app_name in self.app_names:
-                app_path = lambda f: os.path.join(apps_base_dir, app_name, f)
+                app_path = lambda f, app=app_name: os.path.join(apps_base_dir, app, f)
                 app_files = [
                     app_path("__init__.py"),
                     app_path("apps.py"),

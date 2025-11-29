@@ -6,13 +6,13 @@ Provides clean, minimal styling and user interface components.
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
+import questionary
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
-import questionary
 
 console = Console()
 
@@ -171,16 +171,16 @@ class UIFormatter:
             questionary.Choice("No", value=False),
         ]
         default_choice = choices[0] if default else choices[1]
-        
+
         result = questionary.select(
             prompt,
             choices=choices,
             default=default_choice,
         ).ask()
-        
+
         if result is None:
             raise KeyboardInterrupt
-            
+
         return result
 
     @staticmethod

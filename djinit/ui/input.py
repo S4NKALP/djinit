@@ -7,6 +7,14 @@ import os
 import sys
 from typing import Tuple, TypedDict
 
+import questionary
+
+from djinit.core.types import ProjectMetadata
+from djinit.ui.console import UIColors, UIFormatter, console
+from djinit.utils.common import get_package_name
+from djinit.utils.validators import validate_app_name, validate_project_name
+
+
 class StructureOptions(TypedDict):
     project_dir: str
     predefined: bool
@@ -18,20 +26,12 @@ class StructureOptions(TypedDict):
     use_github: bool
     use_gitlab: bool
 
-import questionary
-from djinit.core.types import ProjectMetadata
-from djinit.ui.console import UIColors, UIFormatter, console
-from djinit.utils.common import get_package_name
-from djinit.utils.validators import validate_app_name, validate_project_name
-
 
 class InputCollector:
     def __init__(self):
         pass
 
-    def get_validated_input(
-        self, prompt: str, validator: callable, input_type: str, allow_empty: bool = False
-    ) -> str:
+    def get_validated_input(self, prompt: str, validator: callable, input_type: str, allow_empty: bool = False) -> str:
         def q_validator(text):
             if not text and allow_empty:
                 return True
@@ -91,20 +91,17 @@ class InputCollector:
         def validate_dir(text):
             if not text or text == ".":
                 return True
-            
+
             is_valid, error_msg = validate_project_name(text)
             if not is_valid:
                 return error_msg
-            
+
             if os.path.exists(text):
                 return f"Directory '{text}' already exists."
-            
+
             return True
 
-        project_dir = questionary.text(
-            "Enter project directory name:",
-            validate=validate_dir
-        ).ask()
+        project_dir = questionary.text("Enter project directory name:", validate=validate_dir).ask()
 
         if project_dir is None:
             raise KeyboardInterrupt
@@ -112,22 +109,22 @@ class InputCollector:
         if not project_dir or project_dir == ".":
             UIFormatter.print_info(f"Creating project in current directory: {os.getcwd()}")
             return "."
-        
+
         return project_dir
 
     def _get_selection(self, message: str, choices: list[tuple[str, str]], default: str = None) -> str:
         q_choices = [questionary.Choice(title, value=value) for title, value in choices]
         default_choice = next((c for c in q_choices if c.value == default), q_choices[0])
-        
+
         result = questionary.select(
             message,
             choices=q_choices,
             default=default_choice,
         ).ask()
-        
+
         if result is None:
             raise KeyboardInterrupt
-            
+
         return result
 
     def get_cicd_choice(self) -> Tuple[bool, bool]:
@@ -150,8 +147,7 @@ class InputCollector:
 
     def get_nested_apps_config(self) -> Tuple[bool, str | None]:
         choice = UIFormatter.confirm(
-            "Do you want to place apps inside a package directory (e.g. 'src/')?",
-            default=False
+            "Do you want to place apps inside a package directory (e.g. 'src/')?", default=False
         )
 
         if not choice:
@@ -165,17 +161,14 @@ class InputCollector:
         return True, dir_name
 
     def get_database_config_choice(self) -> bool:
-        return UIFormatter.confirm(
-            "Use DATABASE_URL? (recommended for production)",
-            default=True
-        )
+        return UIFormatter.confirm("Use DATABASE_URL? (recommended for production)", default=True)
 
     def get_database_type_choice(self) -> str:
         choices = [
             ("PostgreSQL", "postgresql"),
             ("MySQL", "mysql"),
         ]
-        
+
         return self._get_selection("Choose database:", choices, default="postgresql")
 
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
@@ -220,11 +213,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             ("Single folder layout (everything in one folder)", "4"),
         ]
 
-        structure_choice = collector._get_selection(
-            "Choose structure type:",
-            structure_choices,
-            default="1"
-        )
+        structure_choice = collector._get_selection("Choose structure type:", structure_choices, default="1")
 
         use_standard = structure_choice == "1"
         use_predefined = structure_choice == "2"

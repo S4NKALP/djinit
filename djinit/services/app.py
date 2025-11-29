@@ -132,13 +132,13 @@ class AppManager:
                 apps_config = self.config.get("apps", {})
                 nested = apps_config.get("nested", False)
                 nested_dir = apps_config.get("nested_dir")
-                
+
                 # Determine base dir for apps
                 if nested and nested_dir:
                     apps_base_dir = os.path.join(self.current_dir, nested_dir)
                 else:
                     apps_base_dir = self.current_dir
-                    
+
                 self._project_structure_cache = (nested, nested_dir, apps_base_dir)
             else:
                 # Fallback to old detection method
@@ -155,7 +155,7 @@ class AppManager:
     def _is_predefined_structure(self) -> bool:
         if self.config:
             return self.config.get("structure", {}).get("predefined", False)
-            
+
         apps_dir = os.path.join(self.current_dir, "apps")
         api_dir = os.path.join(self.current_dir, "api")
         return os.path.isdir(apps_dir) and os.path.isdir(api_dir)

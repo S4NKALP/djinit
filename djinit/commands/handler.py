@@ -68,15 +68,9 @@ def handle_app_command(args: argparse.Namespace) -> None:
     UIFormatter.print_info("")
 
     raw_tokens = args.app_name if isinstance(args.app_name, list) else [args.app_name]
-    
+
     # Flatten and clean tokens
-    app_names = [
-        part.strip()
-        for token in raw_tokens
-        if token
-        for part in str(token).split(",")
-        if part.strip()
-    ]
+    app_names = [part.strip() for token in raw_tokens if token for part in str(token).split(",") if part.strip()]
 
     if not app_names:
         UIFormatter.print_error("App name cannot be empty")
