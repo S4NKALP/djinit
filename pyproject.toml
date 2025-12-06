@@ -49,9 +49,7 @@ classifiers=[
 dependencies = [
     "click>=8.3.0",
     "rich>=14.2.0",
-    "ruff>=0.14.2",
     "jinja2>=3.1.0",
-    "pre-commit>=4.5.0",
     "questionary>=2.0.1",
 ]
 
@@ -61,3 +59,9 @@ Homepage = "https://github.com/S4NKALP/djinit"
 [project.scripts]
 djinit = "djinit.generator:main"
 dj = "djinit.generator:main"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.0",
+    "ruff>=0.14.2",
+]
