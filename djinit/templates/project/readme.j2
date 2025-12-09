@@ -1,6 +1,6 @@
 # {{ project_name }}
 
-A Django project created with [djinitx/djinit/dj](https://github.com/S4NKALP/djinit).
+A Django project folder structure is generated with [djinitx/djinit/dj](https://github.com/S4NKALP/djinit).
 
 ## Features
 
@@ -62,6 +62,11 @@ Run `just` to see all available commands, including:
 - `just format` - Format code
 - `just shell` - Django shell
 - `just clean` - Clean cache files
+- `just install <package>` - Install package
+- `just remove <package>` - Remove package
+- `just server` - Run production server
+- `just ci` - Run all linting and checks
+- `just test-coverage` - Run tests with coverage
 
 ## Project Structure
 
@@ -107,6 +112,7 @@ Run `just` to see all available commands, including:
 ├── manage.py
 ├── requirements.txt
 ├── pyproject.toml
+├── uv.lock
 ├── .env.sample
 ├── justfile
 ├── Procfile
@@ -146,6 +152,7 @@ Run `just` to see all available commands, including:
 ├── manage.py
 ├── requirements.txt
 ├── pyproject.toml
+├── uv.lock
 ├── .env.sample
 ├── justfile
 ├── Procfile
@@ -173,6 +180,7 @@ Run `just` to see all available commands, including:
 ├── manage.py
 ├── requirements.txt
 ├── pyproject.toml
+├── uv.lock
 ├── .env.sample
 └── README.md
 

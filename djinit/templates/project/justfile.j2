@@ -128,9 +128,74 @@ clean:
     rm -rf htmlcov/
     rm -rf .pytest_cache/
 
+# Pin dependencies in pyproject.toml using versions from uv.lock, keeping >= and extras
+pin-deps:
+    #!/usr/bin/env -S uv run python
+    import tomllib, re
+    from pathlib import Path
+
+    lock = Path("uv.lock")
+    if not lock.exists():
+        print("uv.lock not found — run `uv sync` first")
+        raise SystemExit(0)
+
+    data = tomllib.loads(lock.read_text())
+    packages = {p["name"].lower(): p["version"] for p in data.get("package", [])}
+
+    py = Path("pyproject.toml")
+    lines = py.read_text().splitlines()
+
+    pattern = re.compile(r'^(\s*)"([^"]+)"(,?)')
+
+    out = []
+    for line in lines:
+        m = pattern.match(line)
+        if not m:
+            out.append(line)
+            continue
+
+        indent, dep, comma = m.groups()
+
+        base = dep
+        extras = ""
+        operator = ">="
+        version = None
+
+        # extras: django[postgres]
+        if "[" in base and "]" in base:
+            before, after = base.split("[", 1)
+            extras = "[" + after.split("]")[0] + "]"
+            base = before
+
+        # detect >= or ==
+        if ">=" in dep:
+            operator = ">="
+            base, version = dep.split(">=")
+            base = base.strip()
+        elif "==" in dep:
+            operator = "=="
+            base, version = dep.split("==")
+            base = base.strip()
+        else:
+            base = dep
+
+        base_lower = base.lower()
+        new_version = packages.get(base_lower)
+
+        if new_version:
+            new_dep = f'{base}{extras}{operator}{new_version}'
+            line = f'{indent}"{new_dep}"{comma}'
+
+        out.append(line)
+
+    py.write_text("\n".join(out) + "\n")
+    print("Pinned dependencies (>= preserved, extras preserved).")
+
+
 # Setup project for development (using uv)
 setup:
     uv sync
+    just pin-deps
     uv run python manage.py migrate
     uv run python manage.py createsuperuser
 
