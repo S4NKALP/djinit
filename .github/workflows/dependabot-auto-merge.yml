@@ -1,5 +1,7 @@
-name: Dependabot Auto-Approve and Auto-Merge
-on: pull_request
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
 
 permissions:
   contents: write
@@ -7,25 +9,15 @@ permissions:
 
 jobs:
   dependabot:
+    # Run only for Dependabot PRs
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
+
     steps:
-      - name: Dependabot metadata
+      - name: Fetch Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2
-      - name: Approve PR
-        if: |
-          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-patch'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              event: 'APPROVE'
-            })
+
       - name: Enable auto-merge (squash)
         if: |
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
