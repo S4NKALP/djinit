@@ -1,4 +1,3 @@
-
 name: Dependabot Auto-Merge
 
 on:
@@ -10,11 +9,11 @@ permissions:
 
 jobs:
   dependabot:
-    if: ${{github.actor == 'dependabot[bot]' }}
+    if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Merge PR from dependabot
+      - name: Merge PR from Dependabot
         uses: fastify/github-action-merge-dependabot@v3
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          github-token: ${{ secrets.DEPENDABOT_TOKEN }}
