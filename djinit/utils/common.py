@@ -51,7 +51,7 @@ def create_file_from_template(
 
 def create_init_file(directory: str, success_message: str) -> None:
     init_path = os.path.join(directory, "__init__.py")
-    create_file_from_template(init_path, "project/init.j2", {}, success_message, should_format=False)
+    create_file_from_template(init_path, "project/init.py-tpl", {}, success_message, should_format=False)
 
 
 def create_directory_with_init(dir_path: str, message: str) -> None:
