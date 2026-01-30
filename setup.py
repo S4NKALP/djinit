@@ -15,7 +15,6 @@ setup(
         "ruff>=0.14.2",
         "click>=8.3.0",
         "rich>=14.2.0",
-        "jinja2>=3.1.0",
         "questionary>=2.0.1",
     ],
     entry_points={
