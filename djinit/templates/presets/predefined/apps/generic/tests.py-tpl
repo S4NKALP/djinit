@@ -1,0 +1,55 @@
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.contrib.auth import get_user_model
+
+from [[ app_module ]].models.[[ app_name ]] import [[ model_class_name ]]
+
+User = get_user_model()
+
+
+class [[ model_class_name ]]APITestCase(APITestCase):
+    """Test cases for [[ model_class_name ]] API endpoints."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        self.client.force_authenticate(user=self.user)
+        self.test_data = {"name": "Test [[ model_class_name ]]"}
+
+    def test_create_[[ app_name ]](self):
+        """Test creating a [[ model_class_name ]]."""
+        response = self.client.post("/api/v1/[[ app_name ]]/", self.test_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual([[ model_class_name ]].objects.count(), 1)
+
+    def test_list_[[ app_name ]]s(self):
+        """Test listing all [[ model_class_name ]]s."""
+        [[ model_class_name ]].objects.create(**self.test_data)
+        response = self.client.get("/api/v1/[[ app_name ]]/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_retrieve_[[ app_name ]](self):
+        """Test retrieving a single [[ model_class_name ]]."""
+        instance = [[ model_class_name ]].objects.create(**self.test_data)
+        response = self.client.get(f"/api/v1/[[ app_name ]]/{instance.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], self.test_data["name"])
+
+    def test_update_[[ app_name ]](self):
+        """Test updating a [[ model_class_name ]]."""
+        instance = [[ model_class_name ]].objects.create(**self.test_data)
+        updated_data = {"name": "Updated [[ model_class_name ]]"}
+        response = self.client.patch(f"/api/v1/[[ app_name ]]/{instance.id}/", updated_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        instance.refresh_from_db()
+        self.assertEqual(instance.name, updated_data["name"])
+
+    def test_delete_[[ app_name ]](self):
+        """Test deleting a [[ model_class_name ]]."""
+        instance = [[ model_class_name ]].objects.create(**self.test_data)
+        response = self.client.delete(f"/api/v1/[[ app_name ]]/{instance.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual([[ model_class_name ]].objects.count(), 0)

@@ -1,0 +1,8 @@
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+
+# Register your viewsets here
+# router.register(r'endpoint', YourViewSet, basename='your-endpoint')
+
+urlpatterns = router.urls
