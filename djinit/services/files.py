@@ -75,10 +75,24 @@ class FileManager:
         secret_key = generate_secret_key()
         dev_context = {"secret_key": secret_key}
 
+        # Prepare context for base.py with full AppConfig paths
+        base_settings_context = base_context.copy()
+        if "app_names" in base_settings_context:
+            transformed_apps = []
+            for app in base_settings_context["app_names"]:
+                # Transform to full AppConfig path: module.path -> module.path.apps.ConfigName
+                short_name = app.split('.')[-1]
+                config_name = short_name.title().replace('_', '') + 'Config'
+                # If it's the special "apps" container in unified structure, we might want to skip or handle differently
+                # But assumes all user apps follow standard djinit structure
+                full_path = f"{app}.apps.{config_name}"
+                transformed_apps.append(full_path)
+            base_settings_context["app_names"] = transformed_apps
+
         for filename, context in [
-            ("base.py", base_context),
+            ("base.py", base_settings_context),
             ("development.py", dev_context),
-            ("production.py", base_context),
+            ("production.py", base_settings_context),
         ]:
             filepath = os.path.join(settings_dir, filename)
             template_path = f"config/settings/{filename.replace('.py', '')}.py-tpl"

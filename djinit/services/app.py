@@ -78,8 +78,17 @@ class AppManager:
         if self._is_predefined_structure():
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
 
-        _, _, apps_base_dir = self._get_project_structure()
-        success = DjangoHelper.startapp(self.app_name, apps_base_dir)
+        is_nested, nested_dir, apps_base_dir = self._get_project_structure()
+        
+        # Calculate app_module based on project structure
+        if is_nested and nested_dir:
+            # Normalize nested_dir (replace / with . for module path)
+            module_base = nested_dir.replace(os.path.sep, '.')
+            app_module = f"{module_base}.{self.app_name}"
+        else:
+            app_module = self.app_name
+            
+        success = DjangoHelper.startapp(self.app_name, apps_base_dir, app_module)
         if success:
             UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
         else:
@@ -106,23 +115,49 @@ class AppManager:
             is_nested, nested_dir, _ = self._get_project_structure()
             app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
 
+        # Use full AppConfig path to properly support nested apps
+        # e.g. apps.users -> apps.users.apps.UsersConfig
+        app_config_name = self.app_name.title().replace('_', '')
+        full_app_config = f"{app_module_path}.apps.{app_config_name}Config"
+        
+        # We'll check if either the module path or the full config path exists
+        # but we'll prefer adding the full config path
+
         existing_apps = extract_existing_apps(content)
-        if app_module_path in existing_apps:
-            UIFormatter.print_success(f"App '{app_module_path}' already configured in USER_DEFINED_APPS")
+        
+        # Check if full config is already there
+        if full_app_config in existing_apps:
+            UIFormatter.print_success(f"App '{full_app_config}' already configured in USER_DEFINED_APPS")
             return True
+            
+        # Check if legacy module path is there, if so, upgrade it
+        if app_module_path in existing_apps:
+            from djinit.utils.common import replace_app_in_user_defined_apps
+            
+            UIFormatter.print_info(f"Upgrading app configuration from '{app_module_path}' to '{full_app_config}'...")
+            updated_content = replace_app_in_user_defined_apps(content, app_module_path, full_app_config)
+            
+            if updated_content:
+                with open(base_settings_path, "w") as f:
+                    f.write(updated_content)
+                UIFormatter.print_success(f"Upgraded '{app_module_path}' to '{full_app_config}' in USER_DEFINED_APPS")
+                return True
+            else:
+                UIFormatter.print_error(f"Failed to upgrade app '{app_module_path}'")
+                return False
 
         if "USER_DEFINED_APPS" not in content:
             UIFormatter.print_error("Could not find USER_DEFINED_APPS section in base.py")
             return False
 
-        updated_content = insert_apps_into_user_defined_apps(content, [app_module_path])
+        updated_content = insert_apps_into_user_defined_apps(content, [full_app_config])
         if not updated_content:
             return False
 
         with open(base_settings_path, "w") as f:
             f.write(updated_content)
 
-        UIFormatter.print_success(f"Added '{app_module_path}' to USER_DEFINED_APPS in base.py")
+        UIFormatter.print_success(f"Added '{full_app_config}' to USER_DEFINED_APPS in base.py")
         return True
 
     def _get_project_structure(self) -> tuple[bool, Optional[str], str]:
@@ -192,7 +227,13 @@ class AppManager:
 
         model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
         app_module = f"apps.{self.app_name}"
-        base_context = {"app_name": self.app_name, "app_module": app_module, "model_class_name": model_class_name}
+        app_config_name = self.app_name.title().replace('_', '')
+        base_context = {
+            "app_name": self.app_name,
+            "app_config_name": app_config_name,
+            "app_module": app_module,
+            "model_class_name": model_class_name,
+        }
 
         create_file_from_template(
             os.path.join(app_dir, "apps.py"),

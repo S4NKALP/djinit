@@ -46,8 +46,12 @@ class ProjectManager:
         if apps_base_dir != self.project_root:
             create_directory_with_init(apps_base_dir, f"Created {os.path.basename(apps_base_dir)}/__init__.py")
 
-        for app_name in self.app_names:
-            DjangoHelper.startapp(app_name, apps_base_dir)
+        # Calculate module paths for correct AppConfig generation (e.g. src.users)
+        app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
+
+        for i, app_name in enumerate(self.app_names):
+            app_module = app_module_paths[i]
+            DjangoHelper.startapp(app_name, apps_base_dir, app_module)
             UIFormatter.print_success(f"Django app '{app_name}' created successfully!")
 
         self.add_apps_to_settings()
@@ -69,10 +73,45 @@ class ProjectManager:
 
         app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
 
-        existing_apps = extract_existing_apps(content)
-        apps_to_add = [app for app in app_module_paths if app not in existing_apps]
+        # Transform to full AppConfig paths (e.g. apps.users.apps.UsersConfig)
+        full_config_paths = []
+        for app in app_module_paths:
+            short_name = app.split('.')[-1]
+            config_name = short_name.title().replace('_', '') + 'Config'
+            full_config_paths.append(f"{app}.apps.{config_name}")
 
+        existing_apps = extract_existing_apps(content)
+        
+        # Check against both module path and full config path to avoid duplicates
+        apps_to_add = []
+        for i, full_path in enumerate(full_config_paths):
+            mod_path = app_module_paths[i]
+            if full_path not in existing_apps and mod_path not in existing_apps:
+                apps_to_add.append(full_path)
+            elif mod_path in existing_apps:
+                # If legacy module path exists, we could upgrade it here, 
+                # but ProjectManager is typically initialized on creation.
+                # For now, let's just not add a duplicate.
+                 # Actually, let's upgrade it if we can
+                 pass 
+
+        # If we found apps to add, insert them
         if not apps_to_add:
+            # Check if we need to upgrade any legacy paths
+            upgraded = False
+            for i, full_path in enumerate(full_config_paths):
+                mod_path = app_module_paths[i]
+                if mod_path in existing_apps and full_path not in existing_apps:
+                     from djinit.utils.common import replace_app_in_user_defined_apps
+                     content = replace_app_in_user_defined_apps(content, mod_path, full_path)
+                     upgraded = True
+
+            if upgraded:
+                 with open(base_settings_path, "w") as f:
+                    f.write(content)
+                 UIFormatter.print_success("Upgraded existing apps to full AppConfig paths")
+                 return
+            
             UIFormatter.print_success("All apps already configured in USER_DEFINED_APPS")
             return
 
