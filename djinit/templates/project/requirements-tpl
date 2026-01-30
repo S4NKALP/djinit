@@ -10,7 +10,7 @@ djangorestframework_simplejwt
 drf-spectacular
 django-cors-headers
 whitenoise
-# @IF database_type == 'mysql' 
+# @IF database_type == 'mysql'
 mysqlclient
 # @ELSE
 psycopg[binary]

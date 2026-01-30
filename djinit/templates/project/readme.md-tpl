@@ -71,7 +71,7 @@ Run `just` to see all available commands, including:
 ## Project Structure
 
 ```
-# @IF predefined_structure 
+# @IF predefined_structure
 [[ project_name ]]/
 ├── [[ module_name ]]/
 │   ├── settings/
@@ -118,7 +118,7 @@ Run `just` to see all available commands, including:
 ├── Procfile
 ├── runtime.txt
 └── README.md
-# @ELSEIF unified_structure 
+# @ELSEIF unified_structure
 [[ project_name ]]/
 ├── apps/
 │   ├── admin/

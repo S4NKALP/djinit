@@ -8,7 +8,7 @@ SECRET_KEY = env('SECRET_KEY')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Database
-# @IF use_database_url 
+# @IF use_database_url
 # Using dj_database_url (recommended for production)
 DATABASES = {
     'default': env.db('DATABASE_URL')
@@ -17,7 +17,7 @@ DATABASES = {
 # Using individual database parameters
 DATABASES = {
     'default': {
-        # @IF database_type == 'mysql' 
+        # @IF database_type == 'mysql'
         'ENGINE': 'django.db.backends.mysql',
         'PORT': env('DB_PORT', default='3306'),
         # @ELSE

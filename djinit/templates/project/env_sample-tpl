@@ -3,9 +3,9 @@ DJANGO_SETTINGS_MODULE=[[ project_name ]].settings.development
 SECRET_KEY= your-secret-key
 ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
 
-# @IF use_database_url 
+# @IF use_database_url
 # Database URL (recommended for production)
-# @IF database_type == 'mysql' 
+# @IF database_type == 'mysql'
 DATABASE_URL=mysql://user:password@localhost:3306/[[ project_name ]]
 # @ELSE
 DATABASE_URL=postgres://user:password@localhost:5432/[[ project_name ]]
