@@ -7,12 +7,7 @@ This module provides functions to create Django projects and apps without requir
 import os
 
 from djinit.core.config import DJANGO_VERSION
-from djinit.utils.common import (
-    create_directory_with_init,
-    create_file_from_template,
-    create_files_from_templates,
-    create_init_file,
-)
+from djinit.utils.common import CommonUtils
 
 
 class DjangoHelper:
@@ -24,7 +19,7 @@ class DjangoHelper:
             os.makedirs(directory, exist_ok=True)
 
             manage_py_path = os.path.join(directory, "manage.py")
-            create_file_from_template(
+            CommonUtils.create_file_from_template(
                 manage_py_path, "project/manage.py-tpl", {"project_name": project_name}, "Created manage.py"
             )
             os.chmod(manage_py_path, 0o755)
@@ -33,10 +28,10 @@ class DjangoHelper:
                 return
 
             project_config_dir = os.path.join(directory, project_name)
-            create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
+            CommonUtils.create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
 
             settings_dir = os.path.join(project_config_dir, "settings")
-            create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
+            CommonUtils.create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
 
             base_context = {"project_name": project_name, "app_names": []}
             settings_files = [
@@ -44,15 +39,19 @@ class DjangoHelper:
                 ("development.py", "config/settings/development.py-tpl", {}),
                 ("production.py", "config/settings/production.py-tpl", {}),
             ]
-            create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
+            CommonUtils.create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
-            urls_context = {"url_type": "project", "project_name": project_name, "django_version": DjangoHelper.DJANGO_VERSION}
+            urls_context = {
+                "url_type": "project",
+                "project_name": project_name,
+                "django_version": DjangoHelper.DJANGO_VERSION,
+            }
             project_files = [
                 ("urls.py", "config/urls.py-tpl", urls_context),
                 ("wsgi.py", "config/wsgi.py-tpl", {}),
                 ("asgi.py", "config/asgi.py-tpl", {}),
             ]
-            create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
+            CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
         except Exception as e:
             from djinit.utils.exceptions import DjinitError
@@ -66,20 +65,20 @@ class DjangoHelper:
             os.makedirs(app_dir, exist_ok=True)
 
             # Prepare context
-            app_config_name = app_name.title().replace('_', '')
+            app_config_name = app_name.title().replace("_", "")
             context = {
                 "app_name": app_name,
                 "app_config_name": app_config_name,
-                "django_version": DjangoHelper.DJANGO_VERSION
+                "django_version": DjangoHelper.DJANGO_VERSION,
             }
-            
+
             # Use provided app_module or default to app_name (path calculation handled by caller)
             if not app_module:
                 app_module = app_name
-                
+
             context["app_module"] = app_module
 
-            create_init_file(app_dir, f"Created {app_name}/__init__.py")
+            CommonUtils.create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
             app_files = [
                 ("apps.py", "components/apps.py-tpl", context),
@@ -92,10 +91,10 @@ class DjangoHelper:
                 ("tests.py", "components/tests.py-tpl", context),
             ]
 
-            create_files_from_templates(app_dir, app_files, f"{app_name}/")
+            CommonUtils.create_files_from_templates(app_dir, app_files, f"{app_name}/")
 
             migrations_dir = os.path.join(app_dir, "migrations")
-            create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
+            CommonUtils.create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
 
         except Exception as e:
             from djinit.utils.exceptions import DjinitError
