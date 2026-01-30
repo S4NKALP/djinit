@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict
 
-from jinja2 import Environment, FileSystemLoader, Template
+from djinit.core.parser import InFileLogicParser
 
 
 class TemplateEngine:
@@ -27,22 +27,26 @@ class TemplateEngine:
             raise FileNotFoundError(f"Template directory not found: {template_dir}")
 
         self.template_dir = str(template_dir)
-        self.env = Environment(
-            loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True
-        )
+        self.parser = InFileLogicParser()
 
     def render_template(self, template_name: str, context: Dict[str, Any]) -> str:
         """Render a template with the given context.
 
         Args:
-            template_name: Name of the template file (e.g., 'gitignore.j2')
+            template_name: Name of the template file (e.g., 'gitignore.py-tpl')
             context: Dictionary of variables to pass to the template
 
         Returns:
             Rendered template content as string
         """
-        template = self.env.get_template(template_name)
-        return template.render(**context)
+        template_path = os.path.join(self.template_dir, template_name)
+        if not os.path.exists(template_path):
+            raise FileNotFoundError(f"Template not found: {template_path}")
+
+        with open(template_path, "r") as f:
+            template_text = f.read()
+
+        return self.parser.render(template_text, context)
 
     def render_string(self, template_string: str, context: Dict[str, Any]) -> str:
         """Render a template string with the given context.
@@ -54,24 +58,26 @@ class TemplateEngine:
         Returns:
             Rendered template content as string
         """
-        template = Template(template_string, trim_blocks=True, lstrip_blocks=True)
-        return template.render(**context)
+        return self.parser.render(template_string, context)
 
     def get_template_names(self) -> list[str]:
         """Get list of available template files."""
         if not os.path.exists(self.template_dir):
             return []
 
-        return sorted([file for file in os.listdir(self.template_dir) if file.endswith(".j2")])
+        templates = []
+        for root, _, files in os.walk(self.template_dir):
+            for file in files:
+                if file.endswith("-tpl"):
+                    rel_path = os.path.relpath(os.path.join(root, file), self.template_dir)
+                    templates.append(rel_path)
+        return sorted(templates)
 
     def template_exists(self, template_name: str) -> bool:
         """Check if a template file exists.
 
         Args:
             template_name: Name of the template file
-
-        Returns:
-            True if template exists, False otherwise
         """
         template_path = os.path.join(self.template_dir, template_name)
         return os.path.exists(template_path)

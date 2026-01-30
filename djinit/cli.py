@@ -104,7 +104,7 @@ class Cli:
             self.file_manager.create_readme,
             self.file_manager.create_env_file,
             self.file_manager.create_djinit_config,
-            lambda: self.file_manager.create_pyproject_toml(self.metadata),
+            lambda: self.file_manager.create_pyproject(self.metadata),
         ]
 
         for step_func in utility_steps:

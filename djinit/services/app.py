@@ -196,17 +196,17 @@ class AppManager:
 
         create_file_from_template(
             os.path.join(app_dir, "apps.py"),
-            "components/apps.j2",
+            "components/apps.py-tpl",
             {"app_name": self.app_name},
             f"Created apps/{self.app_name}/apps.py",
         )
 
         subfolders = {
-            "models": [(f"{self.app_name}.py", "presets/predefined/apps/generic/models.j2")],
-            "serializers": [(f"{self.app_name}_serializer.py", "presets/predefined/apps/generic/serializers.j2")],
-            "services": [(f"{self.app_name}_service.py", "presets/predefined/apps/generic/services.j2")],
-            "views": [(f"{self.app_name}_view.py", "presets/predefined/apps/generic/views.j2")],
-            "tests": [(f"test_{self.app_name}_api.py", "presets/predefined/apps/generic/tests.j2")],
+            "models": [(f"{self.app_name}.py", "presets/predefined/apps/generic/models.py-tpl")],
+            "serializers": [(f"{self.app_name}_serializer.py", "presets/predefined/apps/generic/serializers.py-tpl")],
+            "services": [(f"{self.app_name}_service.py", "presets/predefined/apps/generic/services.py-tpl")],
+            "views": [(f"{self.app_name}_view.py", "presets/predefined/apps/generic/views.py-tpl")],
+            "tests": [(f"test_{self.app_name}_api.py", "presets/predefined/apps/generic/tests.py-tpl")],
         }
         for folder, files in subfolders.items():
             folder_path = os.path.join(app_dir, folder)
@@ -219,8 +219,8 @@ class AppManager:
 
         create_file_from_template(
             os.path.join(app_dir, "urls.py"),
-            "presets/predefined/apps/generic/urls.j2",
-            {"app_name": self.app_name, "app_module": app_module},
+            "config/urls.py-tpl",
+            {"url_type": "drf_router", "app_module": app_module, "view_file": f"{self.app_name}_view", "viewset_name": f"{model_class_name}ViewSet", "router_prefix": "", "basename": self.app_name, "has_viewset": True, "has_include": False},
             f"Created apps/{self.app_name}/urls.py",
         )
 
