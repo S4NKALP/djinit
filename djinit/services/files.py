@@ -104,8 +104,8 @@ class FileManager:
 
         files = [
             ("urls.py", "config/urls/with_api.j2", urls_context),
-            ("wsgi.py", "config/wsgi.j2", {}),
-            ("asgi.py", "config/asgi.j2", {}),
+            ("wsgi.py", "config/wsgi.j2", {"project_name": prefix}),
+            ("asgi.py", "config/asgi.j2", {"project_name": prefix}),
         ]
 
         for filename, template, context in files:
