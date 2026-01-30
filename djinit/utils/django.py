@@ -24,7 +24,9 @@ class DjangoHelper:
             os.makedirs(directory, exist_ok=True)
 
             manage_py_path = os.path.join(directory, "manage.py")
-            create_file_from_template(manage_py_path, "project/manage_py.j2", {"project_name": project_name}, "Created manage.py")
+            create_file_from_template(
+                manage_py_path, "project/manage_py.j2", {"project_name": project_name}, "Created manage.py"
+            )
             os.chmod(manage_py_path, 0o755)
 
             if unified:

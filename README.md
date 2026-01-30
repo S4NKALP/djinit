@@ -53,10 +53,10 @@ dj setup
 
 The wizard will ask you a few questions:
 
-1. **What structure do you want?**  
-   - **Standard** – Classic Django layout with split settings  
-   - **Predefined** – Organized with `apps/` and `api/` folders (great for larger projects)  
-   - **Unified** – Everything under `core/` and `apps/` (clean and minimal)  
+1. **What structure do you want?**
+   - **Standard** – Classic Django layout with split settings
+   - **Predefined** – Organized with `apps/` and `api/` folders (great for larger projects)
+   - **Unified** – Everything under `core/` and `apps/` (clean and minimal)
    - **Single Folder** – All apps in one configurable folder (simple and flat)
 
 2. **Project Setup** – Destination directory (use `.` for current) and project name.
@@ -71,16 +71,16 @@ That’s it—your project will be ready with everything configured.
 
 ## What You Get
 
-- **Split settings** for development and production  
-- **Django REST Framework** with JWT authentication  
-- **API documentation** (Swagger UI at `/docs/`)  
-- **CORS** configured for local development  
-- **WhiteNoise** for static files  
-- **PostgreSQL** support (SQLite for dev)  
-- **Modern admin** interface (`django-jazzmin`)  
-- **Deployment ready** with `Procfile` and `runtime.txt`  
-- **Development tools** (`Justfile` with common commands)  
-- **Environment template** (`.env.sample`)  
+- **Split settings** for development and production
+- **Django REST Framework** with JWT authentication
+- **API documentation** (Swagger UI at `/docs/`)
+- **CORS** configured for local development
+- **WhiteNoise** for static files
+- **PostgreSQL** support (SQLite for dev)
+- **Modern admin** interface (`django-jazzmin`)
+- **Deployment ready** with `Procfile` and `runtime.txt`
+- **Development tools** (`Justfile` with common commands)
+- **Environment template** (`.env.sample`)
 - **Git ready** (`.gitignore` included)
 
 ## Commands
@@ -191,16 +191,16 @@ If you don’t have `just` installed, these are just shortcuts for the equivalen
 
 ### Packages
 
-- **Django** – Web framework  
-- **Django REST Framework** – API toolkit  
-- **djangorestframework‑simplejwt** – JWT authentication  
-- **drf‑spectacular** – OpenAPI/Swagger docs  
-- **django‑cors‑headers** – CORS handling  
-- **django‑jazzmin** – Modern admin UI  
-- **whitenoise** – Static file serving  
-- **psycopg2‑binary** – PostgreSQL driver  
-- **gunicorn** – Production WSGI server  
-- **python‑dotenv** – `.env` handling  
+- **Django** – Web framework
+- **Django REST Framework** – API toolkit
+- **djangorestframework‑simplejwt** – JWT authentication
+- **drf‑spectacular** – OpenAPI/Swagger docs
+- **django‑cors‑headers** – CORS handling
+- **django‑jazzmin** – Modern admin UI
+- **whitenoise** – Static file serving
+- **psycopg2‑binary** – PostgreSQL driver
+- **gunicorn** – Production WSGI server
+- **python‑dotenv** – `.env` handling
 
 ### API Endpoints
 
@@ -214,7 +214,7 @@ If you don’t have `just` installed, these are just shortcuts for the equivalen
 
 ### Settings Overview
 
-- **Development** – SQLite, `DEBUG=True`, console email backend, permissive CORS.  
+- **Development** – SQLite, `DEBUG=True`, console email backend, permissive CORS.
 - **Production** – PostgreSQL, hardened security settings, SMTP email backend, strict CORS.
 
 ## Environment Setup
@@ -238,18 +238,18 @@ SQLite works out of the box for development—no extra DB setup required.
 The following items are tracked in **TODO.md** and represent the near‑future direction of djinit.
 
 ### Planned Features
-- **Docker Support** – Auto‑generate a `Dockerfile` for containerized deployments.  
-- **Frontend Integration** – Scaffold React, Vue, or HTMX alongside the Django backend.  
-- **Celery Integration** – Simplify background task setup with Celery.  
-- **More Packages** – Add optional integrations for popular Django packages.  
+- **Docker Support** – Auto‑generate a `Dockerfile` for containerized deployments.
+- **Frontend Integration** – Scaffold React, Vue, or HTMX alongside the Django backend.
+- **Celery Integration** – Simplify background task setup with Celery.
+- **More Packages** – Add optional integrations for popular Django packages.
 
 ### Enhancements
-- **Add more project structure templates** – Expand the set of ready‑made layouts.  
-- **Add testing framework setup** – Provide pytest and coverage configuration out of the box.  
+- **Add more project structure templates** – Expand the set of ready‑made layouts.
+- **Add testing framework setup** – Provide pytest and coverage configuration out of the box.
 - **Fix bugs** – Ongoing maintenance and bug resolution.
 
 ### Completed
-- **Interactive configuration wizard** – Streamlined project creation experience.  
+- **Interactive configuration wizard** – Streamlined project creation experience.
 - **Improved structure detection** – Smarter detection of existing Django layouts.
 
 > Contributions that address any of the above items are highly welcome!
@@ -258,17 +258,17 @@ The following items are tracked in **TODO.md** and represent the near‑future d
 
 Found a bug or have an idea? Open an issue or submit a pull request. Contributions are always welcome!
 
-1. Fork the repository.  
-2. Create a feature branch (`git checkout -b feature/awesome-feature`).  
-3. Make your changes and ensure tests pass (`just test`).  
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/awesome-feature`).
+3. Make your changes and ensure tests pass (`just test`).
 4. Submit a pull request with a clear description of the change.
 
 Please follow the existing code style (ruff + black) and include tests for new functionality.
 
 ## License
 
-MIT © Sankalp Tharu  
+MIT © Sankalp Tharu
 
----  
+---
 
 *© 2024 Sankalp Tharu. All rights reserved.*
