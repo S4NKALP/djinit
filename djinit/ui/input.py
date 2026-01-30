@@ -11,7 +11,7 @@ import questionary
 
 from djinit.core.types import ProjectMetadata
 from djinit.ui.console import UIColors, UIFormatter, console
-from djinit.utils.common import get_package_name
+from djinit.utils.common import CommonUtils
 from djinit.utils.validators import validate_app_name, validate_project_name
 
 
@@ -178,7 +178,7 @@ class InputCollector:
         app_names: list[str] = []
 
         # Default package_name to "backend" if project_dir is "." or empty
-        package_name = get_package_name(project_dir)
+        package_name = CommonUtils.get_package_name(project_dir)
 
         project_module_name = "config" if options["predefined"] else "core" if options["unified"] else None
 
@@ -264,7 +264,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         # Generate Metadata
         if use_standard:
-            package_name = get_package_name(project_dir)
+            package_name = CommonUtils.get_package_name(project_dir)
             metadata = ProjectMetadata(
                 package_name=package_name,
                 use_github_actions=use_github,
