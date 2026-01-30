@@ -6,29 +6,19 @@ Handles creation of Django apps and updating settings.
 import os
 from typing import Optional
 
+from djinit.core.base import BaseService
 from djinit.ui.console import UIFormatter
-from djinit.utils.common import (
-    calculate_app_module_path,
-    create_directory_with_init,
-    create_file_from_template,
-    create_init_file,
-    detect_nested_structure_from_settings,
-    extract_existing_apps,
-    find_project_dir,
-    find_settings_path,
-    get_djinit_config,
-    insert_apps_into_user_defined_apps,
-    is_django_project,
-)
+from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
 
 
-class AppManager:
+class AppManager(BaseService):
     def __init__(self, app_name: str):
+        super().__init__()
         self.app_name = app_name
         self.current_dir = os.getcwd()
         self.manage_py_path = os.path.join(self.current_dir, "manage.py")
-        self.config = get_djinit_config(self.current_dir)
+        self.config = CommonUtils.get_djinit_config(self.current_dir)
         self._project_structure_cache = None
 
     def create_app(self) -> bool:
@@ -59,7 +49,7 @@ class AppManager:
         return True
 
     def _is_django_project(self) -> bool:
-        return is_django_project(self.current_dir)
+        return CommonUtils.is_django_project(self.current_dir)
 
     def _app_exists(self) -> bool:
         # For predefined structure, check in apps/ directory
@@ -79,15 +69,15 @@ class AppManager:
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
 
         is_nested, nested_dir, apps_base_dir = self._get_project_structure()
-        
+
         # Calculate app_module based on project structure
         if is_nested and nested_dir:
             # Normalize nested_dir (replace / with . for module path)
-            module_base = nested_dir.replace(os.path.sep, '.')
+            module_base = nested_dir.replace(os.path.sep, ".")
             app_module = f"{module_base}.{self.app_name}"
         else:
             app_module = self.app_name
-            
+
         success = DjangoHelper.startapp(self.app_name, apps_base_dir, app_module)
         if success:
             UIFormatter.print_success(f"Created Django app '{self.app_name}' in {apps_base_dir}")
@@ -96,7 +86,7 @@ class AppManager:
         return success
 
     def _add_to_installed_apps(self) -> bool:
-        settings_path = find_settings_path(self.current_dir)
+        settings_path = CommonUtils.find_settings_path(self.current_dir)
         if not settings_path:
             UIFormatter.print_error("Could not find Django settings directory")
             return False
@@ -113,30 +103,28 @@ class AppManager:
             app_module_path = f"apps.{self.app_name}"
         else:
             is_nested, nested_dir, _ = self._get_project_structure()
-            app_module_path = calculate_app_module_path(self.app_name, is_nested, nested_dir)
+            app_module_path = CommonUtils.calculate_app_module_path(self.app_name, is_nested, nested_dir)
 
         # Use full AppConfig path to properly support nested apps
         # e.g. apps.users -> apps.users.apps.UsersConfig
-        app_config_name = self.app_name.title().replace('_', '')
+        app_config_name = self.app_name.title().replace("_", "")
         full_app_config = f"{app_module_path}.apps.{app_config_name}Config"
-        
+
         # We'll check if either the module path or the full config path exists
         # but we'll prefer adding the full config path
 
-        existing_apps = extract_existing_apps(content)
-        
+        existing_apps = CommonUtils.extract_existing_apps(content)
+
         # Check if full config is already there
         if full_app_config in existing_apps:
             UIFormatter.print_success(f"App '{full_app_config}' already configured in USER_DEFINED_APPS")
             return True
-            
+
         # Check if legacy module path is there, if so, upgrade it
         if app_module_path in existing_apps:
-            from djinit.utils.common import replace_app_in_user_defined_apps
-            
             UIFormatter.print_info(f"Upgrading app configuration from '{app_module_path}' to '{full_app_config}'...")
-            updated_content = replace_app_in_user_defined_apps(content, app_module_path, full_app_config)
-            
+            updated_content = CommonUtils.replace_app_in_user_defined_apps(content, app_module_path, full_app_config)
+
             if updated_content:
                 with open(base_settings_path, "w") as f:
                     f.write(updated_content)
@@ -150,7 +138,7 @@ class AppManager:
             UIFormatter.print_error("Could not find USER_DEFINED_APPS section in base.py")
             return False
 
-        updated_content = insert_apps_into_user_defined_apps(content, [full_app_config])
+        updated_content = CommonUtils.insert_apps_into_user_defined_apps(content, [full_app_config])
         if not updated_content:
             return False
 
@@ -177,12 +165,12 @@ class AppManager:
                 self._project_structure_cache = (nested, nested_dir, apps_base_dir)
             else:
                 # Fallback to old detection method
-                project_dir, settings_base_path = find_project_dir(self.current_dir)
+                project_dir, settings_base_path = CommonUtils.find_project_dir(self.current_dir)
 
                 if project_dir is None:
                     self._project_structure_cache = (False, None, self.current_dir)
                 else:
-                    self._project_structure_cache = detect_nested_structure_from_settings(
+                    self._project_structure_cache = CommonUtils.detect_nested_structure_from_settings(
                         settings_base_path, self.current_dir
                     )
         return self._project_structure_cache
@@ -210,7 +198,7 @@ class AppManager:
             return False
 
         # Check for Single Folder structure (models/ and api/ exist in project dir)
-        project_dir, _ = find_project_dir(self.current_dir)
+        project_dir, _ = CommonUtils.find_project_dir(self.current_dir)
         if project_dir:
             has_models = os.path.isdir(os.path.join(project_dir, "models"))
             has_api = os.path.isdir(os.path.join(project_dir, "api"))
@@ -223,11 +211,11 @@ class AppManager:
         """Create an app following the predefined nested structure with custom templates."""
         app_dir = os.path.join(apps_dir, self.app_name)
         os.makedirs(app_dir, exist_ok=True)
-        create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
+        CommonUtils.create_init_file(app_dir, f"Created apps/{self.app_name}/__init__.py")
 
         model_class_name = "".join([part.capitalize() for part in self.app_name.split("_")])
         app_module = f"apps.{self.app_name}"
-        app_config_name = self.app_name.title().replace('_', '')
+        app_config_name = self.app_name.title().replace("_", "")
         base_context = {
             "app_name": self.app_name,
             "app_config_name": app_config_name,
@@ -235,7 +223,7 @@ class AppManager:
             "model_class_name": model_class_name,
         }
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(app_dir, "apps.py"),
             "components/apps.py-tpl",
             {"app_name": self.app_name},
@@ -251,17 +239,26 @@ class AppManager:
         }
         for folder, files in subfolders.items():
             folder_path = os.path.join(app_dir, folder)
-            create_directory_with_init(folder_path, f"Created apps/{self.app_name}/{folder}/__init__.py")
+            CommonUtils.create_directory_with_init(folder_path, f"Created apps/{self.app_name}/{folder}/__init__.py")
             for filename, template in files:
                 file_path = os.path.join(folder_path, filename)
-                create_file_from_template(
+                CommonUtils.create_file_from_template(
                     file_path, template, base_context, f"Created apps/{self.app_name}/{folder}/{filename}"
                 )
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(app_dir, "urls.py"),
             "config/urls.py-tpl",
-            {"url_type": "drf_router", "app_module": app_module, "view_file": f"{self.app_name}_view", "viewset_name": f"{model_class_name}ViewSet", "router_prefix": "", "basename": self.app_name, "has_viewset": True, "has_include": False},
+            {
+                "url_type": "drf_router",
+                "app_module": app_module,
+                "view_file": f"{self.app_name}_view",
+                "viewset_name": f"{model_class_name}ViewSet",
+                "router_prefix": "",
+                "basename": self.app_name,
+                "has_viewset": True,
+                "has_include": False,
+            },
             f"Created apps/{self.app_name}/urls.py",
         )
 

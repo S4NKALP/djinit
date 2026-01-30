@@ -33,7 +33,7 @@ class InFileLogicParser:
         # Stack stores boolean results of nested IF blocks
         # Each element is (current_block_result, has_any_true_branch_executed)
         stack: List[List[bool]] = []
-        
+
         lines = template_text.splitlines()
         i = 0
         while i < len(lines):
@@ -57,10 +57,10 @@ class InFileLogicParser:
                     final_lines.append(line)
                     i += 1
                     continue
-                
+
                 expr = stripped[9:].strip()
                 current_stack = stack[-1]
-                
+
                 if current_stack[1]:
                     current_stack[0] = False
                 else:
@@ -80,7 +80,7 @@ class InFileLogicParser:
                     final_lines.append(line)
                     i += 1
                     continue
-                
+
                 current_stack = stack[-1]
                 if current_stack[1]:
                     current_stack[0] = False
@@ -121,7 +121,7 @@ class InFileLogicParser:
                         iterable = eval(iterable_name, {"__builtins__": {}}, self.context)
                     except Exception:
                         iterable = []
-                    
+
                     # Capture loop body
                     loop_body = []
                     i += 1
@@ -131,12 +131,12 @@ class InFileLogicParser:
                             loop_depth += 1
                         elif lines[i].strip().startswith("# @ENDLOOP"):
                             loop_depth -= 1
-                        
+
                         if loop_depth > 0:
                             loop_body.append(lines[i])
                             i += 1
-                    
-                    if i < len(lines): # Skip the @ENDLOOP line itself
+
+                    if i < len(lines):  # Skip the @ENDLOOP line itself
                         i += 1
 
                     # Execute loop
@@ -181,7 +181,7 @@ class InFileLogicParser:
                 parts = rendered_line.split("# @IF ", 1)
                 pre_content = parts[0].rstrip()
                 rest = parts[1].strip()
-                
+
                 # Split rest into expression and post-content (if any)
                 # This is tricky because the expression might have spaces.
                 # If there's an # @ENDIF on the same line, use it.

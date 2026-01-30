@@ -5,20 +5,14 @@ Handles creation and modification of project files.
 
 import os
 
+from djinit.core.base import BaseService
 from djinit.services.templates import template_engine
-from djinit.utils.common import (
-    calculate_app_module_paths,
-    change_cwd,
-    create_directory_with_init,
-    create_file_from_template,
-    create_file_with_content,
-    get_package_name,
-)
+from djinit.utils.common import CommonUtils
 
 
-class FileManager:
+class FileManager(BaseService):
     def __init__(self, project_root: str, project_name: str, app_names: list, metadata: dict):
-        self.project_root = project_root
+        super().__init__(project_root=project_root)
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
@@ -38,9 +32,9 @@ class FileManager:
     ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
-        with change_cwd(target_dir):
+        with CommonUtils.change_cwd(target_dir):
             content = template_engine.render_template(template_path, context)
-            create_file_with_content(filepath, content, message, should_format=should_format)
+            CommonUtils.create_file_with_content(filepath, content, message, should_format=should_format)
 
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
@@ -48,25 +42,27 @@ class FileManager:
 
         for folder_name, file_templates in folder_specs.items():
             folder_path = os.path.join(base_dir, folder_name)
-            create_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
+            CommonUtils.create_directory_with_init(folder_path, f"Created {folder_path}/__init__.py")
 
             for filename, template_path in file_templates:
                 file_path = os.path.join(folder_path, filename)
-                create_file_from_template(file_path, template_path, base_context, f"Created {file_path}")
+                CommonUtils.create_file_from_template(file_path, template_path, base_context, f"Created {file_path}")
 
     def _create_apps_py(self, app_dir: str, app_name: str, message: str = None, should_format: bool = False) -> None:
         """Helper to create apps.py file for an app."""
         apps_py_path = os.path.join(app_dir, "apps.py")
         context = {"app_name": app_name} if app_name else {}
         msg = message or f"Created {os.path.basename(app_dir)}/apps.py"
-        create_file_from_template(apps_py_path, "components/apps.py-tpl", context, msg, should_format=should_format)
+        CommonUtils.create_file_from_template(
+            apps_py_path, "components/apps.py-tpl", context, msg, should_format=should_format
+        )
 
     def _create_subdirectories_with_init(self, base_dir: str, subdirs: list, prefix: str = "") -> None:
         """Helper to create multiple subdirectories with __init__.py files."""
         for subdir in subdirs:
             subdir_path = os.path.join(base_dir, subdir)
             message = f"Created {prefix}{subdir}/__init__.py" if prefix else f"Created {subdir}/__init__.py"
-            create_directory_with_init(subdir_path, message)
+            CommonUtils.create_directory_with_init(subdir_path, message)
 
     def _create_settings_package(self, settings_dir: str, base_context: dict, prefix: str) -> None:
         """Helper to create settings package files (base, development, production)."""
@@ -81,8 +77,8 @@ class FileManager:
             transformed_apps = []
             for app in base_settings_context["app_names"]:
                 # Transform to full AppConfig path: module.path -> module.path.apps.ConfigName
-                short_name = app.split('.')[-1]
-                config_name = short_name.title().replace('_', '') + 'Config'
+                short_name = app.split(".")[-1]
+                config_name = short_name.title().replace("_", "") + "Config"
                 # If it's the special "apps" container in unified structure, we might want to skip or handle differently
                 # But assumes all user apps follow standard djinit structure
                 full_path = f"{app}.apps.{config_name}"
@@ -169,7 +165,7 @@ class FileManager:
 
     def create_pyproject(self, metadata: dict) -> None:
         package_name = metadata.get("package_name", "backend")
-        package_name = get_package_name(package_name)
+        package_name = CommonUtils.get_package_name(package_name)
         context = {
             "package_name": package_name,
             "project_name": self.project_name,
@@ -184,7 +180,7 @@ class FileManager:
 
     def create_project_urls(self) -> None:
         """Create project urls.py using project_config/urls.py-tpl template (replaces update_project_urls)."""
-        effective_app_modules = calculate_app_module_paths(self.app_names, self.metadata)
+        effective_app_modules = CommonUtils.calculate_app_module_paths(self.app_names, self.metadata)
         context = {
             "url_type": "project",
             "project_name": self.project_name,
@@ -212,10 +208,10 @@ class FileManager:
 
     def create_predefined_structure(self) -> None:
         apps_dir = os.path.join(self.project_root, "apps")
-        create_directory_with_init(apps_dir, "Created apps/__init__.py")
+        CommonUtils.create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
         users_dir = os.path.join(apps_dir, "users")
-        create_directory_with_init(users_dir, "Created apps/users/__init__.py")
+        CommonUtils.create_directory_with_init(users_dir, "Created apps/users/__init__.py")
         self._create_apps_py(users_dir, "users")
 
         users_subfolders = {
@@ -228,15 +224,26 @@ class FileManager:
         self._create_files_from_specs(users_dir, users_subfolders, {"app_module": "apps.users"})
 
         users_urls_path = os.path.join(users_dir, "urls.py")
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             users_urls_path,
             "config/urls.py-tpl",
-            {"url_type": "drf_router", "app_module": "apps.users", "view_file": "user_view", "viewset_name": "UserViewSet", "router_prefix": "users", "basename": "users", "has_viewset": True, "has_app_name": True, "app_name": "users", "has_include": True},
+            {
+                "url_type": "drf_router",
+                "app_module": "apps.users",
+                "view_file": "user_view",
+                "viewset_name": "UserViewSet",
+                "router_prefix": "users",
+                "basename": "users",
+                "has_viewset": True,
+                "has_app_name": True,
+                "app_name": "users",
+                "has_include": True,
+            },
             "Created apps/users/urls.py",
         )
 
         core_dir = os.path.join(apps_dir, "core")
-        create_directory_with_init(core_dir, "Created apps/core/__init__.py")
+        CommonUtils.create_directory_with_init(core_dir, "Created apps/core/__init__.py")
 
         core_subfolders = {
             "utils": [("responses.py", "presets/predefined/core/utils/responses.py-tpl")],
@@ -246,22 +253,32 @@ class FileManager:
         self._create_files_from_specs(core_dir, core_subfolders, {})
 
         exceptions_path = os.path.join(core_dir, "exceptions.py")
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             exceptions_path, "presets/predefined/core/exceptions.py-tpl", {}, "Created apps/core/exceptions.py"
         )
 
         api_dir = os.path.join(self.project_root, "api")
-        create_directory_with_init(api_dir, "Created api/__init__.py")
+        CommonUtils.create_directory_with_init(api_dir, "Created api/__init__.py")
         api_urls_path = os.path.join(api_dir, "urls.py")
-        create_file_from_template(api_urls_path, "config/urls.py-tpl", {"url_type": "api_root", "app_name": "api", "version": "v1", "api_module": "api"}, "Created api/urls.py")
+        CommonUtils.create_file_from_template(
+            api_urls_path,
+            "config/urls.py-tpl",
+            {"url_type": "api_root", "app_name": "api", "version": "v1", "api_module": "api"},
+            "Created api/urls.py",
+        )
 
         api_v1_dir = os.path.join(api_dir, "v1")
-        create_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
+        CommonUtils.create_directory_with_init(api_v1_dir, "Created api/v1/__init__.py")
         api_v1_urls_path = os.path.join(api_v1_dir, "urls.py")
-        create_file_from_template(api_v1_urls_path, "config/urls.py-tpl", {"url_type": "api_version", "app_name": "v1", "app_list": ["users"], "app_module": "apps"}, "Created api/v1/urls.py")
+        CommonUtils.create_file_from_template(
+            api_v1_urls_path,
+            "config/urls.py-tpl",
+            {"url_type": "api_version", "app_name": "v1", "app_list": ["users"], "app_module": "apps"},
+            "Created api/v1/urls.py",
+        )
 
         project_urls_path = os.path.join(self.project_configs, "urls.py")
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             project_urls_path,
             "config/urls.py-tpl",
             {"url_type": "project", "api_module": "api", "include_api": True},
@@ -272,10 +289,10 @@ class FileManager:
     def create_unified_structure(self) -> None:
         # 1. Create 'core' directory (Project Config)
         core_dir = os.path.join(self.project_root, "core")
-        create_directory_with_init(core_dir, "Created core/__init__.py")
+        CommonUtils.create_directory_with_init(core_dir, "Created core/__init__.py")
 
         settings_dir = os.path.join(core_dir, "settings")
-        create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
+        CommonUtils.create_directory_with_init(settings_dir, "Created core/settings/__init__.py")
 
         # Create settings files
         base_context = {
@@ -291,7 +308,7 @@ class FileManager:
 
         # 2. Create 'apps' directory (The Main App)
         apps_dir = os.path.join(self.project_root, "apps")
-        create_directory_with_init(apps_dir, "Created apps/__init__.py")
+        CommonUtils.create_directory_with_init(apps_dir, "Created apps/__init__.py")
 
         # Create apps.py for the 'apps' app
         self._create_apps_py(apps_dir, "apps", "Created apps/apps.py", should_format=True)
@@ -302,9 +319,9 @@ class FileManager:
 
         # Create 'api' directory with v1
         api_dir = os.path.join(apps_dir, "api")
-        create_directory_with_init(api_dir, "Created apps/api/__init__.py")
+        CommonUtils.create_directory_with_init(api_dir, "Created apps/api/__init__.py")
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(api_dir, "urls.py"),
             "config/urls.py-tpl",
             {"url_type": "api_root", "app_name": "api", "version": "v1", "api_module": "apps.api"},
@@ -313,9 +330,9 @@ class FileManager:
         )
 
         api_v1_dir = os.path.join(api_dir, "v1")
-        create_directory_with_init(api_v1_dir, "Created apps/api/v1/__init__.py")
+        CommonUtils.create_directory_with_init(api_v1_dir, "Created apps/api/v1/__init__.py")
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(api_v1_dir, "urls.py"),
             "config/urls.py-tpl",
             {"url_type": "api_version", "app_name": "v1", "app_list": [], "app_module": "apps"},
@@ -325,10 +342,10 @@ class FileManager:
 
     def create_single_structure(self) -> None:
         project_dir = os.path.join(self.project_root, self.module_name)
-        create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
+        CommonUtils.create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
 
         settings_dir = os.path.join(project_dir, "settings")
-        create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
+        CommonUtils.create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
 
         # Create settings files
         base_context = {
@@ -347,28 +364,28 @@ class FileManager:
         components = ["admin", "api", "models", "tests"]
         self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(project_dir, "admin", "__init__.py"),
             "components/admin.py-tpl",
             {},
             f"Created {self.module_name}/admin/__init__.py",
         )
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(project_dir, "models", "__init__.py"),
             "components/models.py-tpl",
             {},
             f"Created {self.module_name}/models/__init__.py",
         )
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(project_dir, "api", "README.md"),
             "components/api_readme.md-tpl",
             {"module_name": self.module_name},
             f"Created {self.module_name}/api/README.md",
         )
 
-        create_file_from_template(
+        CommonUtils.create_file_from_template(
             os.path.join(project_dir, "models", "README.md"),
             "components/models_readme.md-tpl",
             {"module_name": self.module_name},
@@ -447,4 +464,6 @@ class FileManager:
         }
 
         filepath = os.path.join(self.project_root, ".djinit")
-        create_file_with_content(filepath, json.dumps(config, indent=4), "Created .djinit configuration file")
+        CommonUtils.create_file_with_content(
+            filepath, json.dumps(config, indent=4), "Created .djinit configuration file"
+        )

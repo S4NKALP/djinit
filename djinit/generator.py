@@ -8,7 +8,9 @@ import subprocess
 import sys
 
 from djinit.cli import Cli
-from djinit.commands.handler import handle_app_command, handle_secret_command, parse_arguments
+from djinit.commands.app import AppCommand
+from djinit.commands.handler import parse_arguments
+from djinit.commands.secret import SecretCommand
 from djinit.ui.console import UIFormatter, console
 from djinit.ui.input import confirm_setup, get_user_input
 
@@ -27,11 +29,11 @@ def main() -> None:
     args = parse_arguments()
 
     if args.command == "secret":
-        handle_secret_command(args)
+        SecretCommand(args).execute()
         return
 
     if args.command == "app":
-        handle_app_command(args)
+        AppCommand(args).execute()
         return
 
     clear_screen()

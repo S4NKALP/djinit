@@ -5,25 +5,22 @@ Handles creation of Django projects and apps.
 
 import os
 
+from djinit.core.base import BaseService
 from djinit.ui.console import UIFormatter
-from djinit.utils.common import (
-    calculate_app_module_paths,
-    create_directory_with_init,
-    extract_existing_apps,
-    get_base_settings_path,
-    insert_apps_into_user_defined_apps,
-    read_base_settings,
-)
+from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
 
 
-class ProjectManager:
+class ProjectManager(BaseService):
     def __init__(self, project_dir: str, project_name: str, app_names: list, metadata: dict):
+        super().__init__(project_root=os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir))
         self.project_dir = project_dir
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
-        self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
+        # self.project_root is set by BaseService via super().__init__ but we need to ensure it matches logic
+        # logic was: self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
+        # which I passed to super. So I can remove the line setting self.project_root here.
         self.module_name = metadata.get("project_module_name") or self.project_name
 
     def create_project(self) -> None:
@@ -44,10 +41,12 @@ class ProjectManager:
         apps_base_dir = self._get_apps_base_dir()
 
         if apps_base_dir != self.project_root:
-            create_directory_with_init(apps_base_dir, f"Created {os.path.basename(apps_base_dir)}/__init__.py")
+            CommonUtils.create_directory_with_init(
+                apps_base_dir, f"Created {os.path.basename(apps_base_dir)}/__init__.py"
+            )
 
         # Calculate module paths for correct AppConfig generation (e.g. src.users)
-        app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
+        app_module_paths = CommonUtils.calculate_app_module_paths(self.app_names, self.metadata)
 
         for i, app_name in enumerate(self.app_names):
             app_module = app_module_paths[i]
@@ -58,30 +57,30 @@ class ProjectManager:
 
     def add_apps_to_settings(self) -> None:
         """Add all apps to USER_DEFINED_APPS in base.py settings file."""
-        base_settings_path = get_base_settings_path(self.project_root, self.module_name)
+        base_settings_path = CommonUtils.get_base_settings_path(self.project_root, self.module_name)
 
         if not os.path.exists(base_settings_path):
             from djinit.utils.exceptions import ConfigError
 
             raise ConfigError("Could not find base.py settings file")
 
-        content = read_base_settings(self.project_root, self.module_name)
+        content = CommonUtils.read_base_settings(self.project_root, self.module_name)
         if content is None:
             from djinit.utils.exceptions import ConfigError
 
             raise ConfigError("Could not read base.py settings file")
 
-        app_module_paths = calculate_app_module_paths(self.app_names, self.metadata)
+        app_module_paths = CommonUtils.calculate_app_module_paths(self.app_names, self.metadata)
 
         # Transform to full AppConfig paths (e.g. apps.users.apps.UsersConfig)
         full_config_paths = []
         for app in app_module_paths:
-            short_name = app.split('.')[-1]
-            config_name = short_name.title().replace('_', '') + 'Config'
+            short_name = app.split(".")[-1]
+            config_name = short_name.title().replace("_", "") + "Config"
             full_config_paths.append(f"{app}.apps.{config_name}")
 
-        existing_apps = extract_existing_apps(content)
-        
+        existing_apps = CommonUtils.extract_existing_apps(content)
+
         # Check against both module path and full config path to avoid duplicates
         apps_to_add = []
         for i, full_path in enumerate(full_config_paths):
@@ -89,11 +88,11 @@ class ProjectManager:
             if full_path not in existing_apps and mod_path not in existing_apps:
                 apps_to_add.append(full_path)
             elif mod_path in existing_apps:
-                # If legacy module path exists, we could upgrade it here, 
+                # If legacy module path exists, we could upgrade it here,
                 # but ProjectManager is typically initialized on creation.
                 # For now, let's just not add a duplicate.
-                 # Actually, let's upgrade it if we can
-                 pass 
+                # Actually, let's upgrade it if we can
+                pass
 
         # If we found apps to add, insert them
         if not apps_to_add:
@@ -102,20 +101,19 @@ class ProjectManager:
             for i, full_path in enumerate(full_config_paths):
                 mod_path = app_module_paths[i]
                 if mod_path in existing_apps and full_path not in existing_apps:
-                     from djinit.utils.common import replace_app_in_user_defined_apps
-                     content = replace_app_in_user_defined_apps(content, mod_path, full_path)
-                     upgraded = True
+                    content = CommonUtils.replace_app_in_user_defined_apps(content, mod_path, full_path)
+                    upgraded = True
 
             if upgraded:
-                 with open(base_settings_path, "w") as f:
+                with open(base_settings_path, "w") as f:
                     f.write(content)
-                 UIFormatter.print_success("Upgraded existing apps to full AppConfig paths")
-                 return
-            
+                UIFormatter.print_success("Upgraded existing apps to full AppConfig paths")
+                return
+
             UIFormatter.print_success("All apps already configured in USER_DEFINED_APPS")
             return
 
-        updated_content = insert_apps_into_user_defined_apps(content, apps_to_add)
+        updated_content = CommonUtils.insert_apps_into_user_defined_apps(content, apps_to_add)
         if not updated_content:
             from djinit.utils.exceptions import ConfigError
 

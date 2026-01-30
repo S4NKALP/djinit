@@ -7,10 +7,11 @@ import os
 from pathlib import Path
 from typing import Any, Dict
 
+from djinit.core.base import BaseService
 from djinit.core.parser import InFileLogicParser
 
 
-class TemplateEngine:
+class TemplateEngine(BaseService):
     """Template engine for rendering file templates."""
 
     def __init__(self, template_dir: str = None):
@@ -22,6 +23,8 @@ class TemplateEngine:
         if template_dir is None:
             # djinit/services/templates.py -> djinit/services -> djinit -> templates
             template_dir = Path(__file__).resolve().parent.parent / "templates"
+
+        super().__init__()
 
         if not template_dir.exists():
             raise FileNotFoundError(f"Template directory not found: {template_dir}")
@@ -43,7 +46,7 @@ class TemplateEngine:
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Template not found: {template_path}")
 
-        with open(template_path, "r") as f:
+        with open(template_path) as f:
             template_text = f.read()
 
         return self.parser.render(template_text, context)
