@@ -7,5 +7,5 @@ from django.core.asgi import get_asgi_application
 env = environ.Env()
 environ.Env.read_env()
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", env("DJANGO_SETTINGS_MODULE", default="core.settings.production"))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", env("DJANGO_SETTINGS_MODULE", default="{{ project_name }}.settings.production"))
 application = get_asgi_application()
