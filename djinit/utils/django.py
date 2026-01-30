@@ -60,12 +60,24 @@ class DjangoHelper:
             raise DjinitError(f"Error creating Django project: {e}", details=str(e)) from e
 
     @staticmethod
-    def startapp(app_name: str, directory: str) -> None:
+    def startapp(app_name: str, directory: str, app_module: str = None) -> None:
         try:
             app_dir = os.path.join(directory, app_name)
             os.makedirs(app_dir, exist_ok=True)
 
-            context = {"app_name": app_name, "django_version": DjangoHelper.DJANGO_VERSION}
+            # Prepare context
+            app_config_name = app_name.title().replace('_', '')
+            context = {
+                "app_name": app_name,
+                "app_config_name": app_config_name,
+                "django_version": DjangoHelper.DJANGO_VERSION
+            }
+            
+            # Use provided app_module or default to app_name (path calculation handled by caller)
+            if not app_module:
+                app_module = app_name
+                
+            context["app_module"] = app_module
 
             create_init_file(app_dir, f"Created {app_name}/__init__.py")
 

@@ -203,6 +203,33 @@ def insert_apps_into_user_defined_apps(content: str, apps_to_add: list) -> str:
     return "\n".join(new_lines)
 
 
+def replace_app_in_user_defined_apps(content: str, old_app: str, new_app: str) -> str | None:
+    """Replace an app entry in USER_DEFINED_APPS with a new one."""
+    lines = content.split("\n")
+    new_lines = []
+    replaced = False
+
+    for line in lines:
+        if not replaced and _parse_app_entry_from_line(line) == old_app:
+            # Try to preserve indentation
+            indent_idx = 0
+            for char in line:
+                if char.isspace():
+                    indent_idx += 1
+                else:
+                    break
+            indent = line[:indent_idx] if indent_idx > 0 else "    "
+            
+            new_lines.append(f'{indent}"{new_app}",')
+            replaced = True
+        else:
+            new_lines.append(line)
+
+    if replaced:
+        return "\n".join(new_lines)
+    return None
+
+
 def calculate_app_module_paths(app_names: list, metadata: dict) -> list:
     nested = bool(metadata.get("nested_apps"))
     nested_dir_name = metadata.get("nested_dir") if nested else None
