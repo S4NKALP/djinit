@@ -9,18 +9,18 @@ setup(
     author="Sankalp Tharu",
     author_email="sankalptharu50028@gmail.com",
     url="https://github.com/S4NKALP/djinit",
-    packages=find_packages(include=["djinit", "djinit.*"]),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
-        "ruff>=0.14.2",
-        "click>=8.3.0",
         "rich>=14.2.0",
         "questionary>=2.0.1",
+        "typer>=0.21.1",
     ],
     entry_points={
         "console_scripts": [
-            "djinit=djinit.generator:main",
-            "dj=djinit.generator:main",
+            "djinit=djinit.cli:app",
+            "dj=djinit.cli:app",
         ]
     },
     classifiers=[
@@ -54,7 +54,7 @@ setup(
         "django project",
         "django starter",
     ],
-    python_requires=">=3.13",
+    python_requires=">=3.10",
     project_urls={
         "Bug Reports": "https://github.com/S4NKALP/djinit/issues",
         "Source": "https://github.com/S4NKALP/djinit",
