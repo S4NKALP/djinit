@@ -27,7 +27,7 @@ class ProjectCreator(BaseService):
         os.makedirs(self.project_root, exist_ok=True)
 
         unified = self.metadata.get("unified_structure", False)
-        DjangoHelper.startproject(self.module_name, self.project_root, unified=unified)
+        DjangoHelper.startproject(self.module_name, self.project_root, unified=unified, metadata=self.metadata)
         UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
 
     def _get_apps_base_dir(self) -> str:

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 app = typer.Typer(
     help="djinit - A CLI tool to set up Django projects with best practices.",
     add_completion=False,
-    no_args_is_help=True,
+    no_args_is_help=False,
 )
 
 
@@ -33,8 +33,9 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Annotated[
         Optional[bool],
         typer.Option("--version", "-v", callback=version_callback, is_eager=True, help="Show the version and exit."),
@@ -43,7 +44,8 @@ def main(
     """
     djinit: Django Project Initializer
     """
-    pass
+    if ctx.invoked_subcommand is None:
+        setup()
 
 
 @app.command("secret")

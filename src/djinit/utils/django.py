@@ -14,8 +14,10 @@ class DjangoHelper:
     DJANGO_VERSION = DJANGO_VERSION
 
     @staticmethod
-    def startproject(project_name: str, directory: str, unified: bool = False) -> None:
+    def startproject(project_name: str, directory: str, unified: bool = False, metadata: dict = None) -> None:
         try:
+            from djinit.utils.secretkey import generate_secret_key
+
             os.makedirs(directory, exist_ok=True)
 
             manage_py_path = os.path.join(directory, "manage.py")
@@ -33,11 +35,26 @@ class DjangoHelper:
             settings_dir = os.path.join(project_config_dir, "settings")
             CommonUtils.create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
 
-            base_context = {"project_name": project_name, "app_names": []}
+            # Generate secret key for development
+            secret_key = generate_secret_key()
+            metadata = metadata or {}
+
+            base_context = {
+                "project_name": project_name,
+                "app_names": [],
+                "use_database_url": metadata.get("use_database_url", True),
+                "database_type": metadata.get("database_type", "postgresql"),
+            }
+
+            dev_context = {"secret_key": secret_key}
+
+            # Production context also needs database info
+            prod_context = base_context.copy()
+
             settings_files = [
                 ("base.py", "config/settings/base.py-tpl", base_context),
-                ("development.py", "config/settings/development.py-tpl", {}),
-                ("production.py", "config/settings/production.py-tpl", {}),
+                ("development.py", "config/settings/development.py-tpl", dev_context),
+                ("production.py", "config/settings/production.py-tpl", prod_context),
             ]
             CommonUtils.create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
@@ -48,8 +65,8 @@ class DjangoHelper:
             }
             project_files = [
                 ("urls.py", "config/urls.py-tpl", urls_context),
-                ("wsgi.py", "config/wsgi.py-tpl", {}),
-                ("asgi.py", "config/asgi.py-tpl", {}),
+                ("wsgi.py", "config/wsgi.py-tpl", {"project_name": project_name}),
+                ("asgi.py", "config/asgi.py-tpl", {"project_name": project_name}),
             ]
             CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
