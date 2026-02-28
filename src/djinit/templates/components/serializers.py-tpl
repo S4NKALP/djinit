@@ -1,0 +1,5 @@
+"""generated with djinit"""
+
+from rest_framework import serializers
+
+# Create your serializers here.
