@@ -82,7 +82,7 @@ showmigrations:
 
 # Sync dependencies (uv equivalent of pip freeze)
 requirements:
-    uv pip compile
+    uv run python -c "import tomllib; p = tomllib.load(open('pyproject.toml', 'rb')); print('\n'.join(p['project']['dependencies']))" > requirements.txt
 
 # Run all linting and checks
 ci:
