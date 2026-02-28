@@ -31,15 +31,15 @@ jobs:
 
     - name: Lint with Ruff
       run: |
-        ruff check djinit/
+        ruff check src/djinit/
 
     - name: Check formatting with Ruff
       run: |
-        ruff format --check djinit/
+        ruff format --check src/djinit/
 
     - name: Test CLI import
       run: |
-        python -c "from djinit.generator import main; print('Import successful')"
+        python -c "from djinit.cli import main; print('Import successful')"
 
     - name: Test console script entry point
       run: |
