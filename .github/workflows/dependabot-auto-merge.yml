@@ -1,7 +1,8 @@
 name: Dependabot Auto-Merge
 
 on:
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -9,11 +10,13 @@ permissions:
 
 jobs:
   dependabot:
-    if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
-
+    # Check that it's actually dependabot
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Merge PR from Dependabot
         uses: fastify/github-action-merge-dependabot@v3
         with:
-          github-token: ${{ secrets.DEPENDABOT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          use-github-auto-merge: true
+          target: minor
