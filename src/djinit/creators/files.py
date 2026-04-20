@@ -88,6 +88,10 @@ class FileCreator(BaseService):
                 for name in base_settings_context["app_names"]
             ]
 
+        # Add Tailwind and HTMX to context
+        base_settings_context["use_tailwind"] = self.metadata.get("use_tailwind", False)
+        base_settings_context["use_htmx"] = self.metadata.get("use_htmx", False)
+
         for filename, context in [
             ("base.py", base_settings_context),
             ("development.py", dev_context),
@@ -134,6 +138,8 @@ class FileCreator(BaseService):
         context = {
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_htmx": self.metadata.get("use_htmx", False),
         }
         self._render_and_create_file(
             "requirements.txt",
@@ -413,6 +419,8 @@ class FileCreator(BaseService):
             "settings": {
                 "use_database_url": self.metadata.get("use_database_url", True),
                 "database_type": self.metadata.get("database_type", "postgresql"),
+                "use_tailwind": self.metadata.get("use_tailwind", False),
+                "use_htmx": self.metadata.get("use_htmx", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),
