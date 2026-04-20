@@ -15,6 +15,8 @@ class ProjectMetadata:
     nested_dir: str | None = None
     use_database_url: bool = False
     database_type: str = "postgresql"
+    use_tailwind: bool = False
+    use_htmx: bool = False
     predefined_structure: bool = False
     unified_structure: bool = False
     single_structure: bool = False
@@ -29,6 +31,8 @@ class ProjectMetadata:
             "nested_dir": self.nested_dir,
             "use_database_url": self.use_database_url,
             "database_type": self.database_type,
+            "use_tailwind": self.use_tailwind,
+            "use_htmx": self.use_htmx,
             "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,
