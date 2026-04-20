@@ -20,6 +20,9 @@ dependencies = [
 # @IF database_type == 'postgresql'
     "psycopg2-binary",
 # @ENDIF
+# @IF use_database_url
+    "dj-database-url",
+# @ENDIF
     "gunicorn",
 ]
 

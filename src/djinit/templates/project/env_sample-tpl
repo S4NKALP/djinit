@@ -1,5 +1,5 @@
 # Django settings
-DJANGO_SETTINGS_MODULE={{ project_name }}.settings.development
+DJANGO_SETTINGS_MODULE=[[ project_name ]].settings.development
 SECRET_KEY=your-secret-key
 ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
 
