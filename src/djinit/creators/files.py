@@ -177,6 +177,7 @@ class FileCreator(BaseService):
             "package_name": package_name,
             "project_name": self.project_name,
             "database_type": metadata.get("database_type", "postgresql"),
+            "use_database_url": metadata.get("use_database_url", True),
         }
         self._render_and_create_file(
             "pyproject.toml",
