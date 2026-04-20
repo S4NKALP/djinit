@@ -1,7 +1,9 @@
 """generated with djinit"""
 
 from .base import *
+# @IF use_database_url
 import dj_database_url
+# @ENDIF
 
 DEBUG = False
 SECRET_KEY = env('SECRET_KEY')
