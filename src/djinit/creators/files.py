@@ -81,16 +81,12 @@ class FileCreator(BaseService):
         # Prepare context for base.py with full AppConfig paths
         base_settings_context = base_context.copy()
         if "app_names" in base_settings_context:
-            transformed_apps = []
-            for app in base_settings_context["app_names"]:
-                # Transform to full AppConfig path: module.path -> module.path.apps.ConfigName
-                short_name = app.split(".")[-1]
-                config_name = short_name.title().replace("_", "") + "Config"
-                # If it's the special "apps" container in unified structure, we might want to skip or handle differently
-                # But assumes all user apps follow standard djinit structure
-                full_path = f"{app}.apps.{config_name}"
-                transformed_apps.append(full_path)
-            base_settings_context["app_names"] = transformed_apps
+            nested = bool(self.metadata.get("nested_apps"))
+            nested_dir = self.metadata.get("nested_dir")
+            base_settings_context["app_names"] = [
+                CommonUtils.get_full_app_config_path(name, nested, nested_dir)
+                for name in base_settings_context["app_names"]
+            ]
 
         for filename, context in [
             ("base.py", base_settings_context),
@@ -159,7 +155,7 @@ class FileCreator(BaseService):
     def create_env_file(self) -> None:
         """Create .env.sample file with environment variables."""
         context = {
-            "project_name": self.module_name, # Use module_name here for settings path
+            "project_name": self.module_name,  # Use module_name here for settings path
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
@@ -245,7 +241,7 @@ class FileCreator(BaseService):
         CommonUtils.create_file_from_template(
             api_v1_urls_path,
             "config/urls.py-tpl",
-            {"url_type": "api_version", "app_name": "v1", "app_list": [], "app_module": "apps"},
+            {"url_type": "api_version", "app_name": "v1", "app_list": self.app_names, "app_module": "apps"},
             "Created api/v1/urls.py",
         )
 

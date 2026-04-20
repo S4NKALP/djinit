@@ -70,14 +70,10 @@ class ProjectCreator(BaseService):
 
             raise ConfigError("Could not read base.py settings file")
 
+        nested = bool(self.metadata.get("nested_apps"))
+        nested_dir = self.metadata.get("nested_dir")
         app_module_paths = CommonUtils.calculate_app_module_paths(self.app_names, self.metadata)
-
-        # Transform to full AppConfig paths (e.g. apps.users.apps.UsersConfig)
-        full_config_paths = []
-        for app in app_module_paths:
-            short_name = app.split(".")[-1]
-            config_name = short_name.title().replace("_", "") + "Config"
-            full_config_paths.append(f"{app}.apps.{config_name}")
+        full_config_paths = [CommonUtils.get_full_app_config_path(name, nested, nested_dir) for name in self.app_names]
 
         existing_apps = CommonUtils.extract_existing_apps(content)
 

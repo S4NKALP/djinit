@@ -47,8 +47,11 @@ class AppCreator(BaseService):
         if not self._add_to_installed_apps():
             return False
 
+        # Register URLs based on structure
         if structure_type == "predefined":
             self._add_to_api_v1_urls(self.app_name)
+        elif structure_type in ["standard", "single"]:
+            self._add_to_project_urls(self.app_name, structure_type)
 
         UIFormatter.print_success(f"Django app '{self.app_name}' created and configured successfully!")
         return True
@@ -165,10 +168,22 @@ class AppCreator(BaseService):
         # Calculate the app module path based on structure
         app_module_path = self._calculate_app_module_path(structure_type)
 
-        # Use full AppConfig path to properly support nested apps
-        # e.g. apps.users -> apps.users.apps.UsersConfig
-        app_config_name = self.app_name.title().replace("_", "")
-        full_app_config = f"{app_module_path}.apps.{app_config_name}Config"
+        # Use centralized logic for AppConfig path
+        is_nested, nested_dir, _ = self._get_project_structure()
+        nested = structure_type in ["unified", "predefined"] or (structure_type == "standard" and is_nested)
+
+        # Determine the effective nested_dir for config path
+        if structure_type in ["unified", "predefined"]:
+            effective_nested_dir = "apps"
+        elif structure_type == "single":
+            # For single structure, app is inside the project module
+            project_dir, _ = CommonUtils.find_project_dir(self.current_dir)
+            effective_nested_dir = os.path.basename(project_dir) if project_dir else None
+            nested = True
+        else:
+            effective_nested_dir = nested_dir
+
+        full_app_config = CommonUtils.get_full_app_config_path(self.app_name, nested, effective_nested_dir)
 
         # We'll check if either the module path or the full config path exists
         # but we'll prefer adding the full config path
@@ -281,36 +296,63 @@ class AppCreator(BaseService):
 
         return success
 
-    def _add_to_api_v1_urls(self, app_name: str) -> None:
-        api_v1_urls = os.path.join(self.current_dir, "api", "v1", "urls.py")
-        if not os.path.exists(api_v1_urls):
+    def _add_to_project_urls(self, app_name: str, structure_type: str) -> None:
+        """Add app URLs to the main project urls.py."""
+        project_dir, settings_base_path = CommonUtils.find_project_dir(self.current_dir)
+        if not project_dir:
             return
+
+        project_urls = os.path.join(project_dir, "urls.py")
+        if not os.path.exists(project_urls):
+            return
+
+        app_module_path = self._calculate_app_module_path(structure_type)
+        include_stmt = f'path("", include("{app_module_path}.urls")),'
+
         try:
-            with open(api_v1_urls, encoding="utf-8") as f:
+            with open(project_urls, encoding="utf-8") as f:
                 content = f.read()
 
-            import_line = "from django.urls import include, path"
-            if import_line not in content:
-                # ensure base import exists (fallback)
-                content = import_line + "\n\n" + content
-
-            include_stmt = f'path("{app_name}/", include("apps.{app_name}.urls")),'
             if include_stmt in content:
                 return
 
             if "urlpatterns = [" in content:
-                parts = content.split("urlpatterns = [", 1)
-                before = parts[0]
-                rest = parts[1]
-                if "]" in rest:
-                    idx = rest.rfind("]")
-                    new_rest = rest[:idx]
-                    if not new_rest.endswith("\n"):
-                        new_rest += "\n"
-                    new_rest += f"    {include_stmt}\n" + rest[idx:]
-                    content = before + "urlpatterns = [" + new_rest
+                # Find the best place to insert (before the closing bracket of urlpatterns)
+                idx = content.rfind("]")
+                if idx != -1:
+                    content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
+
+            with open(project_urls, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            UIFormatter.print_success(f"Added '{app_name}' URLs to {os.path.basename(project_urls)}")
+        except Exception as e:
+            UIFormatter.print_warning(f"Could not automatically update {os.path.basename(project_urls)}: {e}")
+
+    def _add_to_api_v1_urls(self, app_name: str) -> None:
+        api_v1_urls = os.path.join(self.current_dir, "api", "v1", "urls.py")
+        if not os.path.exists(api_v1_urls):
+            return
+
+        structure_type = self._get_structure_type()
+        app_module_path = self._calculate_app_module_path(structure_type)
+
+        try:
+            with open(api_v1_urls, encoding="utf-8") as f:
+                content = f.read()
+
+            include_stmt = f'path("{app_name}/", include("{app_module_path}.urls")),'
+            if include_stmt in content:
+                return
+
+            if "urlpatterns = [" in content:
+                idx = content.rfind("]")
+                if idx != -1:
+                    content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
             with open(api_v1_urls, "w", encoding="utf-8") as f:
                 f.write(content)
+
+            UIFormatter.print_success(f"Added '{app_name}' URLs to api/v1/urls.py")
         except Exception:
             return
