@@ -121,7 +121,7 @@ security:
   stage: security
   image: python:3.13
   variables:
-    DJANGO_SETTINGS_MODULE: [[ project_name ]].settings.development
+    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
     SECRET_KEY: test-secret-key-for-ci
   script:
     - pip install uv
