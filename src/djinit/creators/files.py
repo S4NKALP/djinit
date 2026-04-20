@@ -159,7 +159,7 @@ class FileCreator(BaseService):
     def create_env_file(self) -> None:
         """Create .env.sample file with environment variables."""
         context = {
-            "project_name": self.module_name,
+            "project_name": self.module_name, # Use module_name here for settings path
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
         }
@@ -176,6 +176,7 @@ class FileCreator(BaseService):
         context = {
             "package_name": package_name,
             "project_name": self.project_name,
+            "module_name": self.module_name,
             "database_type": metadata.get("database_type", "postgresql"),
             "use_database_url": metadata.get("use_database_url", True),
         }
@@ -206,7 +207,7 @@ class FileCreator(BaseService):
         )
 
     def create_justfile(self) -> None:
-        context = {"project_name": self.project_name}
+        context = {"project_name": self.project_name, "module_name": self.module_name}
         self._render_and_create_file(
             "justfile",
             "project/justfile-tpl",
@@ -353,7 +354,7 @@ class FileCreator(BaseService):
         )
 
     def create_procfile(self) -> None:
-        context = {"project_name": self.project_name}
+        context = {"project_name": self.project_name, "module_name": self.module_name}
         self._render_and_create_file(
             "Procfile",
             "project/procfile-tpl",

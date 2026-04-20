@@ -47,6 +47,9 @@ class AppCreator(BaseService):
         if not self._add_to_installed_apps():
             return False
 
+        if structure_type == "predefined":
+            self._add_to_api_v1_urls(self.app_name)
+
         UIFormatter.print_success(f"Django app '{self.app_name}' created and configured successfully!")
         return True
 
