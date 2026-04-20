@@ -44,6 +44,8 @@ class DjangoHelper:
                 "app_names": [],
                 "use_database_url": metadata.get("use_database_url", True),
                 "database_type": metadata.get("database_type", "postgresql"),
+                "use_tailwind": metadata.get("use_tailwind", False),
+                "use_htmx": metadata.get("use_htmx", False),
             }
 
             dev_context = {"secret_key": secret_key}
