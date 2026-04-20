@@ -18,7 +18,7 @@ dependencies = [
     "mysqlclient",
 # @ENDIF
 # @IF database_type == 'postgresql'
-    "psycopg2-binary",
+    "psycopg[binary]",
 # @ENDIF
 # @IF use_database_url
     "dj-database-url",
@@ -46,4 +46,4 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["[[ project_name ]]"]
+known-first-party = ["[[ module_name ]]"]
