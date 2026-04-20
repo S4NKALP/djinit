@@ -251,6 +251,18 @@ class CommonUtils(BaseUtils):
         return f"{nested_dir}.{app_name}" if nested and nested_dir else app_name
 
     @staticmethod
+    def get_full_app_config_path(app_name: str, nested: bool, nested_dir: str | None) -> str:
+        """Get the full path to the AppConfig class.
+        Example: users -> users.apps.UsersConfig
+        Example: (nested) apps.users -> apps.users.apps.UsersConfig
+        """
+        module_path = CommonUtils.calculate_app_module_path(app_name, nested, nested_dir)
+        # Handle cases where app_name might be a module path already
+        short_name = app_name.split(".")[-1]
+        config_name = short_name.title().replace("_", "") + "Config"
+        return f"{module_path}.apps.{config_name}"
+
+    @staticmethod
     def is_django_project(directory: str = None) -> bool:
         if directory is None:
             directory = os.getcwd()
