@@ -10,6 +10,8 @@ djangorestframework_simplejwt
 drf-spectacular
 django-cors-headers
 whitenoise
+django-tailwind-cli # @IF use_tailwind
+django-htmx # @IF use_htmx
 # @IF database_type == 'mysql'
 mysqlclient
 # @ELSE
