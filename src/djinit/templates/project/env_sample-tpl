@@ -20,7 +20,7 @@ DB_PORT=
 # @ENDIF
 
 # Frontend URL
-FRONTEND_URL=http://frontend.your-domain.com
+FRONTEND_URL=https://frontend.your-domain.com,www.frontend.your-domain.com
 
 # Email settings
 EMAIL_HOST=
