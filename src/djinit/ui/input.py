@@ -25,6 +25,8 @@ class StructureOptions(TypedDict):
     use_database_url: bool
     use_tailwind: bool
     use_htmx: bool
+    use_docker: bool
+    use_vite: bool
     use_github: bool
     use_gitlab: bool
 
@@ -179,6 +181,9 @@ class InputCollector:
     def get_htmx_choice(self) -> bool:
         return UIFormatter.confirm("Include HTMX? (via django-htmx)", default=True)
 
+    def get_docker_choice(self) -> bool:
+        return UIFormatter.confirm("Include Docker support? (Dockerfile + docker-compose)", default=True)
+
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
         """Helper method to generate metadata dictionary."""
         project_dir = options["project_dir"]
@@ -203,6 +208,7 @@ class InputCollector:
             database_type=options["database_type"],
             use_tailwind=options.get("use_tailwind", False),
             use_htmx=options.get("use_htmx", False),
+            use_docker=options.get("use_docker", False),
             predefined_structure=options["predefined"],
             unified_structure=options["unified"],
             single_structure=options["single"],
@@ -264,6 +270,9 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         use_tailwind = collector.get_tailwind_choice()
         use_htmx = collector.get_htmx_choice()
 
+        # Step 4: Docker
+        use_docker = collector.get_docker_choice()
+
         # Step 3: Django Apps (Standard only)
         nested = False
         nested_dir = None
@@ -289,6 +298,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 database_type=database_type,
                 use_tailwind=use_tailwind,
                 use_htmx=use_htmx,
+                use_docker=use_docker,
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -302,6 +312,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_database_url=use_database_url,
                 use_tailwind=use_tailwind,
                 use_htmx=use_htmx,
+                use_docker=use_docker,
                 use_github=use_github,
                 use_gitlab=use_gitlab,
             )
@@ -339,6 +350,9 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     use_htmx = "Yes" if metadata.get("use_htmx", False) else "No"
     console.print(f"[{UIColors.HIGHLIGHT}]HTMX:[/{UIColors.HIGHLIGHT}] {use_htmx}")
+
+    use_docker = "Yes" if metadata.get("use_docker", False) else "No"
+    console.print(f"[{UIColors.HIGHLIGHT}]Docker:[/{UIColors.HIGHLIGHT}] {use_docker}")
 
     console.print()
     UIFormatter.print_separator()
