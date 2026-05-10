@@ -13,6 +13,9 @@ whitenoise
 django-tailwind-cli # @IF use_tailwind
 django-htmx # @IF use_htmx
 django-vite # @IF use_vite
+pytest # @IF use_pytest
+pytest-django # @IF use_pytest
+pytest-cov # @IF use_pytest
 # @IF database_type == 'mysql'
 mysqlclient
 # @ELSE
