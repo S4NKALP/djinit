@@ -88,10 +88,11 @@ class FileCreator(BaseService):
                 for name in base_settings_context["app_names"]
             ]
 
-        # Add Tailwind, HTMX, Vite, and pytest to context
+        # Add Tailwind, HTMX, Vite, Vue, and pytest to context
         base_settings_context["use_tailwind"] = self.metadata.get("use_tailwind", False)
         base_settings_context["use_htmx"] = self.metadata.get("use_htmx", False)
         base_settings_context["use_vite"] = self.metadata.get("use_vite", False)
+        base_settings_context["use_vue"] = self.metadata.get("use_vue", False)
         base_settings_context["use_pytest"] = self.metadata.get("use_pytest", False)
 
         for filename, context in [
@@ -143,6 +144,7 @@ class FileCreator(BaseService):
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
             "use_vite": self.metadata.get("use_vite", False),
+            "use_vue": self.metadata.get("use_vue", False),
             "use_pytest": self.metadata.get("use_pytest", False),
             "module_name": self.module_name,
             "app_names": self.app_names,
@@ -429,6 +431,7 @@ class FileCreator(BaseService):
                 "use_htmx": self.metadata.get("use_htmx", False),
                 "use_docker": self.metadata.get("use_docker", False),
                 "use_vite": self.metadata.get("use_vite", False),
+                "use_vue": self.metadata.get("use_vue", False),
                 "use_pytest": self.metadata.get("use_pytest", False),
             },
             "cicd": {
@@ -517,6 +520,54 @@ class FileCreator(BaseService):
         index_css_path = os.path.join(frontend_src_dir, "index.css")
         CommonUtils.create_file_from_template(
             index_css_path, "project/frontend/src/index.css-tpl", context, "Created frontend/src/index.css"
+        )
+
+    def create_vue_files(self) -> None:
+        """Create Vite/Vue frontend files."""
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+        }
+
+        frontend_dir = os.path.join(self.project_root, "frontend")
+        frontend_src_dir = os.path.join(frontend_dir, "src")
+        static_dir = os.path.join(self.project_root, "static")
+
+        os.makedirs(frontend_dir, exist_ok=True)
+        os.makedirs(frontend_src_dir, exist_ok=True)
+        os.makedirs(static_dir, exist_ok=True)
+
+        CommonUtils.create_directory_with_init(frontend_dir, "Created frontend/")
+        CommonUtils.create_directory_with_init(frontend_src_dir, "Created frontend/src/")
+        CommonUtils.create_directory_with_init(static_dir, "Created static/")
+
+        self._render_and_create_file(
+            "vite.config.js",
+            "project/vite-vue.config.js-tpl",
+            context,
+            "Created vite.config.js for Vue",
+        )
+        self._render_and_create_file(
+            "package.json",
+            "project/package-vue.json-tpl",
+            context,
+            "Created package.json for Vue frontend",
+        )
+        index_html_path = os.path.join(frontend_dir, "index.html")
+        CommonUtils.create_file_from_template(
+            index_html_path, "project/frontend/index-vue.html-tpl", context, "Created frontend/index.html"
+        )
+        main_js_path = os.path.join(frontend_src_dir, "main.js")
+        CommonUtils.create_file_from_template(
+            main_js_path, "project/frontend/src/main.js-tpl", context, "Created frontend/src/main.js"
+        )
+        app_vue_path = os.path.join(frontend_src_dir, "App.vue")
+        CommonUtils.create_file_from_template(
+            app_vue_path, "project/frontend/src/App.vue-tpl", context, "Created frontend/src/App.vue"
+        )
+        style_css_path = os.path.join(frontend_src_dir, "style.css")
+        CommonUtils.create_file_from_template(
+            style_css_path, "project/frontend/src/style.css-tpl", context, "Created frontend/src/style.css"
         )
 
     def create_pytest_files(self) -> None:

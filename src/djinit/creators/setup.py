@@ -79,6 +79,7 @@ class SetupCreator:
                 ("Creating CI/CD pipelines", self._create_cicd_pipelines),
                 ("Creating Docker files", self._create_docker_files),
                 ("Creating Vite/React files", self._create_vite_files),
+                ("Creating Vite/Vue files", self._create_vue_files),
                 ("Creating pytest files", self._create_pytest_files),
             ]
         )
@@ -131,6 +132,11 @@ class SetupCreator:
         if self.metadata.get("use_vite", False):
             self.file_creator.create_vite_files()
             UIFormatter.print_success("Created Vite/React files successfully!")
+
+    def _create_vue_files(self) -> None:
+        if self.metadata.get("use_vue", False):
+            self.file_creator.create_vue_files()
+            UIFormatter.print_success("Created Vite/Vue files successfully!")
 
     def _create_pytest_files(self) -> None:
         if self.metadata.get("use_pytest", False):

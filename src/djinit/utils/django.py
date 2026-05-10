@@ -47,6 +47,7 @@ class DjangoHelper:
                 "use_tailwind": metadata.get("use_tailwind", False),
                 "use_htmx": metadata.get("use_htmx", False),
                 "use_vite": metadata.get("use_vite", False),
+                "use_vue": metadata.get("use_vue", False),
                 "use_pytest": metadata.get("use_pytest", False),
             }
 
