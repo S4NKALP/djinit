@@ -77,6 +77,7 @@ class SetupCreator:
                 ("Creating Justfile", self.file_creator.create_justfile),
                 ("Creating runtime.txt", self.file_creator.create_runtime_txt),
                 ("Creating CI/CD pipelines", self._create_cicd_pipelines),
+                ("Creating Docker files", self._create_docker_files),
             ]
         )
 
@@ -118,3 +119,8 @@ class SetupCreator:
 
         if self.metadata.get("use_gitlab_ci", True):
             self.file_creator.create_gitlab_ci()
+
+    def _create_docker_files(self) -> None:
+        if self.metadata.get("use_docker", False):
+            self.file_creator.create_docker_files()
+            UIFormatter.print_success("Created Docker files successfully!")

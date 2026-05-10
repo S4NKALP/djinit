@@ -421,6 +421,7 @@ class FileCreator(BaseService):
                 "database_type": self.metadata.get("database_type", "postgresql"),
                 "use_tailwind": self.metadata.get("use_tailwind", False),
                 "use_htmx": self.metadata.get("use_htmx", False),
+                "use_docker": self.metadata.get("use_docker", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),
@@ -431,4 +432,31 @@ class FileCreator(BaseService):
         filepath = os.path.join(self.project_root, ".djinit")
         CommonUtils.create_file_with_content(
             filepath, json.dumps(config, indent=4), "Created .djinit configuration file"
+        )
+
+    def create_docker_files(self) -> None:
+        """Create Docker-related files (Dockerfile, docker-compose.yml, .dockerignore)."""
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+            "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_database_url": self.metadata.get("use_database_url", True),
+        }
+        self._render_and_create_file(
+            "Dockerfile",
+            "project/Dockerfile-tpl",
+            context,
+            "Created Dockerfile for Django application",
+        )
+        self._render_and_create_file(
+            "docker-compose.yml",
+            "project/docker-compose.yml-tpl",
+            context,
+            "Created docker-compose.yml for local development",
+        )
+        self._render_and_create_file(
+            ".dockerignore",
+            "project/dockerignore-tpl",
+            {},
+            "Created .dockerignore file",
         )
