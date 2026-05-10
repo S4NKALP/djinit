@@ -17,6 +17,8 @@ django-vite # @IF use_vue
 pytest # @IF use_pytest
 pytest-django # @IF use_pytest
 pytest-cov # @IF use_pytest
+django-q2 # @IF use_django_q
+celery # @IF use_celery
 # @IF database_type == 'mysql'
 mysqlclient
 # @ELSE
