@@ -91,3 +91,12 @@ secrets.json
 
 # Cloud
 .cloud
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.tar
+
+# Docker volumes
+postgres_data/
+mysql_data/
