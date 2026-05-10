@@ -49,6 +49,8 @@ class DjangoHelper:
                 "use_vite": metadata.get("use_vite", False),
                 "use_vue": metadata.get("use_vue", False),
                 "use_pytest": metadata.get("use_pytest", False),
+                "use_django_q": metadata.get("use_django_q", False),
+                "use_celery": metadata.get("use_celery", False),
             }
 
             dev_context = {"secret_key": secret_key}
