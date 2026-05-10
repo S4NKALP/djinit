@@ -7,7 +7,8 @@
 - [x] Tailwind CSS: Integrated via django-tailwind-cli
 - [x] HTMX: Integrated via django-htmx
 - [x] Testing Framework: pytest, pytest-django, pytest-cov
-- [ ] Celery: Making background tasks easier to set up
+- [x] Django-Q2: Optional async task queue (default: disabled)
+- [x] Celery: Optional async task queue with Redis broker (default: disabled)
 - [ ] More Packages: Integrating other popular packages to help you build feature rich apps effortlessly
 
 ## Enhancements
