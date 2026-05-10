@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from djinit.templater import template_engine
+from djinit.templater import template_engine  # noqa: E402
 
 
 def check_template_consistency():

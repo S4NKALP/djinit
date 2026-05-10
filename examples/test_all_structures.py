@@ -7,9 +7,9 @@ Run from the djinit project root: PYTHONPATH=src python3 examples/test_all_struc
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))  # noqa: E402
 
-from djinit.templater import template_engine
+from djinit.templater import template_engine  # noqa: E402
 
 
 def print_section(title):

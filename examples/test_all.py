@@ -6,11 +6,11 @@ Comprehensive test for ALL djinit features and use cases.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))  # noqa: E402
 
-import shutil
+import shutil  # noqa: E402
 
-from djinit.creators.setup import SetupCreator
+from djinit.creators.setup import SetupCreator  # noqa: E402
 
 
 def create_project(name, metadata, structure="standard"):

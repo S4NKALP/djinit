@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from djinit.creators.setup import SetupCreator
+from djinit.creators.setup import SetupCreator  # noqa: E402
 
 
 def create_test_project(name, structure, metadata, use_github=False, use_gitlab=False):
