@@ -1,13 +1,35 @@
 # [[ project_name ]]
 
-A Django project folder structure is generated with [djinitx/djinit/dj](https://github.com/S4NKALP/djinit).
+A Django project generated with [djinitx/djinit/dj](https://github.com/S4NKALP/djinit).
 
 ## Features
 
 - Modern project structure with environment-specific settings
 - Pre-configured REST API with JWT authentication
-- Essential dependencies and utilities
-- Production-ready configuration
+- Split settings for development and production
+- API documentation (Swagger UI at `/docs/`)
+- CORS configured for local development
+- WhiteNoise for static files
+- Modern admin interface (django-jazzmin)
+# @IF use_docker
+- Docker support (Dockerfile, docker-compose.yml)
+# @ENDIF
+# @IF use_vite | use_vue
+- Frontend integration (Vite + React or Vue.js via django-vite)
+# @ENDIF
+# @IF use_pytest
+- Testing framework (pytest, pytest-django, pytest-cov)
+# @ENDIF
+# @IF use_django_q
+- Async task queue (Django-Q2)
+# @ENDIF
+# @IF use_celery
+- Async task queue (Celery with Redis broker)
+# @ENDIF
+- Production-ready configuration (Procfile, runtime.txt)
+- Development tools (Justfile with common commands)
+- Environment template (.env.sample)
+- Git ready (.gitignore included)
 
 ## Setup
 
@@ -158,6 +180,33 @@ Run `just` to see all available commands, including:
 ├── Procfile
 ├── runtime.txt
 └── README.md
+# @ELSEIF single_structure
+[[ project_name ]]/
+├── [[ module_name ]]/
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── development.py
+│   │   └── production.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── admin/
+├── api/                  # API endpoints organized by model
+│   └── user/             # Example: if you have a User model
+│       ├── views.py
+│       ├── serializers.py
+│       └── urls.py
+├── models/
+├── tests/
+├── manage.py
+├── requirements.txt
+├── pyproject.toml
+├── uv.lock
+├── .env.sample
+├── justfile
+├── Procfile
+├── runtime.txt
+└── README.md
 # @ELSE
 [[ project_name ]]/
 ├── [[ module_name ]]/
@@ -182,15 +231,10 @@ Run `just` to see all available commands, including:
 ├── pyproject.toml
 ├── uv.lock
 ├── .env.sample
+├── justfile
+├── Procfile
+├── runtime.txt
 └── README.md
-
-**Note:** For the single folder layout, organize your API endpoints by model name under the `api/` directory.
-For example, if you have a `User` model in `models/user.py`, create:
-- `api/user/views.py` - API views for User
-- `api/user/serializers.py` - Serializers for User
-- `api/user/urls.py` - URL patterns for User endpoints
-
-See the README files in `api/` and `models/` directories for more details.
 # @ENDIF
 ```
 
@@ -199,3 +243,29 @@ See the README files in `api/` and `models/` directories for more details.
 When running in development mode, API documentation is available at:
 - Swagger UI: http://localhost:8000/docs/
 - Schema: http://localhost:8000/schema/
+
+# @IF use_django_q
+## Django-Q2
+
+Django-Q2 is a task queue for Django. To start the worker:
+
+```bash
+python manage.py qcluster
+```
+# @ENDIF
+
+# @IF use_celery
+## Celery
+
+Celery is a distributed task queue. To start the worker:
+
+```bash
+celery -A [[ module_name ]] worker -l info
+```
+
+To start the beat scheduler:
+
+```bash
+celery -A [[ module_name ]] beat -l info
+```
+# @ENDIF
