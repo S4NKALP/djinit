@@ -21,6 +21,8 @@ class ProjectMetadata:
     use_vite: bool = False
     use_vue: bool = False
     use_pytest: bool = False
+    use_django_q: bool = False
+    use_celery: bool = False
     predefined_structure: bool = False
     unified_structure: bool = False
     single_structure: bool = False
@@ -41,6 +43,7 @@ class ProjectMetadata:
             "use_vite": self.use_vite,
             "use_vue": self.use_vue,
             "use_pytest": self.use_pytest,
+            "use_django_q": self.use_django_q,
             "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,

@@ -128,15 +128,50 @@ class ProjectCreator(BaseService):
         # Core Django project files
         required_files = [
             join("manage.py"),
-            join(self.module_name, "__init__.py"),
-            join(self.module_name, "settings", "__init__.py"),
-            join(self.module_name, "settings", "base.py"),
-            join(self.module_name, "settings", "development.py"),
-            join(self.module_name, "settings", "production.py"),
-            join(self.module_name, "urls.py"),
-            join(self.module_name, "wsgi.py"),
-            join(self.module_name, "asgi.py"),
         ]
+
+        if self.metadata.get("unified_structure"):
+            # Unified structure: settings in core/
+            required_files.extend(
+                [
+                    join("core", "__init__.py"),
+                    join("core", "settings", "__init__.py"),
+                    join("core", "settings", "base.py"),
+                    join("core", "settings", "development.py"),
+                    join("core", "settings", "production.py"),
+                    join("core", "urls.py"),
+                    join("core", "wsgi.py"),
+                    join("core", "asgi.py"),
+                ]
+            )
+        elif self.metadata.get("single_structure"):
+            # Single structure: in project_name folder
+            required_files.extend(
+                [
+                    join(self.module_name, "__init__.py"),
+                    join(self.module_name, "settings", "__init__.py"),
+                    join(self.module_name, "settings", "base.py"),
+                    join(self.module_name, "settings", "development.py"),
+                    join(self.module_name, "settings", "production.py"),
+                    join(self.module_name, "urls.py"),
+                    join(self.module_name, "wsgi.py"),
+                    join(self.module_name, "asgi.py"),
+                ]
+            )
+        else:
+            # Standard/Predefined structure
+            required_files.extend(
+                [
+                    join(self.module_name, "__init__.py"),
+                    join(self.module_name, "settings", "__init__.py"),
+                    join(self.module_name, "settings", "base.py"),
+                    join(self.module_name, "settings", "development.py"),
+                    join(self.module_name, "settings", "production.py"),
+                    join(self.module_name, "urls.py"),
+                    join(self.module_name, "wsgi.py"),
+                    join(self.module_name, "asgi.py"),
+                ]
+            )
 
         apps_base_dir = self._get_apps_base_dir()
 

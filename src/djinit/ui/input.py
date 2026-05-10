@@ -29,6 +29,8 @@ class StructureOptions(TypedDict):
     use_vite: bool
     use_vue: bool
     use_pytest: bool
+    use_django_q: bool
+    use_celery: bool
     use_github: bool
     use_gitlab: bool
 
@@ -195,6 +197,12 @@ class InputCollector:
     def get_pytest_choice(self) -> bool:
         return UIFormatter.confirm("Include pytest testing framework? (pytest, coverage)", default=True)
 
+    def get_django_q_choice(self) -> bool:
+        return UIFormatter.confirm("Include Django-Q2? (async task queue)", default=False)
+
+    def get_celery_choice(self) -> bool:
+        return UIFormatter.confirm("Include Celery? (async task queue)", default=False)
+
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
         """Helper method to generate metadata dictionary."""
         project_dir = options["project_dir"]
@@ -223,6 +231,7 @@ class InputCollector:
             use_vite=options.get("use_vite", False),
             use_vue=options.get("use_vue", False),
             use_pytest=options.get("use_pytest", False),
+            use_django_q=options.get("use_django_q", False),
             predefined_structure=options["predefined"],
             unified_structure=options["unified"],
             single_structure=options["single"],
@@ -296,6 +305,12 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         # Step 7: pytest
         use_pytest = collector.get_pytest_choice()
 
+        # Step 8: Django-Q2
+        use_django_q = collector.get_django_q_choice()
+
+        # Step 9: Celery
+        use_celery = collector.get_celery_choice()
+
         # Step 3: Django Apps (Standard only)
         nested = False
         nested_dir = None
@@ -325,6 +340,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_vite=use_vite,
                 use_vue=use_vue,
                 use_pytest=use_pytest,
+                use_django_q=use_django_q,
+                use_celery=use_celery,
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -342,6 +359,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_vite=use_vite,
                 use_vue=use_vue,
                 use_pytest=use_pytest,
+                use_django_q=use_django_q,
+                use_celery=use_celery,
                 use_github=use_github,
                 use_gitlab=use_gitlab,
             )
@@ -391,6 +410,12 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     use_vue = "Yes" if metadata.get("use_vue", False) else "No"
     console.print(f"[{UIColors.HIGHLIGHT}]Vite/Vue:[/{UIColors.HIGHLIGHT}] {use_vue}")
+
+    use_django_q = "Yes" if metadata.get("use_django_q", False) else "No"
+    console.print(f"[{UIColors.HIGHLIGHT}]Django-Q2:[/{UIColors.HIGHLIGHT}] {use_django_q}")
+
+    use_celery = "Yes" if metadata.get("use_celery", False) else "No"
+    console.print(f"[{UIColors.HIGHLIGHT}]Celery:[/{UIColors.HIGHLIGHT}] {use_celery}")
 
     console.print()
     UIFormatter.print_separator()

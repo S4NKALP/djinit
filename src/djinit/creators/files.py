@@ -94,6 +94,8 @@ class FileCreator(BaseService):
         base_settings_context["use_vite"] = self.metadata.get("use_vite", False)
         base_settings_context["use_vue"] = self.metadata.get("use_vue", False)
         base_settings_context["use_pytest"] = self.metadata.get("use_pytest", False)
+        base_settings_context["use_django_q"] = self.metadata.get("use_django_q", False)
+        base_settings_context["use_celery"] = self.metadata.get("use_celery", False)
 
         for filename, context in [
             ("base.py", base_settings_context),
@@ -146,6 +148,8 @@ class FileCreator(BaseService):
             "use_vite": self.metadata.get("use_vite", False),
             "use_vue": self.metadata.get("use_vue", False),
             "use_pytest": self.metadata.get("use_pytest", False),
+            "use_django_q": self.metadata.get("use_django_q", False),
+            "use_celery": self.metadata.get("use_celery", False),
             "module_name": self.module_name,
             "app_names": self.app_names,
         }
