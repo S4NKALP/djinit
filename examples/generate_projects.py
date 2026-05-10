@@ -6,13 +6,10 @@ Run from djinit project root: .venv/bin/python examples/generate_projects.py
 
 import os
 import sys
-import tempfile
-import shutil
-from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from djinit.creators.setup import SetupCreator
 
@@ -44,7 +41,7 @@ def create_test_project(name, structure, metadata, use_github=False, use_gitlab=
             "unified_structure": False,
             "single_structure": False,
             "project_module_name": "config",
-            **metadata
+            **metadata,
         }
 
         # Determine structure type
@@ -76,7 +73,7 @@ def create_test_project(name, structure, metadata, use_github=False, use_gitlab=
             project_name=name,
             primary_app=app_names[0] if app_names else "",
             app_names=app_names,
-            metadata=full_metadata
+            metadata=full_metadata,
         )
         success = creator.create()
 
@@ -90,6 +87,7 @@ def create_test_project(name, structure, metadata, use_github=False, use_gitlab=
     except Exception as e:
         print(f"  ✗ Error creating {name}: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -100,14 +98,18 @@ def list_project_files(project_dir):
     """List key files in the project."""
     print("\n  Key files:")
     key_files = [
-        "requirements.txt", "Dockerfile", "docker-compose.yml",
-        "package.json", "vite.config.js", "settings/base.py",
-        "manage.py"
+        "requirements.txt",
+        "Dockerfile",
+        "docker-compose.yml",
+        "package.json",
+        "vite.config.js",
+        "settings/base.py",
+        "manage.py",
     ]
 
     for root, dirs, files in os.walk(project_dir):
         # Skip hidden and common dirs
-        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('__pycache__', 'node_modules')]
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ("__pycache__", "node_modules")]
 
         for f in files:
             if f in key_files:
@@ -129,14 +131,15 @@ def main():
         ("test_standard_basic", "standard", {}),
         ("test_standard_docker", "standard", {"use_docker": True}),
         ("test_standard_vite", "standard", {"use_vite": True}),
-        ("test_standard_all", "standard", {"use_docker": True, "use_vite": True, "use_tailwind": True, "use_htmx": True}),
-
+        (
+            "test_standard_all",
+            "standard",
+            {"use_docker": True, "use_vite": True, "use_tailwind": True, "use_htmx": True},
+        ),
         ("test_predefined_basic", "predefined", {}),
         ("test_predefined_docker", "predefined", {"use_docker": True}),
-
         ("test_unified_basic", "unified", {}),
         ("test_unified_all", "unified", {"use_docker": True, "use_vite": True, "use_tailwind": True}),
-
         ("test_single_basic", "single", {}),
         ("test_single_docker", "single", {"use_docker": True}),
     ]

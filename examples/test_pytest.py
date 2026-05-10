@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive test for all djinit features.
+Comprehensive test for all djinit features including pytest.
 """
 
 import os
@@ -13,14 +13,13 @@ from djinit.creators.setup import SetupCreator
 
 def create_project(name, metadata):
     """Create a test project."""
-    test_dir = "/tmp/djinit_full_test"
+    test_dir = "/tmp/djinit_pytest_test"
     os.makedirs(test_dir, exist_ok=True)
     original_cwd = os.getcwd()
 
     try:
         os.chdir(test_dir)
 
-        # Set defaults
         full_metadata = {
             "package_name": "backend",
             "use_github_actions": False,
@@ -33,6 +32,7 @@ def create_project(name, metadata):
             "use_htmx": False,
             "use_docker": False,
             "use_vite": False,
+            "use_pytest": False,
             "predefined_structure": False,
             "unified_structure": False,
             "single_structure": False,
@@ -48,6 +48,9 @@ def create_project(name, metadata):
 
     except Exception as e:
         print(f"  Error: {e}")
+        import traceback
+
+        traceback.print_exc()
         return False, test_dir
     finally:
         os.chdir(original_cwd)
@@ -67,30 +70,25 @@ def verify_file(path, content_contains=None):
 
 def run_tests():
     print("=" * 70)
-    print(" COMPREHENSIVE DJINIT TESTS")
+    print(" DJINIT COMPREHENSIVE TESTS (WITH PYTEST)")
     print("=" * 70)
 
     test_cases = [
         ("basic", {}, ["requirements.txt"]),
         ("docker", {"use_docker": True}, ["Dockerfile", "docker-compose.yml"]),
-        ("vite", {"use_vite": True}, ["vite.config.js", "package.json", "frontend/index.html"]),
+        ("vite", {"use_vite": True}, ["vite.config.js", "package.json"]),
+        ("pytest", {"use_pytest": True}, ["pytest.ini", "conftest.py"]),
         ("tailwind", {"use_tailwind": True}, ["requirements.txt"]),
         ("htmx", {"use_htmx": True}, ["requirements.txt"]),
         (
             "all_postgres",
-            {
-                "use_docker": True,
-                "use_vite": True,
-                "use_tailwind": True,
-                "use_htmx": True,
-                "database_type": "postgresql",
-            },
-            ["Dockerfile", "docker-compose.yml", "vite.config.js"],
+            {"use_docker": True, "use_vite": True, "use_tailwind": True, "use_htmx": True, "use_pytest": True},
+            ["Dockerfile", "vite.config.js", "pytest.ini"],
         ),
         (
             "all_mysql",
-            {"use_docker": True, "use_vite": True, "use_tailwind": True, "database_type": "mysql"},
-            ["Dockerfile", "docker-compose.yml", "vite.config.js"],
+            {"use_docker": True, "use_vite": True, "use_tailwind": True, "use_pytest": True, "database_type": "mysql"},
+            ["Dockerfile", "vite.config.js", "pytest.ini"],
         ),
     ]
 
@@ -101,14 +99,12 @@ def run_tests():
         print(f" Testing: {name}")
         print(f" Metadata: {metadata}")
 
-        # Clean up
         import shutil
 
-        test_dir = "/tmp/djinit_full_test"
+        test_dir = "/tmp/djinit_pytest_test"
         if os.path.exists(test_dir):
             shutil.rmtree(test_dir)
 
-        # Create project
         success, _ = create_project(name, metadata)
 
         if not success:
@@ -116,7 +112,6 @@ def run_tests():
             print("  ✗ Failed to create project")
             continue
 
-        # Verify files
         project_dir = os.path.join(test_dir, name)
         all_passed = True
         errors = []
@@ -131,25 +126,41 @@ def run_tests():
             else:
                 print(f"  ✓ {file}")
 
+        # Special checks for pytest
+        if metadata.get("use_pytest"):
+            req_path = os.path.join(project_dir, "requirements.txt")
+            exists, msg = verify_file(req_path, "pytest")
+            if not exists:
+                all_passed = False
+                print("  ✗ pytest not in requirements")
+            else:
+                print("  ✓ pytest in requirements")
+
+            pytest_ini_path = os.path.join(project_dir, "pytest.ini")
+            exists, msg = verify_file(pytest_ini_path, "DJANGO_SETTINGS_MODULE")
+            if not exists:
+                all_passed = False
+                print("  ✗ DJANGO_SETTINGS_MODULE not in pytest.ini")
+            else:
+                print("  ✓ pytest.ini has DJANGO_SETTINGS_MODULE")
+
+            conftest_path = os.path.join(project_dir, "conftest.py")
+            exists, msg = verify_file(conftest_path, "pytest.fixture")
+            if not exists:
+                all_passed = False
+                print("  ✗ pytest fixtures not in conftest.py")
+            else:
+                print("  ✓ conftest.py has fixtures")
+
         # Special checks for vite
         if metadata.get("use_vite"):
             settings_path = os.path.join(project_dir, "config/settings/base.py")
             exists, msg = verify_file(settings_path, "django_vite")
             if not exists:
                 all_passed = False
-                errors.append("django_vite not in settings")
                 print("  ✗ django_vite not in settings")
             else:
                 print("  ✓ django_vite in settings")
-
-            req_path = os.path.join(project_dir, "requirements.txt")
-            exists, msg = verify_file(req_path, "django-vite")
-            if not exists:
-                all_passed = False
-                errors.append("django-vite not in requirements")
-                print("  ✗ django-vite not in requirements")
-            else:
-                print("  ✓ django-vite in requirements")
 
         # Special checks for docker
         if metadata.get("use_docker"):

@@ -7,7 +7,7 @@ Run from the djinit project root: PYTHONPATH=src python3 examples/test_all_struc
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from djinit.templater import template_engine
 
@@ -26,42 +26,105 @@ def print_subsection(title):
 
 # Define all test cases
 CASES = [
-    ("Basic (no optional features)", {
-        "use_docker": False, "use_vite": False, "use_tailwind": False,
-        "use_htmx": False, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("Docker only", {
-        "use_docker": True, "use_vite": False, "use_tailwind": False,
-        "use_htmx": False, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("Vite/React only", {
-        "use_docker": False, "use_vite": True, "use_tailwind": False,
-        "use_htmx": False, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("Docker + Vite", {
-        "use_docker": True, "use_vite": True, "use_tailwind": False,
-        "use_htmx": False, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("Tailwind only", {
-        "use_docker": False, "use_vite": False, "use_tailwind": True,
-        "use_htmx": False, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("HTMX only", {
-        "use_docker": False, "use_vite": False, "use_tailwind": False,
-        "use_htmx": True, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("Tailwind + HTMX", {
-        "use_docker": False, "use_vite": False, "use_tailwind": True,
-        "use_htmx": True, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("All: Docker + Vite + Tailwind + HTMX + PostgreSQL", {
-        "use_docker": True, "use_vite": True, "use_tailwind": True,
-        "use_htmx": True, "database_type": "postgresql", "use_database_url": True
-    }),
-    ("All: Docker + Vite + Tailwind + HTMX + MySQL", {
-        "use_docker": True, "use_vite": True, "use_tailwind": True,
-        "use_htmx": True, "database_type": "mysql", "use_database_url": True
-    }),
+    (
+        "Basic (no optional features)",
+        {
+            "use_docker": False,
+            "use_vite": False,
+            "use_tailwind": False,
+            "use_htmx": False,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "Docker only",
+        {
+            "use_docker": True,
+            "use_vite": False,
+            "use_tailwind": False,
+            "use_htmx": False,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "Vite/React only",
+        {
+            "use_docker": False,
+            "use_vite": True,
+            "use_tailwind": False,
+            "use_htmx": False,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "Docker + Vite",
+        {
+            "use_docker": True,
+            "use_vite": True,
+            "use_tailwind": False,
+            "use_htmx": False,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "Tailwind only",
+        {
+            "use_docker": False,
+            "use_vite": False,
+            "use_tailwind": True,
+            "use_htmx": False,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "HTMX only",
+        {
+            "use_docker": False,
+            "use_vite": False,
+            "use_tailwind": False,
+            "use_htmx": True,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "Tailwind + HTMX",
+        {
+            "use_docker": False,
+            "use_vite": False,
+            "use_tailwind": True,
+            "use_htmx": True,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "All: Docker + Vite + Tailwind + HTMX + PostgreSQL",
+        {
+            "use_docker": True,
+            "use_vite": True,
+            "use_tailwind": True,
+            "use_htmx": True,
+            "database_type": "postgresql",
+            "use_database_url": True,
+        },
+    ),
+    (
+        "All: Docker + Vite + Tailwind + HTMX + MySQL",
+        {
+            "use_docker": True,
+            "use_vite": True,
+            "use_tailwind": True,
+            "use_htmx": True,
+            "database_type": "mysql",
+            "use_database_url": True,
+        },
+    ),
 ]
 
 STRUCTURES = [
@@ -75,22 +138,21 @@ STRUCTURES = [
 def show_file_tree(struct_type, case_name, metadata):
     """Show expected file tree for a structure + case combination."""
 
-    module_name = {
-        "standard": "config",
-        "predefined": "config",
-        "unified": "core",
-        "single": "myproject"
-    }[struct_type]
+    module_name = {"standard": "config", "predefined": "config", "unified": "core", "single": "myproject"}[struct_type]
 
     features = []
-    if metadata.get("use_docker"): features.append("Docker")
-    if metadata.get("use_vite"): features.append("Vite")
-    if metadata.get("use_tailwind"): features.append("Tailwind")
-    if metadata.get("use_htmx"): features.append("HTMX")
+    if metadata.get("use_docker"):
+        features.append("Docker")
+    if metadata.get("use_vite"):
+        features.append("Vite")
+    if metadata.get("use_tailwind"):
+        features.append("Tailwind")
+    if metadata.get("use_htmx"):
+        features.append("HTMX")
     features.append(metadata.get("database_type", "postgresql").upper())
 
     print(f"  Features: {', '.join(features)}")
-    print(f"  Project: myproject/")
+    print("  Project: myproject/")
     print(f"  Module: {module_name}/")
 
     indent = "    "
@@ -225,37 +287,58 @@ def show_template_examples():
 
     # 1. Requirements.txt examples
     print_subsection("1. requirements.txt - Basic (No optional features)")
-    ctx = {"use_vite": False, "use_tailwind": False, "use_htmx": False,
-           "database_type": "postgresql", "use_database_url": True}
+    ctx = {
+        "use_vite": False,
+        "use_tailwind": False,
+        "use_htmx": False,
+        "database_type": "postgresql",
+        "use_database_url": True,
+    }
     print(template_engine.render_template("project/requirements-tpl", ctx))
 
     print_subsection("2. requirements.txt - All Features (PostgreSQL)")
-    ctx = {"use_vite": True, "use_tailwind": True, "use_htmx": True,
-           "database_type": "postgresql", "use_database_url": True}
+    ctx = {
+        "use_vite": True,
+        "use_tailwind": True,
+        "use_htmx": True,
+        "database_type": "postgresql",
+        "use_database_url": True,
+    }
     print(template_engine.render_template("project/requirements-tpl", ctx))
 
     print_subsection("3. requirements.txt - All Features (MySQL)")
-    ctx = {"use_vite": True, "use_tailwind": True, "use_htmx": True,
-           "database_type": "mysql", "use_database_url": True}
+    ctx = {"use_vite": True, "use_tailwind": True, "use_htmx": True, "database_type": "mysql", "use_database_url": True}
     print(template_engine.render_template("project/requirements-tpl", ctx))
 
     # 4. Settings examples
     print_subsection("4. settings/base.py - With Vite enabled")
-    ctx = {"project_name": "config", "app_names": ["users"],
-           "use_vite": True, "use_tailwind": False, "use_htmx": False,
-           "use_database_url": True, "database_type": "postgresql"}
+    ctx = {
+        "project_name": "config",
+        "app_names": ["users"],
+        "use_vite": True,
+        "use_tailwind": False,
+        "use_htmx": False,
+        "use_database_url": True,
+        "database_type": "postgresql",
+    }
     result = template_engine.render_template("config/settings/base.py-tpl", ctx)
-    for line in result.split('\n'):
-        if 'django_vite' in line or 'DJANGO_VITE' in line:
+    for line in result.split("\n"):
+        if "django_vite" in line or "DJANGO_VITE" in line:
             print(line)
 
     print_subsection("5. settings/base.py - With Tailwind enabled")
-    ctx = {"project_name": "config", "app_names": ["users"],
-           "use_vite": False, "use_tailwind": True, "use_htmx": False,
-           "use_database_url": True, "database_type": "postgresql"}
+    ctx = {
+        "project_name": "config",
+        "app_names": ["users"],
+        "use_vite": False,
+        "use_tailwind": True,
+        "use_htmx": False,
+        "use_database_url": True,
+        "database_type": "postgresql",
+    }
     result = template_engine.render_template("config/settings/base.py-tpl", ctx)
-    for line in result.split('\n'):
-        if 'tailwind' in line.lower() or 'daisyui' in line.lower():
+    for line in result.split("\n"):
+        if "tailwind" in line.lower() or "daisyui" in line.lower():
             print(line)
 
     # 6. Dockerfile example
@@ -293,7 +376,7 @@ def main():
     print_section("DJINIT - ALL STRUCTURES & CASES")
 
     # Show all structure + case combinations
-    for struct_type, module_name, struct_desc in STRUCTURES:
+    for struct_type, _module_name, struct_desc in STRUCTURES:
         print_section(struct_desc)
 
         for case_name, metadata in CASES:

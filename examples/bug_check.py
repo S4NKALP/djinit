@@ -6,7 +6,7 @@ Bug detection and checking script for djinit.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from djinit.templater import template_engine
 
@@ -59,7 +59,7 @@ def check_metadata_usage():
 
     # Check requirements template
     req_template = "project/requirements-tpl"
-    req_content = open(os.path.join(os.path.dirname(__file__), '..', 'src/djinit/templates', req_template)).read()
+    req_content = open(os.path.join(os.path.dirname(__file__), "..", "src/djinit/templates", req_template)).read()
 
     issues = []
     for field in metadata_fields:
@@ -86,7 +86,16 @@ def check_all_use_cases():
         {"name": "tailwind", "metadata": {"use_tailwind": True}},
         {"name": "htmx", "metadata": {"use_htmx": True}},
         {"name": "docker_mysql", "metadata": {"use_docker": True, "database_type": "mysql"}},
-        {"name": "all", "metadata": {"use_docker": True, "use_vite": True, "use_tailwind": True, "use_htmx": True, "database_type": "postgresql"}},
+        {
+            "name": "all",
+            "metadata": {
+                "use_docker": True,
+                "use_vite": True,
+                "use_tailwind": True,
+                "use_htmx": True,
+                "database_type": "postgresql",
+            },
+        },
     ]
 
     issues = []
@@ -95,12 +104,7 @@ def check_all_use_cases():
         name = case["name"]
         md = case["metadata"]
 
-        ctx = {
-            "project_name": "test",
-            "module_name": "config",
-            "use_database_url": True,
-            **md
-        }
+        ctx = {"project_name": "test", "module_name": "config", "use_database_url": True, **md}
 
         # Check requirements
         try:
