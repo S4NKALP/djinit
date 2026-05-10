@@ -78,6 +78,7 @@ class SetupCreator:
                 ("Creating runtime.txt", self.file_creator.create_runtime_txt),
                 ("Creating CI/CD pipelines", self._create_cicd_pipelines),
                 ("Creating Docker files", self._create_docker_files),
+                ("Creating Vite/React files", self._create_vite_files),
             ]
         )
 
@@ -124,3 +125,8 @@ class SetupCreator:
         if self.metadata.get("use_docker", False):
             self.file_creator.create_docker_files()
             UIFormatter.print_success("Created Docker files successfully!")
+
+    def _create_vite_files(self) -> None:
+        if self.metadata.get("use_vite", False):
+            self.file_creator.create_vite_files()
+            UIFormatter.print_success("Created Vite/React files successfully!")

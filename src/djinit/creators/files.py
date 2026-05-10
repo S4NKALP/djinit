@@ -88,9 +88,10 @@ class FileCreator(BaseService):
                 for name in base_settings_context["app_names"]
             ]
 
-        # Add Tailwind and HTMX to context
+        # Add Tailwind, HTMX, and Vite to context
         base_settings_context["use_tailwind"] = self.metadata.get("use_tailwind", False)
         base_settings_context["use_htmx"] = self.metadata.get("use_htmx", False)
+        base_settings_context["use_vite"] = self.metadata.get("use_vite", False)
 
         for filename, context in [
             ("base.py", base_settings_context),
@@ -140,6 +141,7 @@ class FileCreator(BaseService):
             "database_type": self.metadata.get("database_type", "postgresql"),
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
+            "use_vite": self.metadata.get("use_vite", False),
         }
         self._render_and_create_file(
             "requirements.txt",
@@ -422,6 +424,7 @@ class FileCreator(BaseService):
                 "use_tailwind": self.metadata.get("use_tailwind", False),
                 "use_htmx": self.metadata.get("use_htmx", False),
                 "use_docker": self.metadata.get("use_docker", False),
+                "use_vite": self.metadata.get("use_vite", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),
@@ -459,4 +462,54 @@ class FileCreator(BaseService):
             "project/dockerignore-tpl",
             {},
             "Created .dockerignore file",
+        )
+
+    def create_vite_files(self) -> None:
+        """Create Vite/React frontend files."""
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+        }
+
+        # Create frontend directories
+        frontend_dir = os.path.join(self.project_root, "frontend")
+        frontend_src_dir = os.path.join(frontend_dir, "src")
+        static_dir = os.path.join(self.project_root, "static")
+
+        os.makedirs(frontend_dir, exist_ok=True)
+        os.makedirs(frontend_src_dir, exist_ok=True)
+        os.makedirs(static_dir, exist_ok=True)
+
+        # Create __init__.py files
+        CommonUtils.create_directory_with_init(frontend_dir, "Created frontend/")
+        CommonUtils.create_directory_with_init(frontend_src_dir, "Created frontend/src/")
+        CommonUtils.create_directory_with_init(static_dir, "Created static/")
+
+        self._render_and_create_file(
+            "vite.config.js",
+            "project/vite.config.js-tpl",
+            context,
+            "Created vite.config.js",
+        )
+        self._render_and_create_file(
+            "package.json",
+            "project/package.json-tpl",
+            context,
+            "Created package.json for frontend",
+        )
+        index_html_path = os.path.join(frontend_dir, "index.html")
+        CommonUtils.create_file_from_template(
+            index_html_path, "project/frontend/index.html-tpl", context, "Created frontend/index.html"
+        )
+        main_jsx_path = os.path.join(frontend_src_dir, "main.jsx")
+        CommonUtils.create_file_from_template(
+            main_jsx_path, "project/frontend/src/main.jsx-tpl", context, "Created frontend/src/main.jsx"
+        )
+        app_jsx_path = os.path.join(frontend_src_dir, "App.jsx")
+        CommonUtils.create_file_from_template(
+            app_jsx_path, "project/frontend/src/App.jsx-tpl", context, "Created frontend/src/App.jsx"
+        )
+        index_css_path = os.path.join(frontend_src_dir, "index.css")
+        CommonUtils.create_file_from_template(
+            index_css_path, "project/frontend/src/index.css-tpl", context, "Created frontend/src/index.css"
         )
