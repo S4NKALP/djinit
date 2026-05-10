@@ -88,10 +88,11 @@ class FileCreator(BaseService):
                 for name in base_settings_context["app_names"]
             ]
 
-        # Add Tailwind, HTMX, and Vite to context
+        # Add Tailwind, HTMX, Vite, and pytest to context
         base_settings_context["use_tailwind"] = self.metadata.get("use_tailwind", False)
         base_settings_context["use_htmx"] = self.metadata.get("use_htmx", False)
         base_settings_context["use_vite"] = self.metadata.get("use_vite", False)
+        base_settings_context["use_pytest"] = self.metadata.get("use_pytest", False)
 
         for filename, context in [
             ("base.py", base_settings_context),
@@ -142,6 +143,9 @@ class FileCreator(BaseService):
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
             "use_vite": self.metadata.get("use_vite", False),
+            "use_pytest": self.metadata.get("use_pytest", False),
+            "module_name": self.module_name,
+            "app_names": self.app_names,
         }
         self._render_and_create_file(
             "requirements.txt",
@@ -425,6 +429,7 @@ class FileCreator(BaseService):
                 "use_htmx": self.metadata.get("use_htmx", False),
                 "use_docker": self.metadata.get("use_docker", False),
                 "use_vite": self.metadata.get("use_vite", False),
+                "use_pytest": self.metadata.get("use_pytest", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),
@@ -512,4 +517,24 @@ class FileCreator(BaseService):
         index_css_path = os.path.join(frontend_src_dir, "index.css")
         CommonUtils.create_file_from_template(
             index_css_path, "project/frontend/src/index.css-tpl", context, "Created frontend/src/index.css"
+        )
+
+    def create_pytest_files(self) -> None:
+        """Create pytest configuration files."""
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+            "app_names": self.app_names or [],
+        }
+        self._render_and_create_file(
+            "pytest.ini",
+            "project/pytest.ini-tpl",
+            context,
+            "Created pytest.ini configuration",
+        )
+        self._render_and_create_file(
+            "conftest.py",
+            "project/conftest.py-tpl",
+            context,
+            "Created conftest.py with pytest fixtures",
         )

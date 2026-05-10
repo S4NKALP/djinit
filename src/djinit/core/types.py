@@ -19,6 +19,7 @@ class ProjectMetadata:
     use_htmx: bool = False
     use_docker: bool = False
     use_vite: bool = False
+    use_pytest: bool = False
     predefined_structure: bool = False
     unified_structure: bool = False
     single_structure: bool = False
@@ -37,6 +38,7 @@ class ProjectMetadata:
             "use_htmx": self.use_htmx,
             "use_docker": self.use_docker,
             "use_vite": self.use_vite,
+            "use_pytest": self.use_pytest,
             "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,

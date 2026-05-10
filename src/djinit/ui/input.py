@@ -27,6 +27,7 @@ class StructureOptions(TypedDict):
     use_htmx: bool
     use_docker: bool
     use_vite: bool
+    use_pytest: bool
     use_github: bool
     use_gitlab: bool
 
@@ -187,6 +188,9 @@ class InputCollector:
     def get_vite_choice(self) -> bool:
         return UIFormatter.confirm("Include Vite/React? (via django-vite)", default=True)
 
+    def get_pytest_choice(self) -> bool:
+        return UIFormatter.confirm("Include pytest testing framework? (pytest, coverage)", default=True)
+
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
         """Helper method to generate metadata dictionary."""
         project_dir = options["project_dir"]
@@ -213,6 +217,7 @@ class InputCollector:
             use_htmx=options.get("use_htmx", False),
             use_docker=options.get("use_docker", False),
             use_vite=options.get("use_vite", False),
+            use_pytest=options.get("use_pytest", False),
             predefined_structure=options["predefined"],
             unified_structure=options["unified"],
             single_structure=options["single"],
@@ -280,6 +285,9 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         # Step 5: Vite/React
         use_vite = collector.get_vite_choice()
 
+        # Step 6: pytest
+        use_pytest = collector.get_pytest_choice()
+
         # Step 3: Django Apps (Standard only)
         nested = False
         nested_dir = None
@@ -307,6 +315,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_htmx=use_htmx,
                 use_docker=use_docker,
                 use_vite=use_vite,
+                use_pytest=use_pytest,
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -322,6 +331,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_htmx=use_htmx,
                 use_docker=use_docker,
                 use_vite=use_vite,
+                use_pytest=use_pytest,
                 use_github=use_github,
                 use_gitlab=use_gitlab,
             )
@@ -365,6 +375,9 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     use_vite = "Yes" if metadata.get("use_vite", False) else "No"
     console.print(f"[{UIColors.HIGHLIGHT}]Vite/React:[/{UIColors.HIGHLIGHT}] {use_vite}")
+
+    use_pytest = "Yes" if metadata.get("use_pytest", False) else "No"
+    console.print(f"[{UIColors.HIGHLIGHT}]pytest:[/{UIColors.HIGHLIGHT}] {use_pytest}")
 
     console.print()
     UIFormatter.print_separator()
