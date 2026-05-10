@@ -6,7 +6,7 @@ Comprehensive test for ALL djinit features and use cases.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import shutil
 
@@ -39,7 +39,7 @@ def create_project(name, metadata, structure="standard"):
             "unified_structure": False,
             "single_structure": False,
             "project_module_name": "config",
-            **metadata
+            **metadata,
         }
 
         # Handle different structures
@@ -70,7 +70,7 @@ def create_project(name, metadata, structure="standard"):
             project_name=name,
             primary_app=app_names[0] if app_names else "users",
             app_names=app_names,
-            metadata=full_metadata
+            metadata=full_metadata,
         )
         success = creator.create()
         return success, test_dir
@@ -78,6 +78,7 @@ def create_project(name, metadata, structure="standard"):
     except Exception as e:
         print(f"  Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False, test_dir
     finally:
@@ -107,38 +108,100 @@ def run_all_tests():
         ("basic_pre", "predefined", {}, ["requirements.txt"], []),
         ("basic_uni", "unified", {}, ["requirements.txt"], []),
         ("basic_sgl", "single", {}, ["requirements.txt"], []),
-
         # Single features
-        ("docker", "standard", {"use_docker": True, "database_type": "postgresql"}, ["Dockerfile", "docker-compose.yml"], ["postgres"]),
-        ("docker_mysql", "standard", {"use_docker": True, "database_type": "mysql"}, ["Dockerfile", "docker-compose.yml"], ["mysql"]),
+        (
+            "docker",
+            "standard",
+            {"use_docker": True, "database_type": "postgresql"},
+            ["Dockerfile", "docker-compose.yml"],
+            ["postgres"],
+        ),
+        (
+            "docker_mysql",
+            "standard",
+            {"use_docker": True, "database_type": "mysql"},
+            ["Dockerfile", "docker-compose.yml"],
+            ["mysql"],
+        ),
         ("react", "standard", {"use_vite": True}, ["vite.config.js", "package.json"], ["react"]),
         ("vue", "standard", {"use_vue": True}, ["vite.config.js", "package.json"], ["vue"]),
         ("tailwind", "standard", {"use_tailwind": True}, ["requirements.txt"], ["tailwind"]),
         ("htmx", "standard", {"use_htmx": True}, ["requirements.txt"], ["htmx"]),
         ("pytest", "standard", {"use_pytest": True}, ["pytest.ini", "conftest.py"], ["pytest"]),
-
         # Combinations
-        ("docker_react", "standard", {"use_docker": True, "use_vite": True, "database_type": "postgresql"}, ["Dockerfile", "vite.config.js"], ["postgres", "react"]),
-        ("docker_vue", "standard", {"use_docker": True, "use_vue": True, "database_type": "postgresql"}, ["Dockerfile", "vite.config.js"], ["postgres", "vue"]),
-        ("react_pytest", "standard", {"use_vite": True, "use_pytest": True}, ["vite.config.js", "pytest.ini"], ["react", "pytest"]),
-        ("vue_pytest", "standard", {"use_vue": True, "use_pytest": True}, ["vite.config.js", "pytest.ini"], ["vue", "pytest"]),
-        ("tailwind_htmx", "standard", {"use_tailwind": True, "use_htmx": True}, ["requirements.txt"], ["tailwind", "htmx"]),
-
+        (
+            "docker_react",
+            "standard",
+            {"use_docker": True, "use_vite": True, "database_type": "postgresql"},
+            ["Dockerfile", "vite.config.js"],
+            ["postgres", "react"],
+        ),
+        (
+            "docker_vue",
+            "standard",
+            {"use_docker": True, "use_vue": True, "database_type": "postgresql"},
+            ["Dockerfile", "vite.config.js"],
+            ["postgres", "vue"],
+        ),
+        (
+            "react_pytest",
+            "standard",
+            {"use_vite": True, "use_pytest": True},
+            ["vite.config.js", "pytest.ini"],
+            ["react", "pytest"],
+        ),
+        (
+            "vue_pytest",
+            "standard",
+            {"use_vue": True, "use_pytest": True},
+            ["vite.config.js", "pytest.ini"],
+            ["vue", "pytest"],
+        ),
+        (
+            "tailwind_htmx",
+            "standard",
+            {"use_tailwind": True, "use_htmx": True},
+            ["requirements.txt"],
+            ["tailwind", "htmx"],
+        ),
         # All features
-        ("all_postgres", "standard", {
-            "use_docker": True, "use_vite": True, "use_tailwind": True,
-            "use_htmx": True, "use_pytest": True, "database_type": "postgresql"
-        }, ["Dockerfile", "vite.config.js", "pytest.ini"], ["postgres", "react", "pytest"]),
-
-        ("all_mysql", "standard", {
-            "use_docker": True, "use_vue": True, "use_tailwind": True,
-            "use_pytest": True, "database_type": "mysql"
-        }, ["Dockerfile", "vite.config.js", "pytest.ini"], ["mysql", "vue", "pytest"]),
-
+        (
+            "all_postgres",
+            "standard",
+            {
+                "use_docker": True,
+                "use_vite": True,
+                "use_tailwind": True,
+                "use_htmx": True,
+                "use_pytest": True,
+                "database_type": "postgresql",
+            },
+            ["Dockerfile", "vite.config.js", "pytest.ini"],
+            ["postgres", "react", "pytest"],
+        ),
+        (
+            "all_mysql",
+            "standard",
+            {"use_docker": True, "use_vue": True, "use_tailwind": True, "use_pytest": True, "database_type": "mysql"},
+            ["Dockerfile", "vite.config.js", "pytest.ini"],
+            ["mysql", "vue", "pytest"],
+        ),
         # Structure tests with features
-        ("predefined_docker", "predefined", {"use_docker": True, "database_type": "postgresql"}, ["Dockerfile"], ["postgres"]),
+        (
+            "predefined_docker",
+            "predefined",
+            {"use_docker": True, "database_type": "postgresql"},
+            ["Dockerfile"],
+            ["postgres"],
+        ),
         ("predefined_vue", "predefined", {"use_vue": True}, ["vite.config.js"], ["vue"]),
-        ("unified_docker", "unified", {"use_docker": True, "database_type": "postgresql"}, ["Dockerfile"], ["postgres"]),
+        (
+            "unified_docker",
+            "unified",
+            {"use_docker": True, "database_type": "postgresql"},
+            ["Dockerfile"],
+            ["postgres"],
+        ),
         ("unified_vue", "unified", {"use_vue": True}, ["vite.config.js"], ["vue"]),
         ("single_docker", "single", {"use_docker": True, "database_type": "postgresql"}, ["Dockerfile"], ["postgres"]),
         ("single_vue", "single", {"use_vue": True}, ["vite.config.js"], ["vue"]),

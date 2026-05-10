@@ -6,7 +6,7 @@ Comprehensive test for all djinit features including Vue.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from djinit.creators.setup import SetupCreator
 
@@ -37,15 +37,11 @@ def create_project(name, metadata):
             "unified_structure": False,
             "single_structure": False,
             "project_module_name": "config",
-            **metadata
+            **metadata,
         }
 
         creator = SetupCreator(
-            project_dir=name,
-            project_name=name,
-            primary_app="users",
-            app_names=["users"],
-            metadata=full_metadata
+            project_dir=name, project_name=name, primary_app="users", app_names=["users"], metadata=full_metadata
         )
         success = creator.create()
         return success, test_dir
@@ -53,6 +49,7 @@ def create_project(name, metadata):
     except Exception as e:
         print(f"  Error: {e}")
         import traceback
+
         traceback.print_exc()
         return False, test_dir
     finally:
@@ -93,6 +90,7 @@ def run_tests():
         print(f" Metadata: {metadata}")
 
         import shutil
+
         test_dir = "/tmp/djinit_vue_test"
         if os.path.exists(test_dir):
             shutil.rmtree(test_dir)
