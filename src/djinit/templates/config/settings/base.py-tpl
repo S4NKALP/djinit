@@ -28,7 +28,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "django_tailwind_cli", # @IF use_tailwind
     "django_htmx", # @IF use_htmx
-    "django_vite", # @IF use_vite
+    "django_vite", # @IF use_vite | use_vue
 ]
 
 USER_DEFINED_APPS = [
@@ -227,7 +227,7 @@ TAILWIND_CLI_CONFIG = {
 }
 # @ENDIF
 
-# @IF use_vite
+# @IF use_vite | use_vue
 # for django-vite
 DJANGO_VITE_ASSET_SRC = "frontend"
 DJANGO_VITE_DEV_SERVER_URL = "http://localhost:5173"
