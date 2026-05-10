@@ -1,0 +1,11 @@
+function App() {
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>Welcome to [[ project_name ]]</h1>
+      <p>This is your React frontend powered by Vite.</p>
+      <p>Edit <code>frontend/src/App.jsx</code> to get started!</p>
+    </div>
+  )
+}
+
+export default App

@@ -13,7 +13,11 @@ services:
     environment:
       - DEBUG=1
       # @IF use_database_url
-      - DATABASE_URL= # @IF database_type == 'postgresql' postgresql://postgres:postgres@db:5432/[[ project_name ]] # @IF database_type == 'mysql' mysql://root:root@db:3306/[[ project_name ]]
+      # @IF database_type == 'postgresql'
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/[[ project_name ]]
+      # @ELSE
+      - DATABASE_URL=mysql://root:root@db:3306/[[ project_name ]]
+      # @ENDIF
       # @ENDIF
     depends_on:
       - db

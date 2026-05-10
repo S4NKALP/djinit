@@ -28,6 +28,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "django_tailwind_cli", # @IF use_tailwind
     "django_htmx", # @IF use_htmx
+    "django_vite", # @IF use_vite
 ]
 
 USER_DEFINED_APPS = [
@@ -224,4 +225,13 @@ TAILWIND_CLI_CONFIG = {
         ]
     },
 }
+# @ENDIF
+
+# @IF use_vite
+# for django-vite
+DJANGO_VITE_ASSET_SRC = "frontend"
+DJANGO_VITE_DEV_SERVER_URL = "http://localhost:5173"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 # @ENDIF
