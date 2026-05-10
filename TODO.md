@@ -3,11 +3,11 @@
 ## Features
 
 - [x] Docker Support: Auto generating `Dockerfile`, `docker-compose.yml`, `.dockerignore`
-- [x] Frontend Integration: Vite + React with django-vite (frontend/, vite.config.js, package.json)
+- [x] Frontend Integration: Vite + React + Vue with django-vite (frontend/, vite.config.js, package.json)
 - [x] Tailwind CSS: Integrated via django-tailwind-cli
 - [x] HTMX: Integrated via django-htmx
+- [x] Testing Framework: pytest, pytest-django, pytest-cov
 - [ ] Celery: Making background tasks easier to set up
-- [ ] Vue.js: Add Vue.js frontend option
 - [ ] More Packages: Integrating other popular packages to help you build feature rich apps effortlessly
 
 ## Enhancements
