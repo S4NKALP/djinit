@@ -65,7 +65,9 @@ The wizard will ask you a few questions:
 
 4. **Django Apps** *(Standard structure only)* – Whether to create an `apps/` folder and which apps to scaffold.
 
-5. **CI/CD Pipeline** – GitHub Actions, GitLab CI, both, or skip it.
+5. **Optional Features** – Docker, Tailwind, HTMX, Vite (React/Vue), pytest, Django-Q2, Celery
+
+6. **CI/CD Pipeline** – GitHub Actions, GitLab CI, both, or skip it.
 
 That’s it—your project will be ready with everything configured.
 
@@ -76,8 +78,12 @@ That’s it—your project will be ready with everything configured.
 - **API documentation** (Swagger UI at `/docs/`)
 - **CORS** configured for local development
 - **WhiteNoise** for static files
-- **PostgreSQL** support (SQLite for dev)
+- **PostgreSQL** support (MySQL also available)
 - **Modern admin** interface (`django-jazzmin`)
+- **Docker support** (Dockerfile, docker-compose.yml)
+- **Frontend integration** (Vite + React or Vue.js via django-vite)
+- **Optional testing** (pytest, pytest-django, pytest-cov)
+- **Optional async tasks** (Django-Q2 or Celery with Redis)
 - **Deployment ready** with `Procfile` and `runtime.txt`
 - **Development tools** (`Justfile` with common commands)
 - **Environment template** (`.env.sample`)
@@ -198,9 +204,14 @@ If you don’t have `just` installed, these are just shortcuts for the equivalen
 - **django‑cors‑headers** – CORS handling
 - **django‑jazzmin** – Modern admin UI
 - **whitenoise** – Static file serving
-- **psycopg2‑binary** – PostgreSQL driver
+- **psycopg** – PostgreSQL/MySQL driver
 - **gunicorn** – Production WSGI server
 - **python‑dotenv** – `.env` handling
+- **django‑vite** – Vite integration (optional)
+- **django‑tailwind‑cli** – Tailwind CSS (optional)
+- **django‑htmx** – HTMX integration (optional)
+- **django‑q2** – Async tasks (optional)
+- **celery** – Async tasks with Redis (optional)
 
 ### API Endpoints
 
@@ -232,27 +243,6 @@ ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
 ```
 
 SQLite works out of the box for development—no extra DB setup required.
-
-## Roadmap
-
-The following items are tracked in **TODO.md** and represent the near‑future direction of djinit.
-
-### Planned Features
-- **Docker Support** – Auto‑generate a `Dockerfile` for containerized deployments.
-- **Frontend Integration** – Scaffold React, Vue, or HTMX alongside the Django backend.
-- **Celery Integration** – Simplify background task setup with Celery.
-- **More Packages** – Add optional integrations for popular Django packages.
-
-### Enhancements
-- **Add more project structure templates** – Expand the set of ready‑made layouts.
-- **Add testing framework setup** – Provide pytest and coverage configuration out of the box.
-- **Fix bugs** – Ongoing maintenance and bug resolution.
-
-### Completed
-- **Interactive configuration wizard** – Streamlined project creation experience.
-- **Improved structure detection** – Smarter detection of existing Django layouts.
-
-> Contributions that address any of the above items are highly welcome!
 
 ## Contributing
 
