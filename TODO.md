@@ -2,15 +2,30 @@
 
 ## Features
 
-- [x] Docker Support: Auto generating `Dockerfile` so you can containerize easily
-- [ ] Frontend Integration: Options to scaffold React, Vue, or HTMX right alongside Django
+- [x] Docker Support: Auto generating `Dockerfile`, `docker-compose.yml`, `.dockerignore`
+- [x] Frontend Integration: Vite/React with django-vite (frontend/, vite.config.js, package.json)
+- [x] Tailwind CSS: Integrated via django-tailwind-cli
+- [x] HTMX: Integrated via django-htmx
 - [ ] Celery: Making background tasks easier to set up
 - [ ] More Packages: Integrating other popular packages to help you build feature rich apps effortlessly
 
 ## Enhancements
 
-- [ ] Add more project structure templates
+- [x] Add more project structure templates (Standard, Predefined, Unified, Single)
 - [x] Add interactive configuration wizard
 - [ ] Add testing framework setup (pytest, coverage)
 - [x] Improve structure detection
-- [ ] Fix bugs
+- [x] Fix bugs (Verified: All tests passing, no issues found)
+
+## Project Structures
+
+- [x] Standard Structure: `config/` module, `apps/` directory with nested apps
+- [x] Predefined Structure: `apps/users`, `apps/core`, `api/` with v1
+- [x] Unified Structure: `core/` as project config, `apps/` as main app
+- [x] Single Folder Layout: Everything in one project folder
+
+## Database Support
+
+- [x] PostgreSQL
+- [x] MySQL
+- [x] DATABASE_URL support
