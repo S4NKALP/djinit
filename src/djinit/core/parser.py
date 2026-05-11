@@ -14,24 +14,29 @@ class InFileLogicParser:
     def _get_value(self, key: str) -> str:
         """
         Supports nested/dotted access like [[ user.name ]] or [[ settings["DEBUG"] ]].
-        For simplicity, it uses eval in the provided context for complex expressions,
-        but falls back to safe dictionary lookup for simple keys.
         """
         key = key.strip()
         try:
-            # Try evaluating the expression in the context
             return str(eval(key, {"__builtins__": {}}, self.context))
         except (NameError, SyntaxError, KeyError, TypeError, AttributeError):
-            # Fallback for common patterns or just return the key as is if it fails
             return f"[[ {key} ]]"
+
+    def _eval_expr(self, expr: str) -> bool:
+        """Safely evaluate a boolean expression in the context. Defaults missing variables to False."""
+        safe_context = dict(self.context)
+        for key in re.findall(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b", expr):
+            if key not in safe_context:
+                safe_context[key] = False
+        try:
+            return bool(eval(expr, {"__builtins__": {}}, safe_context))
+        except Exception:
+            return False
 
     def render(self, template_text: str, context: Dict[str, Any] = None) -> str:
         if context is not None:
             self.context = context
 
         final_lines = []
-        # Stack stores boolean results of nested IF blocks
-        # Each element is (current_block_result, has_any_true_branch_executed)
         stack: List[List[bool]] = []
 
         lines = template_text.splitlines()
@@ -40,18 +45,13 @@ class InFileLogicParser:
             line = lines[i]
             stripped = line.strip()
 
-            # Handle @IF
             if stripped.startswith("# @IF "):
                 expr = stripped[6:].strip()
-                try:
-                    result = bool(eval(expr, {"__builtins__": {}}, self.context))
-                except Exception:
-                    result = False
+                result = self._eval_expr(expr)
                 stack.append([result, result])
                 i += 1
                 continue
 
-            # Handle @ELSEIF
             elif stripped.startswith("# @ELSEIF "):
                 if not stack:
                     final_lines.append(line)
@@ -64,17 +64,13 @@ class InFileLogicParser:
                 if current_stack[1]:
                     current_stack[0] = False
                 else:
-                    try:
-                        result = bool(eval(expr, {"__builtins__": {}}, self.context))
-                    except Exception:
-                        result = False
+                    result = self._eval_expr(expr)
                     current_stack[0] = result
                     if result:
                         current_stack[1] = True
                 i += 1
                 continue
 
-            # Handle @ELSE
             elif stripped.startswith("# @ELSE"):
                 if not stack:
                     final_lines.append(line)
@@ -90,7 +86,6 @@ class InFileLogicParser:
                 i += 1
                 continue
 
-            # Handle @ENDIF
             elif stripped.startswith("# @ENDIF"):
                 if stack:
                     stack.pop()
@@ -99,10 +94,8 @@ class InFileLogicParser:
                 i += 1
                 continue
 
-            # Handle @LOOP
             elif stripped.startswith("# @LOOP "):
                 if stack and not all(s[0] for s in stack):
-                    # Skip the entire loop block if inside a false conditional
                     loop_depth = 1
                     i += 1
                     while i < len(lines) and loop_depth > 0:
@@ -122,7 +115,6 @@ class InFileLogicParser:
                     except Exception:
                         iterable = []
 
-                    # Capture loop body
                     loop_body = []
                     i += 1
                     loop_depth = 1
@@ -131,15 +123,13 @@ class InFileLogicParser:
                             loop_depth += 1
                         elif lines[i].strip().startswith("# @ENDLOOP"):
                             loop_depth -= 1
-
                         if loop_depth > 0:
                             loop_body.append(lines[i])
-                            i += 1
-
-                    if i < len(lines):  # Skip the @ENDLOOP line itself
                         i += 1
 
-                    # Execute loop
+                    if i < len(lines):
+                        i += 1
+
                     if hasattr(iterable, "__iter__"):
                         old_val = self.context.get(var_name)
                         for val in iterable:
@@ -156,35 +146,25 @@ class InFileLogicParser:
                     i += 1
                     continue
 
-            # Handle @ENDLOOP (should only be hit if out of sync or error)
             elif stripped.startswith("# @ENDLOOP"):
                 i += 1
                 continue
 
-            # Check if we should skip this line based on conditional stack
             if stack and not all(s[0] for s in stack):
                 i += 1
                 continue
 
-            # Variable substitution
             rendered_line = line
             matches = re.findall(r"\[\[\s*(.*?)\s*\]\]", rendered_line)
             for match in matches:
                 value = self._get_value(match)
-                # Replace all variations of the variable syntax
                 rendered_line = re.sub(r"\[\[\s*" + re.escape(match) + r"\s*\]\]", value, rendered_line)
 
-            # In-line @IF support
-            # Case 1: content # @IF cond
-            # Case 2: # @IF cond content
             if "# @IF " in rendered_line:
                 parts = rendered_line.split("# @IF ", 1)
                 pre_content = parts[0].rstrip()
                 rest = parts[1].strip()
 
-                # Split rest into expression and post-content (if any)
-                # This is tricky because the expression might have spaces.
-                # If there's an # @ENDIF on the same line, use it.
                 post_content = ""
                 expr = rest
                 if " # @ENDIF" in rest:
@@ -196,16 +176,11 @@ class InFileLogicParser:
                     expr = expr_parts[0].strip()
                     post_content = expr_parts[1].lstrip()
 
-                try:
-                    if bool(eval(expr, {"__builtins__": {}}, self.context)):
-                        # If Case 1, we want pre_content. If Case 2, we want post_content.
-                        # Usually, if pre_content is empty (or just whitespace), it's Case 2.
-                        if pre_content:
-                            final_lines.append(pre_content + post_content)
-                        else:
-                            final_lines.append(post_content)
-                except Exception:
-                    pass
+                if self._eval_expr(expr):
+                    if pre_content:
+                        final_lines.append(pre_content + post_content)
+                    else:
+                        final_lines.append(post_content)
                 i += 1
                 continue
 
