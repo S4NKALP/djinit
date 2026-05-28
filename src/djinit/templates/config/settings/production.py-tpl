@@ -1,6 +1,6 @@
 """generated with djinit"""
 
-from .base import *
+from .base import *  # noqa: F401, F403
 # @IF use_database_url
 import dj_database_url
 # @ENDIF

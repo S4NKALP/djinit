@@ -1,6 +1,6 @@
 """generated with djinit"""
 
-from .base import *
+from .base import *  # noqa: F401, F403
 
 SECRET_KEY = "[[ secret_key ]]"
 
