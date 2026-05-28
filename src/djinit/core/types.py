@@ -17,6 +17,7 @@ class ProjectMetadata:
     database_type: str = "postgresql"
     use_tailwind: bool = False
     use_htmx: bool = False
+    use_vite: bool = False
     predefined_structure: bool = False
     unified_structure: bool = False
     single_structure: bool = False
@@ -33,6 +34,7 @@ class ProjectMetadata:
             "database_type": self.database_type,
             "use_tailwind": self.use_tailwind,
             "use_htmx": self.use_htmx,
+            "use_vite": self.use_vite,
             "predefined_structure": self.predefined_structure,
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,
