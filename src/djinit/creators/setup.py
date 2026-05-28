@@ -104,6 +104,8 @@ class SetupCreator:
             self.file_creator.create_readme,
             self.file_creator.create_env_file,
             self.file_creator.create_djinit_config,
+            self.file_creator.create_dockerfile,
+            self.file_creator.create_dockerignore,
             lambda: self.file_creator.create_pyproject(self.metadata),
         ]
 

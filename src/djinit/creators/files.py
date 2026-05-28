@@ -131,6 +131,27 @@ class FileCreator(BaseService):
                 filepath, template, context, f"Created {prefix}/{filename}", should_format=True
             )
 
+    def create_dockerfile(self) -> None:
+        context = {
+            "module_name": self.module_name,
+            "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+        }
+        self._render_and_create_file(
+            "Dockerfile",
+            "project/Dockerfile-tpl",
+            context,
+            "Created Dockerfile for containerization",
+        )
+
+    def create_dockerignore(self) -> None:
+        self._render_and_create_file(
+            ".dockerignore",
+            "project/dockerignore-tpl",
+            {},
+            "Created .dockerignore file",
+        )
+
     def create_gitignore(self) -> None:
         self._render_and_create_file(".gitignore", "project/gitignore-tpl", {}, "Created .gitignore file")
 
