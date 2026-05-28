@@ -13,4 +13,3 @@
 - [x] Add interactive configuration wizard
 - [ ] Add testing framework setup (pytest, coverage)
 - [x] Improve structure detection
-- [ ] Fix bugs

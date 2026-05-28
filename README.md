@@ -63,9 +63,11 @@ The wizard will ask you a few questions:
 
 3. **Database Configuration** – Choose `DATABASE_URL` (recommended) or individual variables; pick PostgreSQL or MySQL.
 
-4. **Django Apps** *(Standard structure only)* – Whether to create an `apps/` folder and which apps to scaffold.
+4. **Frontend Tools** _(optional)_ – Pick Tailwind CSS, HTMX, or Vite for frontend bundling.
 
-5. **CI/CD Pipeline** – GitHub Actions, GitLab CI, both, or skip it.
+5. **Django Apps** _(Standard structure only)_ – Whether to create an `apps/` folder and which apps to scaffold.
+
+6. **CI/CD Pipeline** – GitHub Actions, GitLab CI, both, or skip it.
 
 That’s it—your project will be ready with everything configured.
 
@@ -82,6 +84,9 @@ That’s it—your project will be ready with everything configured.
 - **Development tools** (`Justfile` with common commands)
 - **Environment template** (`.env.sample`)
 - **Git ready** (`.gitignore` included)
+- **Tailwind CSS** – Optionally scaffolded with `django-tailwind-cli`
+- **HTMX** – Optionally included with `django-htmx` and middleware
+- **Vite** – Optionally set up with `django-vite` and `vite.config.ts`
 
 ## Commands
 
@@ -183,6 +188,8 @@ just shell            # Django shell
 just test             # Run tests
 just format           # Format code
 just lint             # Lint code
+just vite             # Start Vite dev server (if Vite selected)
+just dev-full         # Run Django + Vite together (if Vite selected)
 ```
 
 If you don’t have `just` installed, these are just shortcuts for the equivalent Django commands.
@@ -194,23 +201,26 @@ If you don’t have `just` installed, these are just shortcuts for the equivalen
 - **Django** – Web framework
 - **Django REST Framework** – API toolkit
 - **djangorestframework‑simplejwt** – JWT authentication
-- **drf‑spectacular** – OpenAPI/Swagger docs
+- **drf‑yasg** – OpenAPI/Swagger docs
 - **django‑cors‑headers** – CORS handling
 - **django‑jazzmin** – Modern admin UI
 - **whitenoise** – Static file serving
 - **psycopg2‑binary** – PostgreSQL driver
 - **gunicorn** – Production WSGI server
 - **python‑dotenv** – `.env` handling
+- **django‑tailwind‑cli** – Tailwind CSS integration _(optional)_
+- **django‑htmx** – HTMX integration _(optional)_
+- **django‑vite** – Vite bundler integration _(optional)_
 
 ### API Endpoints
 
-| Endpoint          | Description                     |
-|-------------------|---------------------------------|
-| `/admin/`         | Django admin                    |
-| `/token/`         | Obtain JWT token                |
-| `/token/refresh/` | Refresh JWT token               |
-| `/docs/`          | Swagger UI (dev only)           |
-| `/schema/`        | OpenAPI schema (dev only)       |
+| Endpoint          | Description               |
+| ----------------- | ------------------------- |
+| `/admin/`         | Django admin              |
+| `/token/`         | Obtain JWT token          |
+| `/token/refresh/` | Refresh JWT token         |
+| `/docs/`          | Swagger UI (dev only)     |
+| `/schema/`        | ReDoc API docs (dev only) |
 
 ### Settings Overview
 
@@ -233,27 +243,6 @@ ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
 
 SQLite works out of the box for development—no extra DB setup required.
 
-## Roadmap
-
-The following items are tracked in **TODO.md** and represent the near‑future direction of djinit.
-
-### Planned Features
-- **Docker Support** – Auto‑generate a `Dockerfile` for containerized deployments.
-- **Frontend Integration** – Scaffold React, Vue, or HTMX alongside the Django backend.
-- **Celery Integration** – Simplify background task setup with Celery.
-- **More Packages** – Add optional integrations for popular Django packages.
-
-### Enhancements
-- **Add more project structure templates** – Expand the set of ready‑made layouts.
-- **Add testing framework setup** – Provide pytest and coverage configuration out of the box.
-- **Fix bugs** – Ongoing maintenance and bug resolution.
-
-### Completed
-- **Interactive configuration wizard** – Streamlined project creation experience.
-- **Improved structure detection** – Smarter detection of existing Django layouts.
-
-> Contributions that address any of the above items are highly welcome!
-
 ## Contributing
 
 Found a bug or have an idea? Open an issue or submit a pull request. Contributions are always welcome!
@@ -270,5 +259,3 @@ Please follow the existing code style (ruff + black) and include tests for new f
 MIT © Sankalp Tharu
 
 ---
-
-*© 2024 Sankalp Tharu. All rights reserved.*
