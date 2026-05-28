@@ -77,6 +77,7 @@ class FileCreator(BaseService):
 
         secret_key = generate_secret_key()
         dev_context = {"secret_key": secret_key}
+        dev_context["use_vite"] = self.metadata.get("use_vite", False)
 
         # Prepare context for base.py with full AppConfig paths
         base_settings_context = base_context.copy()
@@ -88,9 +89,10 @@ class FileCreator(BaseService):
                 for name in base_settings_context["app_names"]
             ]
 
-        # Add Tailwind and HTMX to context
+        # Add Tailwind, HTMX, and Vite to context
         base_settings_context["use_tailwind"] = self.metadata.get("use_tailwind", False)
         base_settings_context["use_htmx"] = self.metadata.get("use_htmx", False)
+        base_settings_context["use_vite"] = self.metadata.get("use_vite", False)
 
         for filename, context in [
             ("base.py", base_settings_context),
@@ -136,6 +138,7 @@ class FileCreator(BaseService):
             "module_name": self.module_name,
             "database_type": self.metadata.get("database_type", "postgresql"),
             "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_vite": self.metadata.get("use_vite", False),
         }
         self._render_and_create_file(
             "Dockerfile",
@@ -152,6 +155,18 @@ class FileCreator(BaseService):
             "Created .dockerignore file",
         )
 
+    def create_vite_config(self) -> None:
+        context = {
+            "module_name": self.module_name,
+            "project_name": self.project_name,
+        }
+        self._render_and_create_file(
+            "vite.config.ts",
+            "project/vite.config.ts-tpl",
+            context,
+            "Created vite.config.ts for Vite frontend bundling",
+        )
+
     def create_gitignore(self) -> None:
         self._render_and_create_file(".gitignore", "project/gitignore-tpl", {}, "Created .gitignore file")
 
@@ -161,6 +176,7 @@ class FileCreator(BaseService):
             "database_type": self.metadata.get("database_type", "postgresql"),
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
+            "use_vite": self.metadata.get("use_vite", False),
         }
         self._render_and_create_file(
             "requirements.txt",
@@ -204,6 +220,7 @@ class FileCreator(BaseService):
             "use_database_url": metadata.get("use_database_url", True),
             "use_tailwind": metadata.get("use_tailwind", False),
             "use_htmx": metadata.get("use_htmx", False),
+            "use_vite": metadata.get("use_vite", False),
         }
         self._render_and_create_file(
             "pyproject.toml",
@@ -406,6 +423,7 @@ class FileCreator(BaseService):
             "use_database_url": self.metadata.get("use_database_url", True),
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
+            "use_vite": self.metadata.get("use_vite", False),
         }
         workflow_file = os.path.join(github_dir, "ci.yml")
         self._render_and_create_file(
@@ -424,6 +442,7 @@ class FileCreator(BaseService):
             "use_database_url": self.metadata.get("use_database_url", True),
             "use_tailwind": self.metadata.get("use_tailwind", False),
             "use_htmx": self.metadata.get("use_htmx", False),
+            "use_vite": self.metadata.get("use_vite", False),
         }
         self._render_and_create_file(
             ".gitlab-ci.yml",
@@ -458,6 +477,7 @@ class FileCreator(BaseService):
                 "database_type": self.metadata.get("database_type", "postgresql"),
                 "use_tailwind": self.metadata.get("use_tailwind", False),
                 "use_htmx": self.metadata.get("use_htmx", False),
+                "use_vite": self.metadata.get("use_vite", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),

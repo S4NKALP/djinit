@@ -112,6 +112,9 @@ class SetupCreator:
         for step_func in utility_steps:
             step_func()
 
+        if self.metadata.get("use_vite", False):
+            self.file_creator.create_vite_config()
+
         UIFormatter.print_success("Created all utility files successfully!")
 
     def _create_cicd_pipelines(self) -> None:
