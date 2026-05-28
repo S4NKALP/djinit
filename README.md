@@ -256,6 +256,6 @@ Please follow the existing code style (ruff + black) and include tests for new f
 
 ## License
 
-MIT © Sankalp Tharu
+MIT © [Sankalp Tharu](sankalptharu.com.np)
 
 ---
