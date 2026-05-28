@@ -168,7 +168,11 @@ class FileCreator(BaseService):
         )
 
     def create_gitignore(self) -> None:
-        self._render_and_create_file(".gitignore", "project/gitignore-tpl", {}, "Created .gitignore file")
+        context = {
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_vite": self.metadata.get("use_vite", False),
+        }
+        self._render_and_create_file(".gitignore", "project/gitignore-tpl", context, "Created .gitignore file")
 
     def create_requirements(self) -> None:
         context = {
@@ -249,7 +253,11 @@ class FileCreator(BaseService):
         )
 
     def create_justfile(self) -> None:
-        context = {"project_name": self.project_name, "module_name": self.module_name}
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+            "use_vite": self.metadata.get("use_vite", False),
+        }
         self._render_and_create_file(
             "justfile",
             "project/justfile-tpl",
