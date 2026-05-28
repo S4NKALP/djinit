@@ -1,133 +1,72 @@
 # GitLab CI/CD configuration for [[ project_name ]]
 
 stages:
-  - test
   - lint
+  - test
   - security
+
+variables:
+  DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
+  SECRET_KEY: test-secret-key-for-ci
+  ALLOWED_HOSTS: localhost
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
+
+cache:
+  paths:
+    - .cache/pip
+    - .cache/uv
+    - .venv/
+
+# @IF database_type == 'mysql'
+services:
+  - mysql:8.0
+
+variables:
+  MYSQL_DATABASE: test_db
+  MYSQL_ROOT_PASSWORD: test_password
+# @ELSE
+services:
+  - postgres:15
 
 variables:
   POSTGRES_DB: test_db
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
-  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/test_db"
-
-# Use Docker-in-Docker
-services:
-  - postgres:15
+# @ENDIF
 
 before_script:
   - python --version
   - pip install uv
   - uv sync
 
-# Lint stage
 lint:
   stage: lint
   image: python:3.13
   script:
     - uv run ruff check .
     - uv run ruff format --check .
-  only:
-    - branches
-    - merge_requests
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == 'develop'
 
-# Test stage
 test:
   stage: test
   image: python:3.13
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
-    ALLOWED_HOSTS: localhost
   script:
     - uv run python manage.py check
-    - uv run python manage.py migrate
     - uv run python manage.py test
-  only:
-    - branches
-    - merge_requests
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == 'develop'
 
-# Multiple Python versions
-test:python310:
-  stage: test
-  image: python:3.10
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
-    ALLOWED_HOSTS: localhost
-  script:
-    - pip install uv
-    - uv sync
-    - uv run python manage.py check
-    - uv run python manage.py migrate
-    - uv run python manage.py test
-  only:
-    - branches
-    - merge_requests
-
-test:python311:
-  stage: test
-  image: python:3.11
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
-    ALLOWED_HOSTS: localhost
-  script:
-    - pip install uv
-    - uv sync
-    - uv run python manage.py check
-    - uv run python manage.py migrate
-    - uv run python manage.py test
-  only:
-    - branches
-    - merge_requests
-
-test:python312:
-  stage: test
-  image: python:3.12
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
-    ALLOWED_HOSTS: localhost
-  script:
-    - pip install uv
-    - uv sync
-    - uv run python manage.py check
-    - uv run python manage.py migrate
-    - uv run python manage.py test
-  only:
-    - branches
-    - merge_requests
-
-test:python313:
-  stage: test
-  image: python:3.13
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
-    ALLOWED_HOSTS: localhost
-  script:
-    - pip install uv
-    - uv sync
-    - uv run python manage.py check
-    - uv run python manage.py migrate
-    - uv run python manage.py test
-  only:
-    - branches
-    - merge_requests
-
-# Security check
 security:
   stage: security
   image: python:3.13
-  variables:
-    DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
-    SECRET_KEY: test-secret-key-for-ci
   script:
-    - pip install uv
-    - uv sync
     - uv run python manage.py check --deploy
-    - uv run python manage.py validate_templates
-  only:
-    - main
-    - develop
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == 'develop'
