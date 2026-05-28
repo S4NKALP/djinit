@@ -1,8 +1,8 @@
 # djinit
 
-<div align="center">
-
 > PyPI didn't allow the original name, so you'll find it as **djinitx** on PyPI
+
+<div align="center">
 
 <img src="https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white" alt="PyPI">
 <img src="https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2-0C4B33?logo=django&logoColor=white" alt="Django">
@@ -11,140 +11,118 @@
 
 </div>
 
-**djinit** helps you set up a production‑ready Django project in minutes. No more copy‑pasting settings or manually wiring up apps—just answer a few questions and get a modern Django project with REST API, authentication, documentation, and deployment configs ready to go.
-
-## Why djinit?
-
-Starting a Django project usually means spending hours setting up the same things: splitting settings for dev/prod, configuring DRF, adding JWT auth, setting up CORS, preparing for deployment. djinit does all of this for you with sensible defaults and lets you choose the project structure that fits your needs.
-
-## Installation
-
-**Recommended** (using pipx):
+A CLI that scaffolds production-ready Django projects with DRF, JWT auth, API docs, and deployment configs — all through an interactive wizard. No more copy-pasting settings or wiring up apps by hand.
 
 ```bash
 pipx install djinitx
+djinit setup
 ```
 
-Or with pip:
+## Installation
 
 ```bash
+# Recommended — isolated environment
+pipx install djinitx
+
+# Or with uv
+uv tool install djinitx
+
+# Or with pip
 pip install djinitx
 ```
 
-Or with uv:
+Requires Python 3.13+.
 
-```bash
-uv tool install djinitx
-```
+## Usage
 
-**Requirements**: Python 3.13+
-
-## Getting Started
+### Create a project
 
 ```bash
 djinit setup
-```
-
-or the shorter alias:
-
-```bash
+# or
 dj setup
 ```
 
-The wizard will ask you a few questions:
+The wizard walks you through these choices:
 
-1. **What structure do you want?**
-   - **Standard** – Classic Django layout with split settings
-   - **Predefined** – Organized with `apps/` and `api/` folders (great for larger projects)
-   - **Unified** – Everything under `core/` and `apps/` (clean and minimal)
-   - **Single Folder** – All apps in one configurable folder (simple and flat)
+1. **Project structure** — Standard, Predefined (`apps/` + `api/`), Unified (`core/` + `apps/`), or Single Folder
+2. **Project name and directory**
+3. **Database** — PostgreSQL or MySQL; `DATABASE_URL` or individual env vars
+4. **Frontend tools** — Tailwind CSS, HTMX, and/or Vite (optional)
+5. **Django apps** — Name them; optionally nest under an `apps/` package
+6. **CI/CD** — GitHub Actions, GitLab CI, both, or none
 
-2. **Project Setup** – Destination directory (use `.` for current) and project name.
+When you're done, you have a fully configured Django project ready to run.
 
-3. **Database Configuration** – Choose `DATABASE_URL` (recommended) or individual variables; pick PostgreSQL or MySQL.
-
-4. **Frontend Tools** _(optional)_ – Pick Tailwind CSS, HTMX, or Vite for frontend bundling.
-
-5. **Django Apps** _(Standard structure only)_ – Whether to create an `apps/` folder and which apps to scaffold.
-
-6. **CI/CD Pipeline** – GitHub Actions, GitLab CI, both, or skip it.
-
-That’s it—your project will be ready with everything configured.
-
-## What You Get
-
-- **Split settings** for development and production
-- **Django REST Framework** with JWT authentication
-- **API documentation** (Swagger UI at `/docs/`)
-- **CORS** configured for local development
-- **WhiteNoise** for static files
-- **PostgreSQL** support (SQLite for dev)
-- **Modern admin** interface (`django-jazzmin`)
-- **Deployment ready** with `Procfile` and `runtime.txt`
-- **Development tools** (`Justfile` with common commands)
-- **Environment template** (`.env.sample`)
-- **Git ready** (`.gitignore` included)
-- **Tailwind CSS** – Optionally scaffolded with `django-tailwind-cli`
-- **HTMX** – Optionally included with `django-htmx` and middleware
-- **Vite** – Optionally set up with `django-vite` and `vite.config.ts`
-
-## Commands
-
-### Create a Project
-
-```bash
-djinit setup
-```
-
-### Add Apps to an Existing Project
+### Add apps later
 
 ```bash
 djinit app users products orders
 ```
 
-Creates the apps, adds them to `INSTALLED_APPS`, and wires up URLs.
+Creates the apps, registers them in `INSTALLED_APPS`, and wires up URL includes.
 
-### Generate Secret Keys
+### Generate secret keys
 
 ```bash
 djinit secret
+djinit secret --count 5 --length 64
 ```
 
-Use `--count 5` to generate five keys or `--length 64` to change the length.
+## What You Get
+
+Every project ships with:
+
+- **Split settings** — `base.py`, `development.py`, `production.py` with sensible defaults
+- **Django REST Framework** — With JWT authentication (access + refresh tokens)
+- **API documentation** — Swagger UI at `/docs/`, ReDoc at `/schema/`
+- **CORS** — Configured for local dev, locked down for production
+- **WhiteNoise** — Static file serving, production-ready
+- **django-jazzmin** — Modern admin interface
+- **Environment management** — `.env.sample` with `django-environ`
+- **Deployment configs** — `Dockerfile`, `Procfile`, `runtime.txt`
+- **CI/CD pipelines** — GitHub Actions and/or GitLab CI
+- **Task runner** — `Justfile` with common commands
+- **`.gitignore`** — Python + Node defaults
+
+Optional add-ons when selected:
+
+| Feature | Package | What's configured |
+|---|---|---|
+| Tailwind CSS | django-tailwind-cli | Settings, DaisyUI theme, Node install in Docker |
+| HTMX | django-htmx | Installed app + HtmxMiddleware |
+| Vite | django-vite | `vite.config.ts`, dev/prod mode toggles, CI build step |
+
+### Development workflow
+
+```bash
+just dev              # Start dev server
+just migrate          # Run migrations
+just test             # Run tests
+just lint             # Lint with ruff
+just format           # Format with ruff
+just vite             # Start Vite dev server (if selected)
+just dev-full         # Django + Vite together (if selected)
+```
+
+No `just` installed? These map directly to Django management commands.
 
 ## Project Structures
 
-### Standard Structure
+### Standard
 
 ```
 myproject/
 ├── manage.py
 ├── myproject/          # Config module
-│   ├── settings/       # Split settings
+│   ├── settings/       # base.py, development.py, production.py
 │   ├── urls.py
 │   └── wsgi.py
 └── apps/               # Your apps (optional)
     └── users/
 ```
 
-### Single Folder Layout
-
-```
-myproject/
-├── manage.py
-├── project/            # Configurable folder name
-│   ├── settings/
-│   ├── urls.py
-│   ├── models/         # All models here
-│   ├── api/            # API views & serializers
-│   │   └── your_model_name/
-│   │       ├── views.py
-│   │       ├── serializers.py
-│   │       └── urls.py
-│   └── wsgi.py
-```
-
-### Predefined Structure
+### Predefined
 
 ```
 myproject/
@@ -159,7 +137,7 @@ myproject/
     └── v1/
 ```
 
-### Unified Structure
+### Unified
 
 ```
 myproject/
@@ -173,89 +151,69 @@ myproject/
     ├── serializers/
     ├── views/
     ├── urls/
-    └── api/            # API routes
+    └── api/
 ```
 
-## Development Workflow
+### Single Folder
 
-Your project ships with a `Justfile` for common tasks:
-
-```bash
-just dev              # Start dev server
-just migrate          # Run migrations
-just makemigrations   # Create migrations
-just shell            # Django shell
-just test             # Run tests
-just format           # Format code
-just lint             # Lint code
-just vite             # Start Vite dev server (if Vite selected)
-just dev-full         # Run Django + Vite together (if Vite selected)
 ```
-
-If you don’t have `just` installed, these are just shortcuts for the equivalent Django commands.
-
-## What's Included
-
-### Packages
-
-- **Django** – Web framework
-- **Django REST Framework** – API toolkit
-- **djangorestframework‑simplejwt** – JWT authentication
-- **drf‑yasg** – OpenAPI/Swagger docs
-- **django‑cors‑headers** – CORS handling
-- **django‑jazzmin** – Modern admin UI
-- **whitenoise** – Static file serving
-- **psycopg2‑binary** – PostgreSQL driver
-- **gunicorn** – Production WSGI server
-- **python‑dotenv** – `.env` handling
-- **django‑tailwind‑cli** – Tailwind CSS integration _(optional)_
-- **django‑htmx** – HTMX integration _(optional)_
-- **django‑vite** – Vite bundler integration _(optional)_
-
-### API Endpoints
-
-| Endpoint          | Description               |
-| ----------------- | ------------------------- |
-| `/admin/`         | Django admin              |
-| `/token/`         | Obtain JWT token          |
-| `/token/refresh/` | Refresh JWT token         |
-| `/docs/`          | Swagger UI (dev only)     |
-| `/schema/`        | ReDoc API docs (dev only) |
-
-### Settings Overview
-
-- **Development** – SQLite, `DEBUG=True`, console email backend, permissive CORS.
-- **Production** – PostgreSQL, hardened security settings, SMTP email backend, strict CORS.
+myproject/
+├── manage.py
+├── project/            # Configurable name
+│   ├── settings/
+│   ├── urls.py
+│   ├── models/
+│   ├── api/
+│   └── wsgi.py
+```
 
 ## Environment Setup
-
-Copy the sample file and fill in your values:
 
 ```bash
 cp .env.sample .env
 ```
 
-```dotenv
-SECRET_KEY=your-secret-key-here  # Generate with: djinit secret
-DATABASE_URL=postgres://user:pass@host:5432/db
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-```
+SQLite works out of the box for development. Swap in your production database when you're ready.
 
-SQLite works out of the box for development—no extra DB setup required.
+## Packages
+
+| Package | Role |
+|---|---|
+| Django | Web framework |
+| django-environ | Environment variable management |
+| django-jazzmin | Admin UI |
+| djangorestframework | REST API toolkit |
+| djangorestframework-simplejwt | JWT authentication |
+| drf-yasg | Swagger/OpenAPI docs |
+| django-cors-headers | CORS handling |
+| whitenoise | Static file serving |
+| gunicorn | Production WSGI server |
+| psycopg[binary] | PostgreSQL driver |
+| django-tailwind-cli | Tailwind CSS _(optional)_ |
+| django-htmx | HTMX _(optional)_ |
+| django-vite | Vite bundler _(optional)_ |
+
+## API Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `/admin/` | Django admin |
+| `/token/` | Obtain JWT pair |
+| `/token/refresh/` | Refresh access token |
+| `/docs/` | Swagger UI |
+| `/schema/` | ReDoc |
 
 ## Contributing
 
-Found a bug or have an idea? Open an issue or submit a pull request. Contributions are always welcome!
+Contributions are welcome. Open an issue or submit a PR.
 
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/awesome-feature`).
-3. Make your changes and ensure tests pass (`just test`).
-4. Submit a pull request with a clear description of the change.
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/whatever`)
+3. Make your changes and run `just test`
+4. Submit a pull request
 
-Please follow the existing code style (ruff + black) and include tests for new functionality.
+Match the existing code style — ruff linting and formatting are enforced.
 
 ## License
 
-MIT © [Sankalp Tharu](sankalptharu.com.np)
-
----
+MIT © [Sankalp Tharu](https://sankalptharu.com.np)
