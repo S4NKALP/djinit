@@ -117,7 +117,12 @@ class FileCreator(BaseService):
     ) -> None:
         """Helper to create urls.py, wsgi.py, and asgi.py."""
 
-        urls_context = {"url_type": "project", "api_module": api_module, "include_api": True}
+        urls_context = {
+            "url_type": "project",
+            "project_name": self.project_name,
+            "api_module": api_module,
+            "include_api": True,
+        }
         if comment_out_api:
             urls_context["comment_out_api_url"] = True
 
@@ -303,7 +308,7 @@ class FileCreator(BaseService):
         CommonUtils.create_file_from_template(
             project_urls_path,
             "config/urls.py-tpl",
-            {"url_type": "project", "api_module": "api", "include_api": True},
+            {"url_type": "project", "project_name": self.project_name, "api_module": "api", "include_api": True},
             "Updated project urls.py to include API routes",
             should_format=True,
         )
