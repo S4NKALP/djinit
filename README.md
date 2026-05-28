@@ -5,13 +5,13 @@
 <div align="center">
 
 <img src="https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white" alt="PyPI">
-<img src="https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2-0C4B33?logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Django-5.1%20%7C%205.2%20%7C%206.0-0C4B33?logo=django&logoColor=white" alt="Django">
 <img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python">
 <a href="https://github.com/S4NKALP/djinit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
 
 </div>
 
-A CLI that scaffolds production-ready Django projects with DRF, JWT auth, API docs, and deployment configs — all through an interactive wizard. No more copy-pasting settings or wiring up apps by hand.
+A CLI that scaffolds production-ready Django projects with DRF, JWT auth, API docs, and deployment configs - all through an interactive wizard. No more copy-pasting settings or wiring up apps by hand.
 
 ```bash
 pipx install djinitx
@@ -21,7 +21,7 @@ djinit setup
 ## Installation
 
 ```bash
-# Recommended — isolated environment
+# Recommended - isolated environment
 pipx install djinitx
 
 # Or with uv
@@ -45,12 +45,12 @@ dj setup
 
 The wizard walks you through these choices:
 
-1. **Project structure** — Standard, Predefined (`apps/` + `api/`), Unified (`core/` + `apps/`), or Single Folder
+1. **Project structure** - Standard, Predefined (`apps/` + `api/`), Unified (`core/` + `apps/`), or Single Folder
 2. **Project name and directory**
-3. **Database** — PostgreSQL or MySQL; `DATABASE_URL` or individual env vars
-4. **Frontend tools** — Tailwind CSS, HTMX, and/or Vite (optional)
-5. **Django apps** — Name them; optionally nest under an `apps/` package
-6. **CI/CD** — GitHub Actions, GitLab CI, both, or none
+3. **Database** - PostgreSQL or MySQL; `DATABASE_URL` or individual env vars
+4. **Frontend tools** - Tailwind CSS, HTMX, and/or Vite (optional)
+5. **Django apps** - Name them; optionally nest under an `apps/` package
+6. **CI/CD** - GitHub Actions, GitLab CI, both, or none
 
 When you're done, you have a fully configured Django project ready to run.
 
@@ -73,17 +73,17 @@ djinit secret --count 5 --length 64
 
 Every project ships with:
 
-- **Split settings** — `base.py`, `development.py`, `production.py` with sensible defaults
-- **Django REST Framework** — With JWT authentication (access + refresh tokens)
-- **API documentation** — Swagger UI at `/docs/`, ReDoc at `/schema/`
-- **CORS** — Configured for local dev, locked down for production
-- **WhiteNoise** — Static file serving, production-ready
-- **django-jazzmin** — Modern admin interface
-- **Environment management** — `.env.sample` with `django-environ`
-- **Deployment configs** — `Dockerfile`, `Procfile`, `runtime.txt`
-- **CI/CD pipelines** — GitHub Actions and/or GitLab CI
-- **Task runner** — `Justfile` with common commands
-- **`.gitignore`** — Python + Node defaults
+- **Split settings** - `base.py`, `development.py`, `production.py` with sensible defaults
+- **Django REST Framework** - With JWT authentication (access + refresh tokens)
+- **API documentation** - Swagger UI at `/docs/`, ReDoc at `/schema/`
+- **CORS** - Configured for local dev, locked down for production
+- **WhiteNoise** - Static file serving, production-ready
+- **django-jazzmin** - Modern admin interface
+- **Environment management** - `.env.sample` with `django-environ`
+- **Deployment configs** - `Dockerfile`, `Procfile`, `runtime.txt`
+- **CI/CD pipelines** - GitHub Actions and/or GitLab CI
+- **Task runner** - `Justfile` with common commands
+- **`.gitignore`** - Python + Node defaults
 
 Optional add-ons when selected:
 
@@ -212,7 +212,7 @@ Contributions are welcome. Open an issue or submit a PR.
 3. Make your changes and run `just test`
 4. Submit a pull request
 
-Match the existing code style — ruff linting and formatting are enforced.
+Match the existing code style - ruff linting and formatting are enforced.
 
 ## License
 
