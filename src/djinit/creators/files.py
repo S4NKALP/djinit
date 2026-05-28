@@ -202,6 +202,8 @@ class FileCreator(BaseService):
             "module_name": self.module_name,
             "database_type": metadata.get("database_type", "postgresql"),
             "use_database_url": metadata.get("use_database_url", True),
+            "use_tailwind": metadata.get("use_tailwind", False),
+            "use_htmx": metadata.get("use_htmx", False),
         }
         self._render_and_create_file(
             "pyproject.toml",
@@ -397,7 +399,14 @@ class FileCreator(BaseService):
     def create_github_actions(self) -> None:
         github_dir = os.path.join(self.project_root, ".github", "workflows")
         os.makedirs(github_dir, exist_ok=True)
-        context = {"project_name": self.project_name, "module_name": self.module_name}
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+            "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_database_url": self.metadata.get("use_database_url", True),
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_htmx": self.metadata.get("use_htmx", False),
+        }
         workflow_file = os.path.join(github_dir, "ci.yml")
         self._render_and_create_file(
             workflow_file,
@@ -408,7 +417,14 @@ class FileCreator(BaseService):
         )
 
     def create_gitlab_ci(self) -> None:
-        context = {"project_name": self.project_name, "module_name": self.module_name}
+        context = {
+            "project_name": self.project_name,
+            "module_name": self.module_name,
+            "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_database_url": self.metadata.get("use_database_url", True),
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_htmx": self.metadata.get("use_htmx", False),
+        }
         self._render_and_create_file(
             ".gitlab-ci.yml",
             "project/ci/gitlab_ci-tpl",
