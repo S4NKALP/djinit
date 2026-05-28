@@ -11,5 +11,5 @@
 
 - [ ] Add more project structure templates
 - [x] Add interactive configuration wizard
-- [ ] Add testing framework setup (pytest, coverage)
+- [x] Add testing framework setup (pytest, coverage)
 - [x] Improve structure detection
