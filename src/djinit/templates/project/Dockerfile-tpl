@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 # @ENDIF
 
-# @IF use_tailwind
+# @IF use_tailwind or use_vite
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -33,6 +33,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # @IF use_tailwind
 RUN python manage.py tailwind install
+# @ENDIF
+
+# @IF use_vite
+COPY package.json package-lock.json ./
+RUN npm ci
+RUN npm run build
 # @ENDIF
 
 COPY . .

@@ -14,6 +14,17 @@ dev:
 dev-server HOST="0.0.0.0" PORT="8000":
     uv run python manage.py runserver {{ HOST }}:{{ PORT }}
 
+# @IF use_vite
+# Start Vite dev server
+vite:
+    npm run dev
+
+# Start both Django and Vite dev servers
+dev-full:
+    @just dev &
+    @just vite
+# @ENDIF
+
 # Create migrations for all apps
 makemigrations:
     uv run python manage.py makemigrations

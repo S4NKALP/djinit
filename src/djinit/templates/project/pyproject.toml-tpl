@@ -11,7 +11,7 @@ dependencies = [
     "django-jazzmin",
     "djangorestframework",
     "djangorestframework-simplejwt",
-    "drf-spectacular",
+    "drf-yasg",
     "django-cors-headers",
     "whitenoise",
 # @IF database_type == 'mysql'

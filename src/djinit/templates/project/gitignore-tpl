@@ -71,7 +71,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # Node modules (if using frontend tools)
+# @IF use_tailwind or use_vite
 node_modules/
+# @ENDIF
 
 # Secret keys
 secret.txt

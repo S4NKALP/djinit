@@ -39,6 +39,10 @@ before_script:
   - python --version
   - pip install uv
   - uv sync
+# @IF use_vite
+  - npm ci
+  - npm run build
+# @ENDIF
 
 lint:
   stage: lint
