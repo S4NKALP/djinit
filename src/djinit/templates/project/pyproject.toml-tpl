@@ -26,6 +26,9 @@ dependencies = [
 # @IF use_htmx
     "django-htmx",
 # @ENDIF
+# @IF use_vite
+    "django-vite",
+# @ENDIF
 # @IF use_database_url
     "dj-database-url",
 # @ENDIF

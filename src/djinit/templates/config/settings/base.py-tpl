@@ -225,3 +225,13 @@ TAILWIND_CLI_CONFIG = {
     },
 }
 # @ENDIF
+
+# @IF use_vite
+# Vite Settings
+DJANGO_VITE = {
+    "default": {
+        "manifest_path": BASE_DIR / "static" / "dist" / "manifest.json",
+        "static_url_prefix": "dist",
+    }
+}
+# @ENDIF

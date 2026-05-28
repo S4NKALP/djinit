@@ -12,6 +12,7 @@ django-cors-headers
 whitenoise
 django-tailwind-cli # @IF use_tailwind
 django-htmx # @IF use_htmx
+django-vite # @IF use_vite
 # @IF database_type == 'mysql'
 mysqlclient
 # @ELSE

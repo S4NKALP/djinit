@@ -40,3 +40,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Disable HTTPS redirect in development
 SECURE_SSL_REDIRECT = False
+
+# @IF use_vite
+# Vite Settings
+DJANGO_VITE["default"]["dev_mode"] = True
+# @ENDIF
