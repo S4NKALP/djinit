@@ -20,6 +20,12 @@ dependencies = [
 # @IF database_type == 'postgresql'
     "psycopg[binary]",
 # @ENDIF
+# @IF use_tailwind
+    "django-tailwind-cli",
+# @ENDIF
+# @IF use_htmx
+    "django-htmx",
+# @ENDIF
 # @IF use_database_url
     "dj-database-url",
 # @ENDIF
