@@ -46,9 +46,10 @@ class DjangoHelper:
                 "database_type": metadata.get("database_type", "postgresql"),
                 "use_tailwind": metadata.get("use_tailwind", False),
                 "use_htmx": metadata.get("use_htmx", False),
+                "use_vite": metadata.get("use_vite", False),
             }
 
-            dev_context = {"secret_key": secret_key}
+            dev_context = {"secret_key": secret_key, "use_vite": metadata.get("use_vite", False)}
 
             # Production context also needs database info
             prod_context = base_context.copy()
