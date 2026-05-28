@@ -35,6 +35,11 @@ dependencies = [
     "gunicorn",
 ]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.14.2",
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py313"
