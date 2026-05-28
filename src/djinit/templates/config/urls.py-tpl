@@ -8,10 +8,8 @@ from django.urls import include
 # @ENDIF
 # @IF include_api
 from django.conf import settings
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-)
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -44,9 +42,16 @@ urlpatterns = [
 
 # Don't show schema in production
 if settings.DEBUG:
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="[[ project_name ]] API",
+            default_version="v1",
+        ),
+        public=True,
+    )
     urlpatterns += [
-        path("schema/", SpectacularAPIView.as_view(), name="schema"),
-        path("docs/", SpectacularSwaggerView.as_view(url_name="schema")),
+        path("docs/", schema_view.with_ui("swagger", cache_timeout=0)),
+        path("schema/", schema_view.with_ui("redoc", cache_timeout=0)),
     ]
 # @ENDIF
 # @ENDIF
