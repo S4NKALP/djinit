@@ -1,11 +1,13 @@
 """generated with djinit"""
 
 import os
+from pathlib import Path
 import environ
 from django.core.wsgi import get_wsgi_application
 
+env_path = Path(__file__).resolve().parent.parent / ".env"
 env = environ.Env()
-environ.Env.read_env()
+environ.Env.read_env(env_path)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", env("DJANGO_SETTINGS_MODULE", default="[[ project_name ]].settings.production"))
 
