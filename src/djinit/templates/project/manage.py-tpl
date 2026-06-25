@@ -9,7 +9,7 @@ from pathlib import Path
 
 import environ
 
-env_path = Path(__file__).resolve().parent.parent / ".env"
+env_path = Path(__file__).resolve().parent / ".env"
 env = environ.Env()
 environ.Env.read_env(env_path)
 
