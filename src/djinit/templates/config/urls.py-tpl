@@ -2,12 +2,13 @@
 """generated with djinit"""
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
+from django.conf import settings
+from django.views.static import serve
 # @IF include_api or include_apps
 from django.urls import include
 # @ENDIF
 # @IF include_api
-from django.conf import settings
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework_simplejwt.views import (
@@ -54,6 +55,22 @@ if settings.DEBUG:
         path("schema/", schema_view.with_ui("redoc", cache_timeout=0)),
     ]
 # @ENDIF
+# @IF use_tailwind
+
+# django-browser-reload for tailwind live reload (dev only)
+if settings.DEBUG:
+    urlpatterns += [
+        path("__reload__/", include("django_browser_reload.urls")),
+    ]
+# @ENDIF
+
+urlpatterns += [
+    re_path(
+        r"^media/(?P<path>.*)$",
+        serve,
+        {"document_root": settings.MEDIA_ROOT},
+    ),
+]
 # @ENDIF
 # @IF url_type == 'api_root'
 from django.urls import include, path
