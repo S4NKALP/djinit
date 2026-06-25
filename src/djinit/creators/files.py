@@ -122,6 +122,7 @@ class FileCreator(BaseService):
             "project_name": self.project_name,
             "api_module": api_module,
             "include_api": True,
+            "use_tailwind": self.metadata.get("use_tailwind", False),
         }
         if comment_out_api:
             urls_context["comment_out_api_url"] = True
@@ -247,6 +248,7 @@ class FileCreator(BaseService):
             "app_names": effective_app_modules,
             "include_apps": True,
             "include_api": True,
+            "use_tailwind": self.metadata.get("use_tailwind", False),
         }
         self._render_and_create_file(
             "urls.py",
@@ -308,7 +310,13 @@ class FileCreator(BaseService):
         CommonUtils.create_file_from_template(
             project_urls_path,
             "config/urls.py-tpl",
-            {"url_type": "project", "project_name": self.project_name, "api_module": "api", "include_api": True},
+            {
+                "url_type": "project",
+                "project_name": self.project_name,
+                "api_module": "api",
+                "include_api": True,
+                "use_tailwind": self.metadata.get("use_tailwind", False),
+            },
             "Updated project urls.py to include API routes",
             should_format=True,
         )
