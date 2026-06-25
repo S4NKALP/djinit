@@ -65,6 +65,7 @@ class DjangoHelper:
                 "url_type": "project",
                 "project_name": project_name,
                 "django_version": DjangoHelper.DJANGO_VERSION,
+                "use_tailwind": metadata.get("use_tailwind", False),
             }
             project_files = [
                 ("urls.py", "config/urls.py-tpl", urls_context),
