@@ -43,14 +43,20 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_PRIVATE_NETWORK = False
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST', default="smtp.gmail.com")
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default="")
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default="")
-DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER', default="")
-SERVER_EMAIL = env('EMAIL_HOST_USER', default="")
+MAILERS = {
+    'default': {
+        'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+        'OPTIONS': {
+            'host': env('EMAIL_HOST', default='smtp.gmail.com'),
+            'port': env.int('EMAIL_PORT', default=587),
+            'use_tls': env.bool('EMAIL_USE_TLS', default=True),
+            'username': env('EMAIL_HOST_USER', default=''),
+            'password': env('EMAIL_HOST_PASSWORD', default=''),
+        },
+    },
+}
+DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER', default='')
+SERVER_EMAIL = env('EMAIL_HOST_USER', default='')
 
 # Security settings for production
 SECURE_SSL_REDIRECT = True
@@ -62,9 +68,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Session settings
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-
-# Static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # @IF use_tailwind
 ## Tailwind

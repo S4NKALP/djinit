@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
 dependencies = [
-    "django",
+    "django>=6.1,<7.0",
     "django-environ",
     "django-jazzmin",
     "djangorestframework",
@@ -37,9 +37,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff>=0.14.2",
-    "pytest>=8.0.0",
-    "pytest-django>=4.9.0",
+    "ruff>=0.16.6",
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
 ]
 
 [tool.ruff]
