@@ -3,22 +3,27 @@
 """generated with djinit"""
 
 """Django's command-line utility for administrative tasks."""
+
 import os
 import sys
 from pathlib import Path
 
 import environ
 
-env_path = Path(__file__).resolve().parent / ".env"
+# Load environment variables from .env
+BASE_DIR = Path(__file__).resolve().parent
 env = environ.Env()
-environ.Env.read_env(env_path)
+env.read_env(BASE_DIR / ".env")
 
 
 def main():
     """Run administrative tasks."""
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE",
-        env("DJANGO_SETTINGS_MODULE", default="[[ project_name ]].settings.production"),
+        env(
+            "DJANGO_SETTINGS_MODULE",
+            default="[[ project_name ]].settings.production",
+        ),
     )
 
     try:
@@ -29,12 +34,9 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
     execute_from_command_line(sys.argv)
 
 
 if __name__ == "__main__":
-    env = environ.Env()
-    # Read .env file, if it exists
-    environ.Env.read_env()
-
     main()
