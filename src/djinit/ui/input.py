@@ -189,7 +189,7 @@ class InputCollector:
         project_name = project_dir
         if project_name == "." or not project_name:
             project_name = os.path.basename(os.path.abspath(os.getcwd()))
-        
+
         app_names: list[str] = []
 
         # Default package_name to "backend" if project_dir is "." or empty
