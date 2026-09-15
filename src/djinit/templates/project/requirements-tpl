@@ -7,7 +7,6 @@ django-environ
 django-jazzmin
 djangorestframework
 djangorestframework_simplejwt
-drf-yasg
 django-cors-headers
 whitenoise
 django-tailwind-cli # @IF use_tailwind

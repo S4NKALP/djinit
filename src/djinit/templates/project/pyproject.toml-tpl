@@ -6,12 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = { text = "MIT" }
 dependencies = [
-    "django>=6.1,<7.0",
+    "django>=6.0,<7.0",
     "django-environ",
     "django-jazzmin",
     "djangorestframework",
     "djangorestframework-simplejwt",
-    "drf-yasg",
     "django-cors-headers",
     "whitenoise",
 # @IF database_type == 'mysql'
