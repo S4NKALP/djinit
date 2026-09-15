@@ -68,6 +68,7 @@ class SetupCreator:
         else:
             steps.append(("Creating Django apps", self.project_creator.create_apps))
             steps.append(("Creating project URLs", self.file_creator.create_project_urls))
+            steps.append(("Creating shared module", self.file_creator.create_standard_shared))
 
         steps.extend(
             [

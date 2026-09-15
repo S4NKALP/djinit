@@ -285,6 +285,14 @@ class FileCreator(BaseService):
         core_subfolders = ["utils", "mixins", "middleware"]
         self._create_subdirectories_with_init(core_dir, core_subfolders, "apps/core/")
 
+        # Inject base model
+        CommonUtils.create_file_from_template(
+            os.path.join(core_dir, "base.py"),
+            "components/base.py-tpl",
+            {},
+            "Created apps/core/base.py",
+        )
+
         # Create api directory structure
         api_dir = os.path.join(self.project_root, "api")
         CommonUtils.create_directory_with_init(api_dir, "Created api/__init__.py")
@@ -352,6 +360,14 @@ class FileCreator(BaseService):
         components = ["admin", "models", "serializers", "tests", "urls", "views"]
         self._create_subdirectories_with_init(apps_dir, components, "apps/")
 
+        # Inject base model
+        CommonUtils.create_file_from_template(
+            os.path.join(apps_dir, "models", "base.py"),
+            "components/base.py-tpl",
+            {},
+            "Created apps/models/base.py",
+        )
+
         # Create 'api' directory with v1
         api_dir = os.path.join(apps_dir, "api")
         CommonUtils.create_directory_with_init(api_dir, "Created apps/api/__init__.py")
@@ -400,6 +416,14 @@ class FileCreator(BaseService):
         # Create component folders with __init__.py only (no example code)
         components = ["admin", "api", "models", "tests"]
         self._create_subdirectories_with_init(project_dir, components, f"{self.module_name}/")
+
+        # Inject base model
+        CommonUtils.create_file_from_template(
+            os.path.join(project_dir, "models", "base.py"),
+            "components/base.py-tpl",
+            {},
+            f"Created {self.module_name}/models/base.py",
+        )
 
         # Create README files for guidance
         CommonUtils.create_file_from_template(
@@ -509,4 +533,16 @@ class FileCreator(BaseService):
         filepath = os.path.join(self.project_root, ".djinit")
         CommonUtils.create_file_with_content(
             filepath, json.dumps(config, indent=4), "Created .djinit configuration file"
+        )
+
+    def create_standard_shared(self) -> None:
+        """Create shared directory and inject base model for standard structure."""
+        shared_dir = os.path.join(self.project_root, "shared")
+        CommonUtils.create_directory_with_init(shared_dir, "Created shared/__init__.py")
+
+        CommonUtils.create_file_from_template(
+            os.path.join(shared_dir, "base.py"),
+            "components/base.py-tpl",
+            {},
+            "Created shared/base.py",
         )
