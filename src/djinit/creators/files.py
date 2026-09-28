@@ -8,6 +8,7 @@ import os
 from djinit.core.base import BaseService
 from djinit.templater import template_engine
 from djinit.utils.common import CommonUtils
+from djinit.utils.django import DjangoHelper
 
 
 class FileCreator(BaseService):
@@ -195,12 +196,26 @@ class FileCreator(BaseService):
             "Created requirements.txt with Django dependencies",
         )
 
+    def _registered_app_modules(self) -> list:
+        """Dotted module paths of the apps that end up in INSTALLED_APPS.
+
+        The unified and single layouts use the generated package itself as their
+        only app, so they have no separate ``app_names`` to report.
+        """
+        if self.metadata.get("unified_structure"):
+            return ["apps"]
+        if self.metadata.get("single_structure"):
+            return [self.module_name]
+        return CommonUtils.calculate_app_module_paths(self.app_names, self.metadata)
+
     def create_readme(self) -> None:
         context = {
             "project_name": self.project_name,
             "app_names": self.app_names,
+            "app_list": self._registered_app_modules(),
             "predefined_structure": bool(self.metadata.get("predefined_structure")),
             "unified_structure": bool(self.metadata.get("unified_structure")),
+            "single_structure": bool(self.metadata.get("single_structure")),
             "module_name": self.module_name,
         }
         self._render_and_create_file("README.md", "project/readme.md-tpl", context, "Created README.md file")
@@ -292,6 +307,11 @@ class FileCreator(BaseService):
             {},
             "Created apps/core/base.py",
         )
+
+        # Every app that ends up in USER_DEFINED_APPS needs a real app module,
+        # otherwise the generated project cannot start.
+        for app_name in self.app_names or ["users", "core"]:
+            DjangoHelper.startapp(app_name, apps_dir, f"apps.{app_name}")
 
         # Create api directory structure
         api_dir = os.path.join(self.project_root, "api")

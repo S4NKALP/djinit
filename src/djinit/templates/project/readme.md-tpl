@@ -9,6 +9,16 @@ A Django project folder structure is generated with [djinitx/djinit/dj](https://
 - Essential dependencies and utilities
 - Production-ready configuration
 
+# @IF app_list
+## Apps
+
+Registered in `[[ module_name ]]/settings/base.py`:
+
+# @LOOP app in app_list
+- `[[ app ]]`
+# @ENDLOOP
+
+# @ENDIF
 ## Setup
 
 ### Using Just (Recommended)

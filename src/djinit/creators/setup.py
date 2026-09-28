@@ -35,6 +35,7 @@ class SetupCreator:
             if not self.app_names:
                 self.app_names = ["users", "core"]
                 self.project_creator.app_names = self.app_names
+                self.file_creator.app_names = self.app_names
 
         elif self.metadata.get("unified_structure"):
             self.metadata.setdefault("project_module_name", "core")
@@ -43,12 +44,14 @@ class SetupCreator:
             if not self.app_names:
                 self.app_names = []
                 self.project_creator.app_names = self.app_names
+                self.file_creator.app_names = self.app_names
 
         elif self.metadata.get("single_structure"):
             self.metadata.setdefault("nested_apps", False)
             if not self.app_names:
                 self.app_names = []
                 self.project_creator.app_names = self.app_names
+                self.file_creator.app_names = self.app_names
 
     def create(self) -> bool:
         """Run the full setup process."""

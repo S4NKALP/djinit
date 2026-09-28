@@ -1,5 +1,5 @@
 [project]
-name = "[[ project_name ]]"
+name = "[[ package_name ]]"
 version = "0.1.0"
 description = ""
 readme = "README.md"
@@ -61,7 +61,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["[[ project_name ]]"]
+known-first-party = ["[[ module_name ]]"]
 
 [tool.ruff.lint.per-file-ignores]
-"[[ project_name ]]/settings/*.py" = ["F403", "F405"]
+"[[ module_name ]]/settings/*.py" = ["F403", "F405"]
