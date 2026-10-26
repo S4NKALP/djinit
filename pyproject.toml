@@ -10,7 +10,7 @@ name = "djinitx"
 version = "0.3.8"
 description = "A CLI tool to setup Django project"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
 { name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" }
 ]
@@ -29,7 +29,6 @@ keywords = [
 classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
