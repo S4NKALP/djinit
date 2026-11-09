@@ -155,9 +155,11 @@ class FileCreator(BaseService):
         )
 
     def create_docker_compose(self) -> None:
+        db_name = self.project_name.replace("-", "_")
         context = {
             "module_name": self.module_name,
             "project_name": self.project_name,
+            "db_name": db_name,
             "database_type": self.metadata.get("database_type", "sqlite3"),
         }
         self._render_and_create_file(

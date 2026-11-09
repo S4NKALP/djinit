@@ -15,7 +15,7 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: [[ project_name ]]
+      POSTGRES_DB: [[ db_name ]]
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     volumes:
@@ -33,7 +33,7 @@ volumes:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: [[ project_name ]]
+      MYSQL_DATABASE: [[ db_name ]]
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: rootpassword
