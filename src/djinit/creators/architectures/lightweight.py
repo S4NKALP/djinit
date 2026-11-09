@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
 
 from djinit.creators.architectures.base import ArchitectureHandler
+from djinit.creators.files import FileCreator
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
-
-if TYPE_CHECKING:
-    from djinit.creators.files import FileCreator
 
 
 class LightweightHandler(ArchitectureHandler):

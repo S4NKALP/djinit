@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
 
 from djinit.creators.architectures.base import ArchitectureHandler
+from djinit.creators.files import FileCreator
 from djinit.utils.common import CommonUtils
-
-if TYPE_CHECKING:
-    from djinit.creators.files import FileCreator
 
 
 class MultiTenantHandler(ArchitectureHandler):
@@ -126,15 +123,12 @@ class TenantMiddleware:
         request.tenant = None
         if tenant_id:
             try:
-                try:
-                    uuid_val = uuid.UUID(str(tenant_id))
-                    q_filter = Q(id=uuid_val)
-                except (ValueError, TypeError, AttributeError):
-                    q_filter = Q(slug=tenant_id)
+                uuid_val = uuid.UUID(str(tenant_id))
+                q_filter = Q(id=uuid_val)
+            except (ValueError, TypeError, AttributeError):
+                q_filter = Q(slug=tenant_id)
 
-                request.tenant = Tenant.objects.filter(is_active=True).filter(q_filter).first()
-            except Exception:
-                request.tenant = None
+            request.tenant = Tenant.objects.filter(is_active=True).filter(q_filter).first()
 
         return self.get_response(request)
 '''
