@@ -63,7 +63,7 @@ def create_file(
     try:
         content = template_engine.render_template(tpl_name, template_file.context)
 
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(content)
 
         logger.debug(f"Created template file, {path}")

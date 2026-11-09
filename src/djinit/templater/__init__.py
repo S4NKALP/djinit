@@ -46,7 +46,7 @@ class TemplateEngine(BaseService):
         if not os.path.exists(template_path):
             raise FileNotFoundError(f"Template not found: {template_path}")
 
-        with open(template_path) as f:
+        with open(template_path, encoding="utf-8") as f:
             template_text = f.read()
 
         return self.parser.render(template_text, context)

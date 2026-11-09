@@ -102,7 +102,7 @@ class ProjectCreator(BaseService):
                     upgraded = True
 
             if upgraded:
-                with open(base_settings_path, "w") as f:
+                with open(base_settings_path, "w", encoding="utf-8") as f:
                     f.write(content)
                 UIFormatter.print_success("Upgraded existing apps to full AppConfig paths")
                 return
@@ -116,7 +116,7 @@ class ProjectCreator(BaseService):
 
             raise ConfigError("Could not update USER_DEFINED_APPS in base.py")
 
-        with open(base_settings_path, "w") as f:
+        with open(base_settings_path, "w", encoding="utf-8") as f:
             f.write(updated_content)
 
         added_apps_str = ", ".join(apps_to_add)

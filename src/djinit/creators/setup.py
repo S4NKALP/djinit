@@ -114,7 +114,7 @@ class SetupCreator:
                             content, ["tenancy.apps.TenancyConfig"]
                         )
                         if updated:
-                            with open(base_settings_path, "w") as f:
+                            with open(base_settings_path, "w", encoding="utf-8") as f:
                                 f.write(updated)
                     self.project_creator.add_apps_to_settings()
 

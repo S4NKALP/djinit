@@ -187,7 +187,7 @@ class AppCreator(BaseService):
             UIFormatter.print_error("Could not find base.py settings file")
             return False
 
-        with open(base_settings_path) as f:
+        with open(base_settings_path, encoding="utf-8") as f:
             content = f.read()
 
         # Calculate the app module path based on structure
@@ -228,7 +228,7 @@ class AppCreator(BaseService):
             updated_content = CommonUtils.replace_app_in_user_defined_apps(content, app_module_path, full_app_config)
 
             if updated_content:
-                with open(base_settings_path, "w") as f:
+                with open(base_settings_path, "w", encoding="utf-8") as f:
                     f.write(updated_content)
                 UIFormatter.print_success(f"Upgraded '{app_module_path}' to '{full_app_config}' in USER_DEFINED_APPS")
                 return True
@@ -244,7 +244,7 @@ class AppCreator(BaseService):
         if not updated_content:
             return False
 
-        with open(base_settings_path, "w") as f:
+        with open(base_settings_path, "w", encoding="utf-8") as f:
             f.write(updated_content)
 
         UIFormatter.print_success(f"Added '{full_app_config}' to USER_DEFINED_APPS in base.py")

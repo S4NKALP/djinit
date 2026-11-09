@@ -17,7 +17,15 @@ class CommonUtils(BaseUtils):
     @staticmethod
     def format_file(filename: str) -> None:
         """Format Python file using Ruff formatter."""
-        subprocess.run([sys.executable, "-m", "ruff", "format", filename], check=False, capture_output=True)
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "ruff", "format", filename],
+                check=False,
+                capture_output=True,
+                timeout=5,
+            )
+        except Exception:
+            pass
 
     @staticmethod
     def create_file_with_content(
@@ -25,10 +33,23 @@ class CommonUtils(BaseUtils):
     ) -> None:
         from djinit.utils.exceptions import FileError
 
+        temp_path = None
         try:
-            with open(filename, "w") as file:
+            parent_dir = os.path.dirname(filename)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
+
+            # Atomic write via temporary file to prevent partial writes and race conditions
+            temp_path = f"{filename}.tmp.{os.getpid()}"
+            with open(temp_path, "w", encoding="utf-8") as file:
                 file.write(content)
+            os.replace(temp_path, filename)
         except OSError as e:
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
             raise FileError(f"Failed to write file: {filename}", details=str(e)) from e
 
         if should_format:
@@ -300,7 +321,7 @@ class CommonUtils(BaseUtils):
         if not os.path.exists(base_settings_path):
             return None
 
-        with open(base_settings_path) as f:
+        with open(base_settings_path, encoding="utf-8") as f:
             return f.read()
 
     @staticmethod
@@ -314,7 +335,7 @@ class CommonUtils(BaseUtils):
             return False, None, search_dir
 
         try:
-            with open(base_settings_path) as f:
+            with open(base_settings_path, encoding="utf-8") as f:
                 base_content = f.read()
 
             for line in CommonUtils._iterate_user_apps_lines(base_content):
@@ -346,7 +367,7 @@ class CommonUtils(BaseUtils):
             return None
 
         try:
-            with open(config_path) as f:
+            with open(config_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return None
