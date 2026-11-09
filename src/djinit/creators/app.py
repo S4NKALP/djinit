@@ -228,8 +228,7 @@ class AppCreator(BaseService):
             updated_content = CommonUtils.replace_app_in_user_defined_apps(content, app_module_path, full_app_config)
 
             if updated_content:
-                with open(base_settings_path, "w", encoding="utf-8") as f:
-                    f.write(updated_content)
+                CommonUtils.write_text_atomic(base_settings_path, updated_content)
                 UIFormatter.print_success(f"Upgraded '{app_module_path}' to '{full_app_config}' in USER_DEFINED_APPS")
                 return True
             else:
@@ -244,8 +243,7 @@ class AppCreator(BaseService):
         if not updated_content:
             return False
 
-        with open(base_settings_path, "w", encoding="utf-8") as f:
-            f.write(updated_content)
+        CommonUtils.write_text_atomic(base_settings_path, updated_content)
 
         UIFormatter.print_success(f"Added '{full_app_config}' to USER_DEFINED_APPS in base.py")
         return True
@@ -367,11 +365,10 @@ class AppCreator(BaseService):
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
-            with open(project_urls, "w", encoding="utf-8") as f:
-                f.write(content)
+            CommonUtils.write_text_atomic(project_urls, content)
 
             UIFormatter.print_success(f"Added '{app_name}' URLs to {os.path.basename(project_urls)}")
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             UIFormatter.print_warning(f"Could not automatically update {os.path.basename(project_urls)}: {e}")
 
     def _add_to_api_v1_urls(self, app_name: str) -> None:
@@ -396,9 +393,8 @@ class AppCreator(BaseService):
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
-            with open(api_v1_urls, "w", encoding="utf-8") as f:
-                f.write(content)
+            CommonUtils.write_text_atomic(api_v1_urls, content)
 
             UIFormatter.print_success(f"Added '{app_name}' URLs to api/v1/urls.py")
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             return

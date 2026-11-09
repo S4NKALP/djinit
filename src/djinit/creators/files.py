@@ -744,9 +744,8 @@ __all__ = [
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
-            with open(urls_path, "w", encoding="utf-8") as f:
-                f.write(content)
-        except Exception:
+            CommonUtils.write_text_atomic(urls_path, content)
+        except (OSError, UnicodeDecodeError):
             pass
 
     def create_standard_shared(self) -> None:

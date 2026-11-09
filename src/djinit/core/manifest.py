@@ -284,8 +284,8 @@ class ManifestManager:
 
     @classmethod
     def save_manifest(cls, target_dir: str, manifest: ProjectManifest) -> None:
-        """Write .djinit.toml in target_dir."""
-        os.makedirs(target_dir, exist_ok=True)
+        """Write .djinit.toml in target_dir atomically."""
+        from djinit.utils.common import CommonUtils
+
         toml_path = os.path.join(target_dir, ".djinit.toml")
-        with open(toml_path, "w", encoding="utf-8") as f:
-            f.write(manifest.to_toml())
+        CommonUtils.write_text_atomic(toml_path, manifest.to_toml())

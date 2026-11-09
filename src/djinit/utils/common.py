@@ -4,53 +4,52 @@ Contains common operations used across multiple managers.
 """
 
 import os
+import secrets
 import subprocess
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
+from pathlib import Path
 
 from djinit.core.base import BaseUtils
 from djinit.templater import template_engine
 from djinit.ui.console import UIFormatter
+from djinit.utils.exceptions import FileError, TemplateError
 
 
 class CommonUtils(BaseUtils):
     @staticmethod
     def format_file(filename: str) -> None:
         """Format Python file using Ruff formatter."""
-        try:
+        with suppress(Exception):
             subprocess.run(
                 [sys.executable, "-m", "ruff", "format", filename],
                 check=False,
                 capture_output=True,
                 timeout=5,
             )
-        except Exception:
-            pass
+
+    @staticmethod
+    def write_text_atomic(path: str | os.PathLike, content: str) -> None:
+        """Atomically write text content to path using a unique temporary file."""
+        target = Path(path).resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        # Unique suffix avoids any race condition between concurrent tasks or processes
+        temp_file = target.with_name(f".{target.name}.tmp.{os.getpid()}.{secrets.token_hex(4)}")
+        try:
+            temp_file.write_text(content, encoding="utf-8")
+            temp_file.replace(target)
+        except OSError as e:
+            raise FileError(f"Failed to write file: {target}", details=str(e)) from e
+        finally:
+            with suppress(OSError):
+                if temp_file.exists():
+                    temp_file.unlink()
 
     @staticmethod
     def create_file_with_content(
         filename: str, content: str, success_message: str, should_format: bool = False
     ) -> None:
-        from djinit.utils.exceptions import FileError
-
-        temp_path = None
-        try:
-            parent_dir = os.path.dirname(filename)
-            if parent_dir:
-                os.makedirs(parent_dir, exist_ok=True)
-
-            # Atomic write via temporary file to prevent partial writes and race conditions
-            temp_path = f"{filename}.tmp.{os.getpid()}"
-            with open(temp_path, "w", encoding="utf-8") as file:
-                file.write(content)
-            os.replace(temp_path, filename)
-        except OSError as e:
-            if temp_path and os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except OSError:
-                    pass
-            raise FileError(f"Failed to write file: {filename}", details=str(e)) from e
+        CommonUtils.write_text_atomic(filename, content)
 
         if should_format:
             CommonUtils.format_file(filename)
@@ -68,8 +67,6 @@ class CommonUtils(BaseUtils):
         try:
             content = template_engine.render_template(template_path, context)
         except Exception as e:
-            from djinit.utils.exceptions import TemplateError
-
             raise TemplateError(f"Failed to render template: {template_path}", details=str(e)) from e
 
         CommonUtils.create_file_with_content(file_path, content, success_message, should_format=should_format)

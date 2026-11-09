@@ -123,8 +123,7 @@ class SetupCreator:
                         )
 
                     if content:
-                        with open(base_settings_path, "w", encoding="utf-8") as f:
-                            f.write(content)
+                        CommonUtils.write_text_atomic(base_settings_path, content)
                     self.project_creator.add_apps_to_settings()
 
                 steps.append(("Adding apps to settings", add_tenancy_and_apps))

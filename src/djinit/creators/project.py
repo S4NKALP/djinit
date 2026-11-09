@@ -10,6 +10,7 @@ from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
+from djinit.utils.exceptions import ConfigError
 
 
 class ProjectCreator(BaseService):
@@ -61,14 +62,10 @@ class ProjectCreator(BaseService):
         base_settings_path = CommonUtils.get_base_settings_path(self.project_root, self.module_name)
 
         if not os.path.exists(base_settings_path):
-            from djinit.utils.exceptions import ConfigError
-
             raise ConfigError("Could not find base.py settings file")
 
         content = CommonUtils.read_base_settings(self.project_root, self.module_name)
         if content is None:
-            from djinit.utils.exceptions import ConfigError
-
             raise ConfigError("Could not read base.py settings file")
 
         nested = bool(self.metadata.get("nested_apps"))
@@ -102,8 +99,7 @@ class ProjectCreator(BaseService):
                     upgraded = True
 
             if upgraded:
-                with open(base_settings_path, "w", encoding="utf-8") as f:
-                    f.write(content)
+                CommonUtils.write_text_atomic(base_settings_path, content)
                 UIFormatter.print_success("Upgraded existing apps to full AppConfig paths")
                 return
 
@@ -112,12 +108,9 @@ class ProjectCreator(BaseService):
 
         updated_content = CommonUtils.insert_apps_into_user_defined_apps(content, apps_to_add)
         if not updated_content:
-            from djinit.utils.exceptions import ConfigError
-
             raise ConfigError("Could not update USER_DEFINED_APPS in base.py")
 
-        with open(base_settings_path, "w", encoding="utf-8") as f:
-            f.write(updated_content)
+        CommonUtils.write_text_atomic(base_settings_path, updated_content)
 
         added_apps_str = ", ".join(apps_to_add)
         UIFormatter.print_success(f"Added apps to USER_DEFINED_APPS: {added_apps_str}")
