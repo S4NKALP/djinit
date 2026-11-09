@@ -68,3 +68,42 @@ def test_input_collector_frontend_stack_by_architecture():
     collector._get_selection = lambda prompt, choices, default="none": "tailwind"
     tailwind, htmx, alpine, vite = collector.get_frontend_stack_choice("standard")
     assert (tailwind, htmx, alpine, vite) == (True, False, False, False)
+
+
+def test_reserved_names_validation():
+    from djinit.utils.validators import validate_app_name, validate_project_name
+
+    for name in ["django", "test", "admin"]:
+        valid, msg = validate_app_name(name)
+        assert valid is False
+        assert "reserved" in msg.lower() or "conflict" in msg.lower()
+
+        valid_proj, msg_proj = validate_project_name(name)
+        assert valid_proj is False
+        assert "reserved" in msg_proj.lower() or "conflict" in msg_proj.lower()
+
+    valid_ok, _ = validate_app_name("billing")
+    assert valid_ok is True
+
+
+def test_secret_key_minimum_length_and_count():
+    from djinit.utils.secretkey import generate_multiple_keys, generate_secret_key
+
+    # Clamps to safe minimum length of 16
+    key = generate_secret_key(length=5)
+    assert len(key) >= 16
+
+    # Clamps to count of at least 1
+    keys = generate_multiple_keys(count=0, length=20)
+    assert len(keys) == 1
+    assert len(keys[0]) == 20
+
+
+def test_atomic_file_write(tmp_path):
+    from djinit.utils.common import CommonUtils
+
+    target_file = str(tmp_path / "deep" / "nested" / "output.txt")
+    CommonUtils.create_file_with_content(target_file, "hello atomic world", "Success")
+
+    with open(target_file, encoding="utf-8") as f:
+        assert f.read() == "hello atomic world"
