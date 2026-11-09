@@ -40,6 +40,9 @@ def test_standard_structure_and_app_creation(tmp_path, monkeypatch):
     assert (Path(proj_dir) / "std_proj" / "settings" / "base.py").exists()
     assert (Path(proj_dir) / "apps" / "core" / "apps.py").exists()
     assert (Path(proj_dir) / "shared" / "base.py").exists()
+    shared_base = (Path(proj_dir) / "shared" / "base.py").read_text()
+    assert "class OrderedModel" in shared_base
+    assert "class TimeStampedModel" in shared_base
 
     # Now test creating a new app in standard structure
     monkeypatch.chdir(proj_dir)

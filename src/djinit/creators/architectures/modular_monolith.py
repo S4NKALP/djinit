@@ -64,6 +64,17 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class OrderedModel(models.Model):
+    """Abstract base model providing sort order and active status."""
+
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        abstract = True
+        ordering = ("sort_order", "id")
+
+
 class UUIDModel(models.Model):
     """Abstract base model with UUID primary key."""
 
@@ -83,6 +94,16 @@ class BaseModel(UUIDModel, TimeStampedModel):
             os.path.join(common_dir, "db", "models.py"),
             db_models_code,
             "Created common/db/models.py",
+        )
+
+        common_db_init = """from .models import BaseModel, OrderedModel, TimeStampedModel, UUIDModel
+
+__all__ = ["BaseModel", "OrderedModel", "TimeStampedModel", "UUIDModel"]
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(common_dir, "db", "__init__.py"),
+            common_db_init,
+            "Created common/db/__init__.py",
         )
 
         # Common Permissions

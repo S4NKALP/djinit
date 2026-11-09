@@ -335,6 +335,16 @@ class FileCreator(BaseService):
             "Created apps/core/base.py",
         )
 
+        core_init = """from .base import OrderedModel, TimeStampedModel
+
+__all__ = ["OrderedModel", "TimeStampedModel"]
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(core_dir, "__init__.py"),
+            core_init,
+            "Updated apps/core/__init__.py with model exports",
+        )
+
         # Every app that ends up in USER_DEFINED_APPS needs a real app module,
         # otherwise the generated project cannot start.
         for app_name in self.app_names or ["users", "core"]:
@@ -415,6 +425,16 @@ class FileCreator(BaseService):
             "Created apps/models/base.py",
         )
 
+        models_init = """from .base import OrderedModel, TimeStampedModel
+
+__all__ = ["OrderedModel", "TimeStampedModel"]
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(apps_dir, "models", "__init__.py"),
+            models_init,
+            "Updated apps/models/__init__.py with model exports",
+        )
+
         # Create 'api' directory with v1
         api_dir = os.path.join(apps_dir, "api")
         CommonUtils.create_directory_with_init(api_dir, "Created apps/api/__init__.py")
@@ -470,6 +490,16 @@ class FileCreator(BaseService):
             "components/base.py-tpl",
             {},
             f"Created {self.module_name}/models/base.py",
+        )
+
+        single_models_init = """from .base import OrderedModel, TimeStampedModel
+
+__all__ = ["OrderedModel", "TimeStampedModel"]
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(project_dir, "models", "__init__.py"),
+            single_models_init,
+            f"Updated {self.module_name}/models/__init__.py with model exports",
         )
 
         # Create README files for guidance
@@ -669,4 +699,14 @@ class FileCreator(BaseService):
             "components/base.py-tpl",
             {},
             "Created shared/base.py",
+        )
+
+        shared_init = """from .base import OrderedModel, TimeStampedModel
+
+__all__ = ["OrderedModel", "TimeStampedModel"]
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(shared_dir, "__init__.py"),
+            shared_init,
+            "Updated shared/__init__.py with model exports",
         )

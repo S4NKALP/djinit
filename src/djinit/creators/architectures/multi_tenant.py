@@ -94,6 +94,17 @@ class TenantAwareModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class OrderedModel(models.Model):
+    """Abstract base model providing sort order and active status."""
+
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        abstract = True
+        ordering = ("sort_order", "id")
 '''
         CommonUtils.create_file_with_content(
             os.path.join(tenancy_dir, "models.py"), models_py, "Created tenancy/models.py"

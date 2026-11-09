@@ -37,6 +37,9 @@ def test_modular_monolith_setup_and_app(tmp_path, monkeypatch):
 
     # Check common kernel
     assert (Path(proj_dir) / "common" / "db" / "models.py").exists()
+    common_models = (Path(proj_dir) / "common" / "db" / "models.py").read_text()
+    assert "class OrderedModel" in common_models
+    assert "class TimeStampedModel" in common_models
     assert (Path(proj_dir) / "common" / "permissions" / "base.py").exists()
     assert (Path(proj_dir) / "common" / "middleware" / "request_id.py").exists()
 
