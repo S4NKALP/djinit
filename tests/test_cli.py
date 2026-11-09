@@ -107,3 +107,39 @@ def test_atomic_file_write(tmp_path):
 
     with open(target_file, encoding="utf-8") as f:
         assert f.read() == "hello atomic world"
+
+
+def test_cli_help_command_overview():
+    result = runner.invoke(app, ["help"])
+    assert result.exit_code == 0
+    assert "djinit - Django Project Initializer CLI" in result.output
+    assert "Available Commands & Subcommands" in result.output
+    assert "setup" in result.output
+    assert "app" in result.output
+    assert "secret" in result.output
+    assert "template export" in result.output
+    assert "template list" in result.output
+
+
+def test_cli_help_subcommand_details():
+    result = runner.invoke(app, ["help", "setup"])
+    assert result.exit_code == 0
+    assert "setup" in result.output
+    assert "--template" in result.output
+
+    res_tpl = runner.invoke(app, ["help", "template"])
+    assert res_tpl.exit_code == 0
+    assert "export" in res_tpl.output
+    assert "list" in res_tpl.output
+
+
+def test_cli_help_unknown_command():
+    result = runner.invoke(app, ["help", "nonexistent"])
+    assert result.exit_code != 0
+    assert "Unknown command" in result.output
+
+
+def test_cli_template_help_subcommand():
+    result = runner.invoke(app, ["template", "help"])
+    assert result.exit_code == 0
+    assert "Manage and export custom reusable project templates" in result.output
