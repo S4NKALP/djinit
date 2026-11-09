@@ -8,6 +8,7 @@ from typing import Optional
 
 from djinit.core.base import BaseService
 from djinit.core.manifest import ManifestManager
+from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
@@ -52,7 +53,7 @@ class AppCreator(BaseService):
         # Register URLs based on structure
         if structure_type == "predefined":
             self._add_to_api_v1_urls(self.app_name)
-        elif structure_type in ["standard", "single"]:
+        elif structure_type != "unified":
             self._add_to_project_urls(self.app_name, structure_type)
 
         UIFormatter.print_success(f"Django app '{self.app_name}' created and configured successfully!")
@@ -91,7 +92,11 @@ class AppCreator(BaseService):
 
     def _calculate_app_module_path(self, structure_type: str) -> str:
         """Calculate the module path for the app based on structure type."""
-        if structure_type == "unified":
+        if structure_type in ARCHITECTURE_HANDLERS:
+            if structure_type == "lightweight":
+                return self.app_name
+            return f"apps.{self.app_name}"
+        elif structure_type == "unified":
             # Unified structure: apps are not separate, return app name within apps module
             # But actually in unified, we don't create separate apps - the structure is different
             # For now, return a path that makes sense: apps.{appname}
@@ -121,6 +126,19 @@ class AppCreator(BaseService):
         if not os.path.exists(self.manage_py_path):
             UIFormatter.print_error("Could not find manage.py file in project root")
             return False
+
+        structure_type = self._get_structure_type()
+        if structure_type in ARCHITECTURE_HANDLERS:
+            handler = ARCHITECTURE_HANDLERS[structure_type]
+            _, _, apps_base_dir = self._get_project_structure()
+            success = handler.scaffold_app(self.app_name, apps_base_dir)
+            if success:
+                UIFormatter.print_success(
+                    f"Created {structure_type.replace('_', ' ').title()} app '{self.app_name}' in {apps_base_dir}"
+                )
+            else:
+                UIFormatter.print_error(f"Failed to create app '{self.app_name}'")
+            return success
 
         if self._is_predefined_structure():
             return self._create_predefined_app(os.path.join(self.current_dir, "apps"))
@@ -177,11 +195,13 @@ class AppCreator(BaseService):
 
         # Use centralized logic for AppConfig path
         is_nested, nested_dir, _ = self._get_project_structure()
-        nested = structure_type in ["unified", "predefined"] or (structure_type == "standard" and is_nested)
+        nested = is_nested or structure_type in ["unified", "predefined"]
 
         # Determine the effective nested_dir for config path
         if structure_type in ["unified", "predefined"]:
             effective_nested_dir = "apps"
+        elif structure_type in ARCHITECTURE_HANDLERS:
+            effective_nested_dir = nested_dir if nested else None
         elif structure_type == "single":
             # For single structure, app is inside the project module
             project_dir, _ = CommonUtils.find_project_dir(self.current_dir)
@@ -233,7 +253,17 @@ class AppCreator(BaseService):
     def _get_project_structure(self) -> tuple[bool, Optional[str], str]:
         """Get project structure with caching to avoid repeated detection."""
         if self._project_structure_cache is None:
-            if self.config:
+            struct = self._get_structure_type()
+            if struct in ARCHITECTURE_HANDLERS:
+                if struct == "lightweight":
+                    self._project_structure_cache = (False, None, self.current_dir)
+                else:
+                    apps_dir = os.path.join(self.current_dir, "apps")
+                    self._project_structure_cache = (True, "apps", apps_dir)
+            elif self.manifest and self.manifest.project.apps_dir:
+                apps_dir = os.path.join(self.current_dir, self.manifest.project.apps_dir)
+                self._project_structure_cache = (True, self.manifest.project.apps_dir, apps_dir)
+            elif self.config:
                 apps_config = self.config.get("apps", {})
                 nested = apps_config.get("nested", False)
                 nested_dir = apps_config.get("nested_dir")
@@ -313,15 +343,22 @@ class AppCreator(BaseService):
         if not os.path.exists(project_urls):
             return
 
+        is_nested, _, _ = self._get_project_structure()
         app_module_path = self._calculate_app_module_path(structure_type)
-        include_stmt = f'path("", include("{app_module_path}.urls")),'
+        if structure_type in ARCHITECTURE_HANDLERS or is_nested:
+            include_stmt = f'path("{app_name}/", include("{app_module_path}.urls")),'
+        else:
+            include_stmt = f'path("", include("{app_module_path}.urls")),'
 
         try:
             with open(project_urls, encoding="utf-8") as f:
                 content = f.read()
 
-            if include_stmt in content:
+            if include_stmt in content or f'"{app_module_path}.urls"' in content:
                 return
+
+            if "include" not in content:
+                content = content.replace("from django.urls import path", "from django.urls import include, path")
 
             if "urlpatterns = [" in content:
                 # Find the best place to insert (before the closing bracket of urlpatterns)

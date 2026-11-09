@@ -1,9 +1,11 @@
 import os
 from typing import Callable, List, Tuple
 
+from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.creators.files import FileCreator
 from djinit.creators.project import ProjectCreator
 from djinit.ui.console import UIFormatter
+from djinit.utils.common import CommonUtils
 
 
 class SetupCreator:
@@ -28,7 +30,37 @@ class SetupCreator:
 
     def _normalize_metadata(self) -> None:
         """Normalize metadata and app names based on structure type."""
-        if self.metadata.get("predefined_structure"):
+        arch = self.metadata.get("architecture")
+        if arch in ARCHITECTURE_HANDLERS:
+            if arch == "lightweight":
+                self.metadata.setdefault("nested_apps", False)
+                if not self.app_names:
+                    self.app_names = []
+            else:
+                self.metadata.setdefault("project_module_name", "config")
+                self.metadata.setdefault("nested_apps", True)
+                self.metadata.setdefault("nested_dir", "apps")
+                if not self.app_names:
+                    defaults = {
+                        "modular_monolith": ["accounts", "core"],
+                        "service_layer": ["products", "core"],
+                        "fullstack_htmx": ["dashboard"],
+                        "ddd": ["orders", "core"],
+                        "clean_architecture": ["users", "core"],
+                        "multi_tenant": ["projects"],
+                    }
+                    self.app_names = defaults.get(arch, ["core"])
+            self.project_creator.app_names = self.app_names
+            self.file_creator.app_names = self.app_names
+            # Update module name on creators
+            if self.metadata.get("project_module_name"):
+                self.project_creator.module_name = self.metadata["project_module_name"]
+                self.file_creator.module_name = self.metadata["project_module_name"]
+                self.file_creator.project_configs = os.path.join(
+                    self.project_root, self.metadata["project_module_name"]
+                )
+
+        elif self.metadata.get("predefined_structure"):
             self.metadata.setdefault("project_module_name", "config")
             self.metadata.setdefault("nested_apps", True)
             self.metadata.setdefault("nested_dir", "apps")
@@ -61,7 +93,44 @@ class SetupCreator:
 
         steps.append(("Creating Django project", self.project_creator.create_project))
 
-        if self.metadata.get("unified_structure"):
+        arch = self.metadata.get("architecture")
+        if arch in ARCHITECTURE_HANDLERS:
+            handler = ARCHITECTURE_HANDLERS[arch]
+            steps.append(
+                (
+                    f"Creating {arch.replace('_', ' ').title()} structure",
+                    lambda: handler.scaffold_project(self.file_creator),
+                )
+            )
+            if arch == "multi_tenant":
+
+                def add_tenancy_and_apps():
+                    base_settings_path = CommonUtils.get_base_settings_path(
+                        self.project_root, self.file_creator.module_name
+                    )
+                    content = CommonUtils.read_base_settings(self.project_root, self.file_creator.module_name)
+                    if content and "tenancy.apps.TenancyConfig" not in content:
+                        updated = CommonUtils.insert_apps_into_user_defined_apps(
+                            content, ["tenancy.apps.TenancyConfig"]
+                        )
+                        if updated:
+                            with open(base_settings_path, "w") as f:
+                                f.write(updated)
+                    self.project_creator.add_apps_to_settings()
+
+                steps.append(("Adding apps to settings", add_tenancy_and_apps))
+            elif arch != "lightweight":
+                steps.append(("Adding apps to settings", self.project_creator.add_apps_to_settings))
+
+            if arch != "lightweight":
+
+                def register_initial_urls():
+                    for app in self.app_names:
+                        self.file_creator.add_app_url_route(app, f"apps.{app}")
+
+                steps.append(("Configuring app URLs", register_initial_urls))
+
+        elif self.metadata.get("unified_structure"):
             steps.append(("Creating unified structure", self.file_creator.create_unified_structure))
         elif self.metadata.get("single_structure"):
             steps.append(("Creating single folder structure", self.file_creator.create_single_structure))
@@ -109,6 +178,8 @@ class SetupCreator:
             self.file_creator.create_env_file,
             self.file_creator.create_djinit_config,
             self.file_creator.create_dockerfile,
+            self.file_creator.create_docker_compose,
+            self.file_creator.create_passenger_wsgi,
             self.file_creator.create_dockerignore,
             lambda: self.file_creator.create_pyproject(self.metadata),
         ]

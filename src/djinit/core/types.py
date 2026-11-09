@@ -22,6 +22,12 @@ class ProjectMetadata:
     unified_structure: bool = False
     single_structure: bool = False
     project_module_name: str | None = None
+    architecture: str | None = None
+    use_alpine: bool = False
+    use_drf: bool = True
+    use_jwt: bool = True
+    use_ninja: bool = False
+    deployment_target: str = "docker"
 
     def to_dict(self) -> dict:
         return {
@@ -39,6 +45,12 @@ class ProjectMetadata:
             "unified_structure": self.unified_structure,
             "single_structure": self.single_structure,
             "project_module_name": self.project_module_name,
+            "architecture": self.architecture,
+            "use_alpine": self.use_alpine,
+            "use_drf": self.use_drf,
+            "use_jwt": self.use_jwt,
+            "use_ninja": self.use_ninja,
+            "deployment_target": self.deployment_target,
         }
 
 

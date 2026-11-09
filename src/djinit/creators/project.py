@@ -6,6 +6,7 @@ Handles creation of Django projects and apps.
 import os
 
 from djinit.core.base import BaseService
+from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
@@ -139,8 +140,76 @@ class ProjectCreator(BaseService):
         ]
 
         apps_base_dir = self._get_apps_base_dir()
+        arch = self.metadata.get("architecture")
 
-        if self.metadata.get("unified_structure"):
+        if arch in ARCHITECTURE_HANDLERS:
+            for app_name in self.app_names:
+                app_dir = os.path.join(apps_base_dir, app_name)
+                required_files.extend(
+                    [
+                        os.path.join(app_dir, "__init__.py"),
+                        os.path.join(app_dir, "apps.py"),
+                        os.path.join(app_dir, "urls.py"),
+                        os.path.join(app_dir, "migrations"),
+                    ]
+                )
+                if arch == "modular_monolith":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "models", "__init__.py"),
+                            os.path.join(app_dir, "services", "__init__.py"),
+                            os.path.join(app_dir, "selectors", "__init__.py"),
+                            os.path.join(app_dir, "views", "__init__.py"),
+                            os.path.join(app_dir, "api", "__init__.py"),
+                        ]
+                    )
+                elif arch == "service_layer":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "models.py"),
+                            os.path.join(app_dir, "services.py"),
+                            os.path.join(app_dir, "selectors.py"),
+                            os.path.join(app_dir, "views.py"),
+                            os.path.join(app_dir, "api", "__init__.py"),
+                        ]
+                    )
+                elif arch == "fullstack_htmx":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "models.py"),
+                            os.path.join(app_dir, "forms.py"),
+                            os.path.join(app_dir, "views", "__init__.py"),
+                            os.path.join(app_dir, "templates", app_name, "index.html"),
+                        ]
+                    )
+                elif arch == "ddd":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "domain", "__init__.py"),
+                            os.path.join(app_dir, "application", "__init__.py"),
+                            os.path.join(app_dir, "infrastructure", "__init__.py"),
+                            os.path.join(app_dir, "presentation", "__init__.py"),
+                        ]
+                    )
+                elif arch == "clean_architecture":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "domain", "__init__.py"),
+                            os.path.join(app_dir, "use_cases", "__init__.py"),
+                            os.path.join(app_dir, "interfaces", "__init__.py"),
+                            os.path.join(app_dir, "infrastructure", "__init__.py"),
+                        ]
+                    )
+                elif arch == "multi_tenant":
+                    required_files.extend(
+                        [
+                            os.path.join(app_dir, "models.py"),
+                            os.path.join(app_dir, "services.py"),
+                            os.path.join(app_dir, "views.py"),
+                        ]
+                    )
+
+        elif self.metadata.get("unified_structure"):
             # Validate Unified Structure
             apps_dir = join("apps")
             unified_files = [
