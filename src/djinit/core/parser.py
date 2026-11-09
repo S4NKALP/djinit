@@ -372,6 +372,9 @@ def safe_eval(expression: str, context: Optional[Mapping[str, Any]] = None) -> A
     return _SafeExpressionEvaluator(context or {}).evaluate(tree)
 
 
+_EVAL_ERRORS = (AttributeError, IndexError, KeyError, TypeError, ValueError, SafeExpressionError)
+
+
 class InFileLogicParser:
     """
     A lightweight template parser that uses comment-style markers for logic
@@ -385,6 +388,21 @@ class InFileLogicParser:
         """Evaluate ``expression`` against the current context, safely."""
         return safe_eval(expression, self.context)
 
+    def _evaluate_bool(self, expression: str) -> bool:
+        """Evaluate expression as a boolean condition safely without unhandled exceptions."""
+        try:
+            return bool(self._evaluate(expression))
+        except _EVAL_ERRORS:
+            return False
+
+    def _evaluate_iterable(self, expression: str) -> Any:
+        """Evaluate expression as an iterable collection safely."""
+        try:
+            res = self._evaluate(expression)
+            return res if hasattr(res, "__iter__") and not isinstance(res, (str, bytes)) else []
+        except _EVAL_ERRORS:
+            return []
+
     def _get_value(self, key: str) -> str:
         """
         Supports nested/dotted access like [[ user.name ]] or [[ settings["DEBUG"] ]].
@@ -395,7 +413,7 @@ class InFileLogicParser:
         key = key.strip()
         try:
             return str(self._evaluate(key))
-        except (AttributeError, IndexError, KeyError, TypeError, ValueError):
+        except _EVAL_ERRORS:
             return f"[[ {key} ]]"
 
     def render(self, template_text: str, context: Dict[str, Any] = None) -> str:
@@ -416,10 +434,7 @@ class InFileLogicParser:
             # Handle @IF
             if stripped.startswith("# @IF "):
                 expr = stripped[6:].strip()
-                try:
-                    result = bool(self._evaluate(expr))
-                except (AttributeError, IndexError, KeyError, TypeError, ValueError):
-                    result = False
+                result = self._evaluate_bool(expr)
                 stack.append([result, result])
                 i += 1
                 continue
@@ -437,10 +452,7 @@ class InFileLogicParser:
                 if current_stack[1]:
                     current_stack[0] = False
                 else:
-                    try:
-                        result = bool(self._evaluate(expr))
-                    except (AttributeError, IndexError, KeyError, TypeError, ValueError):
-                        result = False
+                    result = self._evaluate_bool(expr)
                     current_stack[0] = result
                     if result:
                         current_stack[1] = True
@@ -490,12 +502,7 @@ class InFileLogicParser:
                 if len(parts) == 2 and parts[0].strip() and parts[1].strip():
                     var_name = parts[0].strip()
                     iterable_name = parts[1].strip()
-                    try:
-                        iterable = self._evaluate(iterable_name)
-                        if not hasattr(iterable, "__iter__"):
-                            raise TypeError(f"{iterable_name!r} is not iterable")
-                    except (AttributeError, IndexError, KeyError, TypeError, ValueError):
-                        iterable = []
+                    iterable = self._evaluate_iterable(iterable_name)
 
                     # Capture loop body
                     loop_body = []
