@@ -29,6 +29,11 @@
   - [x] `BaseModel` (combined `UUIDModel` and `TimeStampedModel`)
 
 ### Developer Experience & Tooling
+- [x] **Export to Template & Custom Starters**:
+  - [x] Export existing projects with sensitive data sanitization (`.env`, `db.sqlite3`, virtual environments, cache)
+  - [x] Automated parameterization of project names (`[[ project_name ]]`) and secret keys (`[[ secret_key ]]`)
+  - [x] Custom template management CLI (`djinit template list`, `export`, `delete`, `apply`)
+  - [x] Direct bootstrapping from custom templates via `djinit setup --template <name>`
 - [x] **Interactive Configuration Wizard**:
   - [x] Categorized architecture selection (Simple, Application, Advanced)
   - [x] Architecture-dependent frontend stack prompts
@@ -59,4 +64,3 @@
 
 ### Enhancements
 - [ ] **Interactive TUI**: Rich-based terminal dashboard for project health checks
-- [ ] **Export to Template**: Ability to export existing projects as reusable custom templates

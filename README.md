@@ -121,6 +121,33 @@ djinit secret
 djinit secret --count 5 --length 64
 ```
 
+### `djinit template` (Export & Custom Starters)
+
+Export any existing Django project into a reusable, sanitized custom starter template:
+
+```bash
+# Export the current project as a custom starter template
+djinit template export . --name my-custom-starter --description "Company SaaS Starter"
+
+# List all saved custom templates
+djinit template list
+
+# Create a new project directly from your custom template
+djinit template apply my-custom-starter --name new_saas_app --dir ./new_saas_app
+
+# Or use the --template flag during setup
+djinit setup --template my-custom-starter --name new_saas_app
+
+# Delete a custom template
+djinit template delete my-custom-starter --force
+```
+
+**Custom template sanitization features:**
+- Automatically ignores `.venv/`, `venv/`, `__pycache__/`, `.git/`, `node_modules/`, `db.sqlite3`, and build artifacts.
+- Masks sensitive secrets and `SECRET_KEY` in settings.
+- Converts `.env` into a sanitized `.env.sample` and generates a cryptographically fresh `SECRET_KEY` upon instantiation.
+- Automatically parameterizes internal project package names (`[[ project_name ]]`).
+
 ---
 
 ## Architecture Presets
