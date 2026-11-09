@@ -28,6 +28,8 @@ class StructureOptions(TypedDict):
     use_vite: bool
     use_github: bool
     use_gitlab: bool
+    architecture: str | None
+    use_alpine: bool
 
 
 class InputCollector:
@@ -184,6 +186,9 @@ class InputCollector:
     def get_vite_choice(self) -> bool:
         return UIFormatter.confirm("Include Vite? (via django-vite for frontend bundling)", default=False)
 
+    def get_alpine_choice(self) -> bool:
+        return UIFormatter.confirm("Include Alpine.js? (lightweight reactive frontend)", default=True)
+
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
         """Helper method to generate metadata dictionary."""
         project_dir = options["project_dir"]
@@ -196,26 +201,56 @@ class InputCollector:
         # Default package_name to "backend" if project_dir is "." or empty
         package_name = CommonUtils.get_package_name(project_dir)
 
-        project_module_name = "config" if options["predefined"] else "core" if options["unified"] else None
+        arch = options.get("architecture")
+        if not arch:
+            if options["predefined"]:
+                arch = "predefined"
+            elif options["unified"]:
+                arch = "unified"
+            elif options["single"]:
+                arch = "single"
+            else:
+                arch = "standard"
 
-        if options["single"]:
+        if arch == "predefined":
+            project_module_name = "config"
+            nested = True
+            nested_dir = "apps"
+        elif arch == "unified":
+            project_module_name = "core"
+            nested = True
+            nested_dir = "apps"
+        elif arch == "single":
             project_module_name = options["single_module_name"] or "project"
+            nested = False
+            nested_dir = None
+        elif arch == "lightweight":
+            project_module_name = project_name
+            nested = False
+            nested_dir = None
+        else:
+            # All other architecture presets use config/ and apps/
+            project_module_name = "config"
+            nested = True
+            nested_dir = "apps"
 
         metadata = ProjectMetadata(
             package_name=package_name,
             use_github_actions=options["use_github"],
             use_gitlab_ci=options["use_gitlab"],
-            nested_apps=not options["single"],
-            nested_dir="apps" if not options["single"] else None,
+            nested_apps=nested,
+            nested_dir=nested_dir,
             use_database_url=options["use_database_url"],
             database_type=options["database_type"],
             use_tailwind=options.get("use_tailwind", False),
             use_htmx=options.get("use_htmx", False),
             use_vite=options.get("use_vite", False),
-            predefined_structure=options["predefined"],
-            unified_structure=options["unified"],
-            single_structure=options["single"],
+            predefined_structure=arch == "predefined",
+            unified_structure=arch == "unified",
+            single_structure=arch == "single",
             project_module_name=project_module_name,
+            architecture=arch,
+            use_alpine=options.get("use_alpine", False),
         )
 
         return project_name, "", app_names, metadata.to_dict()
@@ -227,9 +262,16 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         structure_choices = [
             ("Standard structure (default Django layout)", "1"),
+            ("Single folder layout (everything in one folder)", "4"),
+            ("Lightweight (minimal, prototype/MVP preset)", "lightweight"),
             ("Predefined structure (apps/users, apps/core, api/)", "2"),
             ("Unified structure (core/, apps/core, apps/api)", "3"),
-            ("Single folder layout (everything in one folder)", "4"),
+            ("Modular Monolith (ERP, CRM, LMS, enterprise)", "modular_monolith"),
+            ("Service Layer (services, selectors, clean business ops)", "service_layer"),
+            ("Full-Stack HTMX (Django Templates, HTMX, Tailwind, Alpine)", "fullstack_htmx"),
+            ("Domain-Driven Design (Domain, Application, Infrastructure)", "ddd"),
+            ("Clean Architecture (Domain, Use Cases, Interfaces, Adapters)", "clean_architecture"),
+            ("Multi-Tenant (Shared-schema, organization isolation)", "multi_tenant"),
         ]
 
         structure_choice = collector._get_selection("Choose structure type:", structure_choices, default="1")
@@ -238,6 +280,14 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         use_predefined = structure_choice == "2"
         use_unified = structure_choice == "3"
         use_single = structure_choice == "4"
+
+        arch_map = {
+            "1": "standard",
+            "2": "predefined",
+            "3": "unified",
+            "4": "single",
+        }
+        architecture = arch_map.get(structure_choice, structure_choice)
 
         # Step 1: Project Setup
         project_dir = collector._get_project_directory()
@@ -269,12 +319,19 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         database_type = collector.get_database_type_choice()
         use_database_url = collector.get_database_config_choice()
 
-        # Step 3: Tailwind, HTMX, and Vite
-        use_tailwind = collector.get_tailwind_choice()
-        use_htmx = collector.get_htmx_choice()
-        use_vite = collector.get_vite_choice()
+        # Step 3: Frontend Tools
+        if architecture == "fullstack_htmx":
+            use_tailwind = True
+            use_htmx = True
+            use_alpine = collector.get_alpine_choice()
+            use_vite = False
+        else:
+            use_tailwind = collector.get_tailwind_choice()
+            use_htmx = collector.get_htmx_choice()
+            use_alpine = False
+            use_vite = collector.get_vite_choice()
 
-        # Step 3: Django Apps (Standard only)
+        # Step 4: Django Apps (Standard only)
         nested = False
         nested_dir = None
         app_names = []
@@ -283,7 +340,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
             nested, nested_dir = collector.get_nested_apps_config()
             app_names = collector.get_app_names()
 
-        # Step 3/4: CI/CD Pipeline
+        # Step 5: CI/CD Pipeline
         use_github, use_gitlab = collector.get_cicd_choice()
 
         # Generate Metadata
@@ -300,6 +357,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_tailwind=use_tailwind,
                 use_htmx=use_htmx,
                 use_vite=use_vite,
+                architecture="standard",
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -316,6 +374,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_vite=use_vite,
                 use_github=use_github,
                 use_gitlab=use_gitlab,
+                architecture=architecture,
+                use_alpine=use_alpine,
             )
             project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(options)
             return project_dir, project_name, primary_app, app_names, metadata_dict
@@ -334,6 +394,23 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
 
     console.print(f"[{UIColors.HIGHLIGHT}]Project Directory:[/{UIColors.HIGHLIGHT}] {project_dir}")
     console.print(f"[{UIColors.HIGHLIGHT}]Django Project:[/{UIColors.HIGHLIGHT}] {project_name}")
+
+    arch_display = {
+        "standard": "Standard (Default Django)",
+        "single": "Single Folder",
+        "lightweight": "Lightweight",
+        "predefined": "Predefined",
+        "unified": "Unified",
+        "modular_monolith": "Modular Monolith",
+        "service_layer": "Service Layer",
+        "fullstack_htmx": "Full-Stack HTMX",
+        "ddd": "Domain-Driven Design (DDD)",
+        "clean_architecture": "Clean Architecture",
+        "multi_tenant": "Multi-Tenant",
+    }
+    arch_name = arch_display.get(metadata.get("architecture", "standard"), metadata.get("architecture", "Standard"))
+    console.print(f"[{UIColors.HIGHLIGHT}]Architecture:[/{UIColors.HIGHLIGHT}] {arch_name}")
+
     console.print(f"[{UIColors.HIGHLIGHT}]Apps:[/{UIColors.HIGHLIGHT}] {', '.join(app_names)}")
     console.print(f"[{UIColors.HIGHLIGHT}]Package:[/{UIColors.HIGHLIGHT}] {metadata['package_name']}")
 
