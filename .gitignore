@@ -90,3 +90,7 @@ secrets.json
 
 # Cloud
 .cloud
+
+# Local tracking files
+docs/implementation-progress.md
+

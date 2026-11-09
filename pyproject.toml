@@ -62,5 +62,10 @@ dj = "djinit.cli:app"
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.0",
+    "pytest>=9.2.0",
     "ruff>=0.14.2",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
