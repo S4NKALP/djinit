@@ -7,6 +7,7 @@ import os
 from typing import Optional
 
 from djinit.core.base import BaseService
+from djinit.core.manifest import ManifestManager
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
@@ -18,6 +19,7 @@ class AppCreator(BaseService):
         self.app_name = app_name
         self.current_dir = os.getcwd()
         self.manage_py_path = os.path.join(self.current_dir, "manage.py")
+        self.manifest = ManifestManager.load_manifest(self.current_dir)
         self.config = CommonUtils.get_djinit_config(self.current_dir)
         self._project_structure_cache = None
 
@@ -61,7 +63,12 @@ class AppCreator(BaseService):
 
     def _get_structure_type(self) -> str:
         """Determine the project structure type."""
+        if self.manifest:
+            return self.manifest.project.structure
+
         if self.config:
+            if "architecture" in self.config:
+                return self.config["architecture"]
             structure = self.config.get("structure", {})
             if structure.get("unified"):
                 return "unified"

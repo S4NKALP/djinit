@@ -520,13 +520,63 @@ class FileCreator(BaseService):
         """Create .djinit configuration file."""
         import json
 
-        is_predefined = self.metadata.get("predefined_structure", False)
-        is_unified = self.metadata.get("unified_structure", False)
-        is_single = self.metadata.get("single_structure", False)
-        is_standard = not (is_predefined or is_unified or is_single)
+        from djinit.core.manifest import (
+            DatabaseSection,
+            DeploymentSection,
+            FeaturesSection,
+            ManifestManager,
+            ProjectManifest,
+            ProjectSection,
+        )
 
+        arch = self.metadata.get("architecture")
+        if not arch:
+            if self.metadata.get("predefined_structure"):
+                arch = "predefined"
+            elif self.metadata.get("unified_structure"):
+                arch = "unified"
+            elif self.metadata.get("single_structure"):
+                arch = "single"
+            else:
+                arch = "standard"
+
+        is_predefined = arch == "predefined"
+        is_unified = arch == "unified"
+        is_single = arch == "single"
+        is_standard = arch == "standard"
+
+        # 1. Save modern .djinit.toml
+        nested_dir = self.metadata.get("nested_dir") if self.metadata.get("nested_apps") else None
+        manifest = ProjectManifest(
+            project=ProjectSection(
+                name=self.project_name,
+                structure=arch,
+                apps_dir=nested_dir,
+                module_name=self.module_name,
+            ),
+            features=FeaturesSection(
+                drf=self.metadata.get("use_drf", True),
+                jwt=self.metadata.get("use_jwt", True),
+                htmx=self.metadata.get("use_htmx", False),
+                tailwind=self.metadata.get("use_tailwind", False),
+                alpine=self.metadata.get("use_alpine", False),
+                vite=self.metadata.get("use_vite", False),
+                ninja=self.metadata.get("use_ninja", False),
+            ),
+            database=DatabaseSection(
+                engine=self.metadata.get("database_type", "sqlite3"),
+                use_database_url=self.metadata.get("use_database_url", False),
+            ),
+            deployment=DeploymentSection(
+                target=self.metadata.get("deployment_target", "docker"),
+            ),
+        )
+        ManifestManager.save_manifest(self.project_root, manifest)
+
+        # 2. Save legacy .djinit (JSON) for backward compatibility
         config = {
             "project_name": self.project_name,
+            "architecture": arch,
             "structure": {
                 "standard": is_standard,
                 "predefined": is_predefined,
