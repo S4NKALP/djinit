@@ -40,6 +40,11 @@ def test_modular_monolith_setup_and_app(tmp_path, monkeypatch):
     common_models = (Path(proj_dir) / "common" / "db" / "models.py").read_text()
     assert "class OrderedModel" in common_models
     assert "class TimeStampedModel" in common_models
+    assert "class SoftDeleteModel" in common_models
+    assert "class UUIDModel" in common_models
+    assert "class ActivatableModel" in common_models
+    assert "class SluggedModel" in common_models
+    assert "class BaseModel" in common_models
     assert (Path(proj_dir) / "common" / "permissions" / "base.py").exists()
     assert (Path(proj_dir) / "common" / "middleware" / "request_id.py").exists()
 

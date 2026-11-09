@@ -52,6 +52,7 @@ class ModularMonolithHandler(ArchitectureHandler):
         # Base DB Models
         db_models_code = '''import uuid
 from django.db import models
+from django.utils import timezone
 
 
 class TimeStampedModel(models.Model):
@@ -62,17 +63,7 @@ class TimeStampedModel(models.Model):
 
     class Meta:
         abstract = True
-
-
-class OrderedModel(models.Model):
-    """Abstract base model providing sort order and active status."""
-
-    sort_order = models.PositiveIntegerField(default=0, db_index=True)
-    is_active = models.BooleanField(default=True, db_index=True)
-
-    class Meta:
-        abstract = True
-        ordering = ("sort_order", "id")
+        ordering = ("-created_at",)
 
 
 class UUIDModel(models.Model):
@@ -84,11 +75,93 @@ class UUIDModel(models.Model):
         abstract = True
 
 
+class ActivatableModel(models.Model):
+    """Abstract base model for records that can be active or inactive."""
+
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class OrderedModel(models.Model):
+    """Abstract base model providing manual sorting order and active status."""
+
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        abstract = True
+        ordering = ("sort_order", "id")
+
+
+class SoftDeleteQuerySet(models.QuerySet):
+    """QuerySet supporting soft deletion and restoration."""
+
+    def alive(self):
+        return self.filter(deleted_at__isnull=True)
+
+    def dead(self):
+        return self.filter(deleted_at__isnull=False)
+
+    def hard_delete(self):
+        return super().delete()
+
+    def delete(self):
+        return self.update(deleted_at=timezone.now(), is_deleted=True)
+
+    def restore(self):
+        return self.update(deleted_at=None, is_deleted=False)
+
+
+class SoftDeleteManager(models.Manager.from_queryset(SoftDeleteQuerySet)):
+    """Default manager that excludes soft-deleted records."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
+class SoftDeleteModel(models.Model):
+    """Abstract base model providing soft delete functionality with timestamp tracking."""
+
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    is_deleted = models.BooleanField(default=False, db_index=True)
+
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        self.deleted_at = timezone.now()
+        self.is_deleted = True
+        self.save(update_fields=["deleted_at", "is_deleted"])
+
+    def hard_delete(self, using=None, keep_parents=False):
+        return super().delete(using=using, keep_parents=keep_parents)
+
+    def restore(self):
+        self.deleted_at = None
+        self.is_deleted = False
+        self.save(update_fields=["deleted_at", "is_deleted"])
+
+
+class SluggedModel(models.Model):
+    """Abstract base model with a unique slug field for human-readable URLs."""
+
+    slug = models.SlugField(max_length=255, unique=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
 class BaseModel(UUIDModel, TimeStampedModel):
     """Standard base model combining UUID primary key and timestamp tracking."""
 
     class Meta:
         abstract = True
+        ordering = ("-created_at",)
 '''
         CommonUtils.create_file_with_content(
             os.path.join(common_dir, "db", "models.py"),
@@ -96,9 +169,29 @@ class BaseModel(UUIDModel, TimeStampedModel):
             "Created common/db/models.py",
         )
 
-        common_db_init = """from .models import BaseModel, OrderedModel, TimeStampedModel, UUIDModel
+        common_db_init = """from .models import (
+    ActivatableModel,
+    BaseModel,
+    OrderedModel,
+    SluggedModel,
+    SoftDeleteManager,
+    SoftDeleteModel,
+    SoftDeleteQuerySet,
+    TimeStampedModel,
+    UUIDModel,
+)
 
-__all__ = ["BaseModel", "OrderedModel", "TimeStampedModel", "UUIDModel"]
+__all__ = [
+    "ActivatableModel",
+    "BaseModel",
+    "OrderedModel",
+    "SluggedModel",
+    "SoftDeleteManager",
+    "SoftDeleteModel",
+    "SoftDeleteQuerySet",
+    "TimeStampedModel",
+    "UUIDModel",
+]
 """
         CommonUtils.create_file_with_content(
             os.path.join(common_dir, "db", "__init__.py"),

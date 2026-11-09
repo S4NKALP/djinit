@@ -335,9 +335,29 @@ class FileCreator(BaseService):
             "Created apps/core/base.py",
         )
 
-        core_init = """from .base import OrderedModel, TimeStampedModel
+        core_init = """from .base import (
+    ActivatableModel,
+    BaseModel,
+    OrderedModel,
+    SluggedModel,
+    SoftDeleteManager,
+    SoftDeleteModel,
+    SoftDeleteQuerySet,
+    TimeStampedModel,
+    UUIDModel,
+)
 
-__all__ = ["OrderedModel", "TimeStampedModel"]
+__all__ = [
+    "ActivatableModel",
+    "BaseModel",
+    "OrderedModel",
+    "SluggedModel",
+    "SoftDeleteManager",
+    "SoftDeleteModel",
+    "SoftDeleteQuerySet",
+    "TimeStampedModel",
+    "UUIDModel",
+]
 """
         CommonUtils.create_file_with_content(
             os.path.join(core_dir, "__init__.py"),
@@ -425,9 +445,29 @@ __all__ = ["OrderedModel", "TimeStampedModel"]
             "Created apps/models/base.py",
         )
 
-        models_init = """from .base import OrderedModel, TimeStampedModel
+        models_init = """from .base import (
+    ActivatableModel,
+    BaseModel,
+    OrderedModel,
+    SluggedModel,
+    SoftDeleteManager,
+    SoftDeleteModel,
+    SoftDeleteQuerySet,
+    TimeStampedModel,
+    UUIDModel,
+)
 
-__all__ = ["OrderedModel", "TimeStampedModel"]
+__all__ = [
+    "ActivatableModel",
+    "BaseModel",
+    "OrderedModel",
+    "SluggedModel",
+    "SoftDeleteManager",
+    "SoftDeleteModel",
+    "SoftDeleteQuerySet",
+    "TimeStampedModel",
+    "UUIDModel",
+]
 """
         CommonUtils.create_file_with_content(
             os.path.join(apps_dir, "models", "__init__.py"),
@@ -492,9 +532,29 @@ __all__ = ["OrderedModel", "TimeStampedModel"]
             f"Created {self.module_name}/models/base.py",
         )
 
-        single_models_init = """from .base import OrderedModel, TimeStampedModel
+        single_models_init = """from .base import (
+    ActivatableModel,
+    BaseModel,
+    OrderedModel,
+    SluggedModel,
+    SoftDeleteManager,
+    SoftDeleteModel,
+    SoftDeleteQuerySet,
+    TimeStampedModel,
+    UUIDModel,
+)
 
-__all__ = ["OrderedModel", "TimeStampedModel"]
+__all__ = [
+    "ActivatableModel",
+    "BaseModel",
+    "OrderedModel",
+    "SluggedModel",
+    "SoftDeleteManager",
+    "SoftDeleteModel",
+    "SoftDeleteQuerySet",
+    "TimeStampedModel",
+    "UUIDModel",
+]
 """
         CommonUtils.create_file_with_content(
             os.path.join(project_dir, "models", "__init__.py"),
@@ -701,9 +761,29 @@ __all__ = ["OrderedModel", "TimeStampedModel"]
             "Created shared/base.py",
         )
 
-        shared_init = """from .base import OrderedModel, TimeStampedModel
+        shared_init = """from .base import (
+    ActivatableModel,
+    BaseModel,
+    OrderedModel,
+    SluggedModel,
+    SoftDeleteManager,
+    SoftDeleteModel,
+    SoftDeleteQuerySet,
+    TimeStampedModel,
+    UUIDModel,
+)
 
-__all__ = ["OrderedModel", "TimeStampedModel"]
+__all__ = [
+    "ActivatableModel",
+    "BaseModel",
+    "OrderedModel",
+    "SluggedModel",
+    "SoftDeleteManager",
+    "SoftDeleteModel",
+    "SoftDeleteQuerySet",
+    "TimeStampedModel",
+    "UUIDModel",
+]
 """
         CommonUtils.create_file_with_content(
             os.path.join(shared_dir, "__init__.py"),
