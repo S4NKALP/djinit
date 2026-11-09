@@ -172,14 +172,14 @@ class TenancyConfig(AppConfig):
 
         pascal = app_name.title().replace("_", "")
 
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal}"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # Tenant-aware models
@@ -241,7 +241,7 @@ def index(request):
         )
 
         # URLs
-        urls_py = f'''from django.urls import path
+        urls_py = f"""from django.urls import path
 from .views import index
 
 app_name = "{app_name}"
@@ -249,7 +249,7 @@ app_name = "{app_name}"
 urlpatterns = [
     path("", index, name="index"),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "urls.py"), urls_py, f"Created {app_name}/urls.py")
 
         # Migrations & Admin & Isolation Tests

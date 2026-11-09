@@ -138,14 +138,14 @@ class FullStackHTMXHandler(ArchitectureHandler):
 
         pascal = app_name.title().replace("_", "")
 
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal}"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # Models
@@ -191,7 +191,7 @@ class {pascal}ItemForm(forms.ModelForm):
         views_dir = os.path.join(app_dir, "views")
         CommonUtils.create_directory_with_init(views_dir, f"Created {app_name}/views/__init__.py")
 
-        views_py = f'''from django.shortcuts import render, get_object_or_404
+        views_py = f"""from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from ..models import {pascal}Item
 from ..forms import {pascal}ItemForm
@@ -222,7 +222,7 @@ def toggle_item(request, pk):
     if request.htmx:
         return render(request, "{app_name}/partials/item_row.html", {{"item": item}})
     return index(request)
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(views_dir, "views.py"), views_py, f"Created {app_name}/views/views.py"
         )
@@ -232,7 +232,7 @@ def toggle_item(request, pk):
         partials_dir = os.path.join(tpl_dir, "partials")
         os.makedirs(partials_dir, exist_ok=True)
 
-        index_html = f'''{{% extends "layouts/base.html" %}}
+        index_html = f"""{{% extends "layouts/base.html" %}}
 
 {{% block title %}}{pascal} Dashboard{{% endblock %}}
 
@@ -258,7 +258,7 @@ def toggle_item(request, pk):
     </div>
 </div>
 {{% endblock %}}
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(tpl_dir, "index.html"), index_html, f"Created {app_name}/templates/index.html"
         )
@@ -280,7 +280,7 @@ def toggle_item(request, pk):
         )
 
         # urls.py
-        app_urls = f'''from django.urls import path
+        app_urls = f"""from django.urls import path
 from .views.views import index, create_item, toggle_item
 
 app_name = "{app_name}"
@@ -290,7 +290,7 @@ urlpatterns = [
     path("create/", create_item, name="create"),
     path("toggle/<int:pk>/", toggle_item, name="toggle"),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "urls.py"), app_urls, f"Created {app_name}/urls.py")
 
         # admin.py & migrations
@@ -310,7 +310,7 @@ admin.site.register({pascal}Item)
         tests_dir = os.path.join(app_dir, "tests")
         CommonUtils.create_directory_with_init(tests_dir, f"Created {app_name}/tests/__init__.py")
 
-        test_code = f'''import pytest
+        test_code = f"""import pytest
 from django.urls import reverse
 from apps.{app_name}.models import {pascal}Item
 
@@ -322,7 +322,7 @@ def test_htmx_create_item(client):
     assert response.status_code == 200
     assert "Test HTMX Task" in response.content.decode()
     assert {pascal}Item.objects.filter(title="Test HTMX Task").exists()
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(tests_dir, "test_views.py"), test_code, f"Created {app_name}/tests/test_views.py"
         )

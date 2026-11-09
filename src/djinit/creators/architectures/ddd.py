@@ -48,14 +48,14 @@ class DDDHandler(ArchitectureHandler):
 
         pascal = app_name.title().replace("_", "")
 
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal} Domain"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # Layer 1: Domain
@@ -111,7 +111,7 @@ class Create{pascal}UseCase:
         infra_dir = os.path.join(app_dir, "infrastructure")
         CommonUtils.create_directory_with_init(infra_dir, f"Created {app_name}/infrastructure/__init__.py")
 
-        models_py = f'''from django.db import models
+        models_py = f"""from django.db import models
 
 
 class {pascal}Model(models.Model):
@@ -124,7 +124,7 @@ class {pascal}Model(models.Model):
 
     def __str__(self):
         return self.code
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(infra_dir, "models.py"), models_py, f"Created {app_name}/infrastructure/models.py"
         )
@@ -153,10 +153,10 @@ class Django{pascal}Repository:
         )
 
         # Root models.py (re-export infrastructure models so Django discovers them for migrations)
-        models_root = f'''from .infrastructure.models import {pascal}Model
+        models_root = f"""from .infrastructure.models import {pascal}Model
 
 __all__ = ["{pascal}Model"]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "models.py"), models_root, f"Created {app_name}/models.py"
         )
@@ -179,7 +179,7 @@ def create_endpoint(request):
             os.path.join(pres_dir, "views.py"), views_py, f"Created {app_name}/presentation/views.py"
         )
 
-        urls_py = f'''from django.urls import path
+        urls_py = f"""from django.urls import path
 from .presentation.views import create_endpoint
 
 app_name = "{app_name}"
@@ -187,7 +187,7 @@ app_name = "{app_name}"
 urlpatterns = [
     path("create/", create_endpoint, name="create"),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "urls.py"), urls_py, f"Created {app_name}/urls.py")
 
         # Migrations & Admin & Tests

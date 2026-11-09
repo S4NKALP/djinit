@@ -48,14 +48,14 @@ class ServiceLayerHandler(ArchitectureHandler):
 
         pascal = app_name.title().replace("_", "")
 
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal}"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # models.py
@@ -142,14 +142,14 @@ class {pascal}Form(forms.ModelForm):
         )
 
         # views.py
-        views_py = f'''from django.http import JsonResponse
+        views_py = f"""from django.http import JsonResponse
 from .selectors import get_active_{app_name}_list
 
 
 def index(request):
     items = get_active_{app_name}_list()
     return JsonResponse({{"count": items.count(), "{app_name}": [i.name for i in items[:10]]}})
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "views.py"), views_py, f"Created {app_name}/views.py"
         )
@@ -184,7 +184,7 @@ class {pascal}ViewSet(viewsets.ModelViewSet):
             os.path.join(api_dir, "views.py"), api_views, f"Created {app_name}/api/views.py"
         )
 
-        api_urls = f'''from django.urls import include, path
+        api_urls = f"""from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import {pascal}ViewSet
 
@@ -194,13 +194,13 @@ router.register(r"", {pascal}ViewSet, basename="{app_name}")
 urlpatterns = [
     path("", include(router.urls)),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(api_dir, "urls.py"), api_urls, f"Created {app_name}/api/urls.py"
         )
 
         # urls.py
-        app_urls = f'''from django.urls import include, path
+        app_urls = f"""from django.urls import include, path
 from .views import index
 
 app_name = "{app_name}"
@@ -209,7 +209,7 @@ urlpatterns = [
     path("", index, name="index"),
     path("api/", include("apps.{app_name}.api.urls")),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "urls.py"), app_urls, f"Created {app_name}/urls.py")
 
         # admin.py

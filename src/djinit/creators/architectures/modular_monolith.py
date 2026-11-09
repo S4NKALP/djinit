@@ -265,14 +265,14 @@ class RequestIDMiddleware:
         pascal = app_name.title().replace("_", "")
 
         # apps.py
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal}"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # Package subfolders
@@ -281,7 +281,7 @@ class {pascal}Config(AppConfig):
             CommonUtils.create_directory_with_init(os.path.join(app_dir, pkg), f"Created {app_name}/{pkg}/__init__.py")
 
         # Models
-        models_code = f'''from django.db import models
+        models_code = f"""from django.db import models
 from common.db.models import BaseModel
 
 
@@ -297,17 +297,17 @@ class {pascal}Item(BaseModel):
 
     def __str__(self):
         return self.name
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "models", f"{app_name}.py"),
             models_code,
             f"Created {app_name}/models/{app_name}.py",
         )
         # Expose models in models/__init__.py for Django discovery
-        models_init = f'''from .{app_name} import {pascal}Item
+        models_init = f"""from .{app_name} import {pascal}Item
 
 __all__ = ["{pascal}Item"]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "models", "__init__.py"),
             models_init,
@@ -371,14 +371,14 @@ def get_{app_name}_item_by_id(item_id) -> {pascal}Item | None:
         )
 
         # Views
-        views_code = f'''from django.http import JsonResponse
+        views_code = f"""from django.http import JsonResponse
 from ..selectors.{app_name}_selector import list_{app_name}_items
 
 
 def index(request):
     items = list_{app_name}_items(is_active=True)
     return JsonResponse({{"count": items.count(), "{app_name}": [i.name for i in items[:10]]}})
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "views", f"{app_name}_views.py"),
             views_code,
@@ -417,7 +417,7 @@ class {pascal}ItemViewSet(viewsets.ModelViewSet):
             f"Created {app_name}/api/views.py",
         )
 
-        api_urls = f'''from django.urls import include, path
+        api_urls = f"""from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import {pascal}ItemViewSet
 
@@ -427,7 +427,7 @@ router.register(r"items", {pascal}ItemViewSet, basename="{app_name}-items")
 urlpatterns = [
     path("", include(router.urls)),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "api", "urls.py"),
             api_urls,
@@ -435,7 +435,7 @@ urlpatterns = [
         )
 
         # Root app urls.py
-        app_urls = f'''from django.urls import include, path
+        app_urls = f"""from django.urls import include, path
 from .views.{app_name}_views import index
 
 app_name = "{app_name}"
@@ -444,7 +444,7 @@ urlpatterns = [
     path("", index, name="index"),
     path("api/", include("apps.{app_name}.api.urls")),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "urls.py"),
             app_urls,

@@ -48,14 +48,14 @@ class CleanArchitectureHandler(ArchitectureHandler):
 
         pascal = app_name.title().replace("_", "")
 
-        apps_py = f'''from django.apps import AppConfig
+        apps_py = f"""from django.apps import AppConfig
 
 
 class {pascal}Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.{app_name}"
     verbose_name = "{pascal} Clean Architecture"
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "apps.py"), apps_py, f"Created {app_name}/apps.py")
 
         # 1. Domain
@@ -117,7 +117,7 @@ def get_detail_view(request, pk: int):
         infra_dir = os.path.join(app_dir, "infrastructure")
         CommonUtils.create_directory_with_init(infra_dir, f"Created {app_name}/infrastructure/__init__.py")
 
-        models_code = f'''from django.db import models
+        models_code = f"""from django.db import models
 
 
 class {pascal}Record(models.Model):
@@ -125,7 +125,7 @@ class {pascal}Record(models.Model):
 
     class Meta:
         db_table = "{app_name}_records"
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(infra_dir, "models.py"), models_code, f"Created {app_name}/infrastructure/models.py"
         )
@@ -147,16 +147,16 @@ class Django{pascal}Gateway:
         )
 
         # Root models.py for Django discovery
-        models_root = f'''from .infrastructure.models import {pascal}Record
+        models_root = f"""from .infrastructure.models import {pascal}Record
 
 __all__ = ["{pascal}Record"]
-'''
+"""
         CommonUtils.create_file_with_content(
             os.path.join(app_dir, "models.py"), models_root, f"Created {app_name}/models.py"
         )
 
         # URLs
-        urls_code = f'''from django.urls import path
+        urls_code = f"""from django.urls import path
 from .interfaces.controllers import get_detail_view
 
 app_name = "{app_name}"
@@ -164,7 +164,7 @@ app_name = "{app_name}"
 urlpatterns = [
     path("<int:pk>/", get_detail_view, name="detail"),
 ]
-'''
+"""
         CommonUtils.create_file_with_content(os.path.join(app_dir, "urls.py"), urls_code, f"Created {app_name}/urls.py")
 
         # Migrations & Admin & Tests
