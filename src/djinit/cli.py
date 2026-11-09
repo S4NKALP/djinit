@@ -59,6 +59,113 @@ def main(
         setup()
 
 
+@app.command("help")
+def help_command(
+    ctx: typer.Context,
+    command: Annotated[
+        Optional[str],
+        typer.Argument(help="Specific command to show detailed help for (e.g. setup, app, secret, template)."),
+    ] = None,
+):
+    """
+    Show help and command reference for djinit.
+    """
+    click_app = typer.main.get_command(app)
+
+    if not command:
+        UIFormatter.print_info("")
+        UIFormatter.print_header("djinit - Django Project Initializer CLI")
+        console.print(
+            "[dim]A CLI tool to set up, scaffold, and manage modern Django projects with best practices.[/dim]\n"
+        )
+
+        table = Table(title="Available Commands & Subcommands", border_style="cyan")
+        table.add_column("Command", style="bold green", no_wrap=True)
+        table.add_column("Description", style="white")
+        table.add_column("Usage / Syntax", style="dim")
+
+        table.add_row(
+            "setup",
+            "Interactively set up a new Django project or bootstrap from template",
+            "djinit setup [--template <name>] [--name <proj>] [--dir <dir>]",
+        )
+        table.add_row(
+            "app",
+            "Generate one or more architecture-aware Django apps",
+            "djinit app <app_name> [app2...]",
+        )
+        table.add_row(
+            "secret",
+            "Generate cryptographically secure Django SECRET_KEY tokens",
+            "djinit secret [--count <n>] [--length <len>]",
+        )
+        table.add_row(
+            "template export",
+            "Export an existing project as a sanitized starter template",
+            "djinit template export [dir] [--name <name>] [--force]",
+        )
+        table.add_row(
+            "template list",
+            "List all saved custom project templates",
+            "djinit template list",
+        )
+        table.add_row(
+            "template apply",
+            "Bootstrap a new Django project from a saved custom template",
+            "djinit template apply <template_name> [--name <proj>] [--dir <dir>]",
+        )
+        table.add_row(
+            "template delete",
+            "Delete a saved custom template",
+            "djinit template delete <template_name> [--force]",
+        )
+        table.add_row(
+            "help",
+            "Show this command overview or detailed help for a specific command",
+            "djinit help [command]",
+        )
+
+        console.print(table)
+        console.print()
+
+        examples = Text()
+        examples.append("💡 Quick Examples:\n", style=UIColors.ACCENT)
+        examples.append(
+            "  djinit                                 # Start interactive project setup wizard\n",
+            style=UIColors.CODE,
+        )
+        examples.append(
+            "  djinit app users orders                # Create 2 architecture-aware Django apps\n",
+            style=UIColors.CODE,
+        )
+        examples.append(
+            "  djinit template export                 # Export current project via interactive wizard\n",
+            style=UIColors.CODE,
+        )
+        examples.append(
+            "  djinit setup --template my-starter     # Scaffold new project from custom template\n",
+            style=UIColors.CODE,
+        )
+        examples.append(
+            "  djinit help <command>                  # Detailed help for specific command\n",
+            style=UIColors.CODE,
+        )
+        console.print(Panel(examples, title="Usage Shortcuts", border_style="green"))
+        console.print()
+        return
+
+    sub_cmd = click_app.get_command(ctx, command)
+    if sub_cmd:
+        sub_ctx = typer.Context(sub_cmd, info_name=f"djinit {command}", parent=ctx)
+        console.print(sub_cmd.get_help(sub_ctx))
+    else:
+        UIFormatter.print_error(f"Unknown command '{command}'.")
+        console.print(
+            "Run [bold cyan]djinit help[/bold cyan] or [bold cyan]djinit --help[/bold cyan] to see available commands.\n"
+        )
+        raise typer.Exit(1)
+
+
 @app.command("secret")
 def secret(
     count: Annotated[int, typer.Option("--count", "-c", help="Number of keys to generate")] = 3,
@@ -472,6 +579,16 @@ def apply_template_cmd(
     Instantiate a new project from a custom template.
     """
     _apply_template_flow(template_name, project_name, project_dir)
+
+
+@template_app.command("help")
+def template_help_cmd(ctx: typer.Context):
+    """
+    Show help for custom template commands.
+    """
+    click_template = typer.main.get_command(template_app)
+    sub_ctx = typer.Context(click_template, info_name="djinit template", parent=ctx)
+    console.print(click_template.get_help(sub_ctx))
 
 
 @app.command("setup")
