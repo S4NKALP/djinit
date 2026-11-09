@@ -11,12 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from djinit.utils.common import CommonUtils
+import tomllib
 
-try:
-    import tomllib
-except ImportError:  # pragma: no cover
-    import tomli as tomllib  # type: ignore
+from djinit.utils.common import CommonUtils
 
 CURRENT_SCHEMA_VERSION = 1
 
@@ -279,7 +276,7 @@ class ManifestManager:
                 with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
                 return ProjectManifest.from_legacy_djinit_json(data)
-        except Exception:
+        except (tomllib.TOMLDecodeError, json.JSONDecodeError, OSError, KeyError, TypeError, ValueError):
             return None
 
         return None

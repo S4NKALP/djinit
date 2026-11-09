@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import subprocess
 import sys
@@ -6,14 +7,7 @@ import pytest
 
 from djinit.creators.setup import SetupCreator
 
-try:
-    import django  # noqa: F401
-    import environ  # noqa: F401
-    import rest_framework  # noqa: F401
-
-    HAS_DJANGO_RUNTIME = True
-except ImportError:
-    HAS_DJANGO_RUNTIME = False
+HAS_DJANGO_RUNTIME = all(importlib.util.find_spec(mod) is not None for mod in ("django", "environ", "rest_framework"))
 
 pytestmark = pytest.mark.skipif(
     not HAS_DJANGO_RUNTIME,

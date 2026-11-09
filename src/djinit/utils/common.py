@@ -343,7 +343,7 @@ class CommonUtils(BaseUtils):
                     nested_path = os.path.join(search_dir, nested_dir_name)
                     if os.path.isdir(nested_path):
                         return True, nested_dir_name, nested_path
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             pass
 
         return False, None, search_dir
@@ -365,5 +365,5 @@ class CommonUtils(BaseUtils):
         try:
             with open(config_path, encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             return None

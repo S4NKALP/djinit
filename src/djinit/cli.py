@@ -1,5 +1,5 @@
 import logging
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -39,7 +39,7 @@ def version_callback(value: bool):
     if value:
         try:
             typer.echo(f"djinit v{version('djinitx')}")
-        except Exception:
+        except PackageNotFoundError:
             typer.echo("djinit (version unknown)")
         raise typer.Exit()
 
