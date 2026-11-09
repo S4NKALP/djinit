@@ -189,6 +189,45 @@ class InputCollector:
     def get_alpine_choice(self) -> bool:
         return UIFormatter.confirm("Include Alpine.js? (lightweight reactive frontend)", default=True)
 
+    def get_frontend_stack_choice(self, architecture: str) -> tuple[bool, bool, bool, bool]:
+        """
+        Determine frontend tools based on project architecture or user selection.
+        Returns: (use_tailwind, use_htmx, use_alpine, use_vite)
+        """
+        if architecture == "fullstack_htmx":
+            use_alpine = self.get_alpine_choice()
+            return True, True, use_alpine, False
+
+        if architecture in ("lightweight", "predefined"):
+            # Lightweight minimal preset or API-first architecture: default to pure Django/API
+            return False, False, False, False
+
+        choices = [
+            ("None (Standard Django templates / API only)", "none"),
+            ("Tailwind CSS (Utility CSS via django-tailwind-cli)", "tailwind"),
+            ("HTMX + Tailwind CSS (Interactive dynamic templates)", "htmx_tailwind"),
+            ("Vite (Modern frontend bundler: React, Vue, TypeScript)", "vite"),
+            ("Custom (Select individual frontend tools)", "custom"),
+        ]
+
+        selection = self._get_selection("Choose frontend tools:", choices, default="none")
+
+        if selection == "none":
+            return False, False, False, False
+        elif selection == "tailwind":
+            return True, False, False, False
+        elif selection == "htmx_tailwind":
+            use_alpine = self.get_alpine_choice()
+            return True, True, use_alpine, False
+        elif selection == "vite":
+            return False, False, False, True
+        else:  # custom
+            use_tailwind = self.get_tailwind_choice()
+            use_htmx = self.get_htmx_choice()
+            use_alpine = self.get_alpine_choice() if use_htmx else False
+            use_vite = self.get_vite_choice()
+            return use_tailwind, use_htmx, use_alpine, use_vite
+
     def _get_structure_metadata(self, options: StructureOptions) -> Tuple[str, str, list[str], dict]:
         """Helper method to generate metadata dictionary."""
         project_dir = options["project_dir"]
@@ -317,19 +356,13 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         # Step 2: Database Configuration
         database_type = collector.get_database_type_choice()
-        use_database_url = collector.get_database_config_choice()
+        if database_type == "sqlite3":
+            use_database_url = False
+        else:
+            use_database_url = collector.get_database_config_choice()
 
         # Step 3: Frontend Tools
-        if architecture == "fullstack_htmx":
-            use_tailwind = True
-            use_htmx = True
-            use_alpine = collector.get_alpine_choice()
-            use_vite = False
-        else:
-            use_tailwind = collector.get_tailwind_choice()
-            use_htmx = collector.get_htmx_choice()
-            use_alpine = False
-            use_vite = collector.get_vite_choice()
+        use_tailwind, use_htmx, use_alpine, use_vite = collector.get_frontend_stack_choice(architecture)
 
         # Step 4: Django Apps (Standard only)
         nested = False
@@ -357,6 +390,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_tailwind=use_tailwind,
                 use_htmx=use_htmx,
                 use_vite=use_vite,
+                use_alpine=use_alpine,
                 architecture="standard",
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
@@ -417,7 +451,10 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
     cicd_choices = _get_cicd_display(metadata)
     console.print(f"[{UIColors.HIGHLIGHT}]CI/CD:[/{UIColors.HIGHLIGHT}] {cicd_choices}")
 
-    db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
+    if metadata.get("database_type") == "sqlite3":
+        db_config = "Local database file (db.sqlite3)"
+    else:
+        db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
     console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
 
     db_display = {

@@ -41,3 +41,30 @@ def test_cli_app_invalid_name(tmp_path, monkeypatch):
     result = runner.invoke(app, ["app", "123-invalid-name!"])
     assert result.exit_code != 0
     assert "Invalid app name" in result.output
+
+
+def test_input_collector_frontend_stack_by_architecture():
+    from djinit.ui.input import InputCollector
+
+    collector = InputCollector()
+
+    # fullstack_htmx preset auto-configures htmx + tailwind
+    collector.get_alpine_choice = lambda: True
+    tailwind, htmx, alpine, vite = collector.get_frontend_stack_choice("fullstack_htmx")
+    assert tailwind is True
+    assert htmx is True
+    assert alpine is True
+    assert vite is False
+
+    # lightweight preset defaults to no extra frontend
+    tailwind, htmx, alpine, vite = collector.get_frontend_stack_choice("lightweight")
+    assert (tailwind, htmx, alpine, vite) == (False, False, False, False)
+
+    # predefined (API-first) defaults to no frontend tools
+    tailwind, htmx, alpine, vite = collector.get_frontend_stack_choice("predefined")
+    assert (tailwind, htmx, alpine, vite) == (False, False, False, False)
+
+    # standard with selection 'tailwind'
+    collector._get_selection = lambda prompt, choices, default="none": "tailwind"
+    tailwind, htmx, alpine, vite = collector.get_frontend_stack_choice("standard")
+    assert (tailwind, htmx, alpine, vite) == (True, False, False, False)

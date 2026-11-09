@@ -6,6 +6,20 @@ import pytest
 
 from djinit.creators.setup import SetupCreator
 
+try:
+    import django  # noqa: F401
+    import environ  # noqa: F401
+    import rest_framework  # noqa: F401
+
+    HAS_DJANGO_RUNTIME = True
+except ImportError:
+    HAS_DJANGO_RUNTIME = False
+
+pytestmark = pytest.mark.skipif(
+    not HAS_DJANGO_RUNTIME,
+    reason="Django runtime dependencies not installed in test environment",
+)
+
 
 @pytest.mark.parametrize(
     "architecture,apps",
