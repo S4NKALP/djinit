@@ -1,4 +1,5 @@
 import pytest
+import questionary
 from typer.testing import CliRunner
 
 from djinit.cli import app
@@ -257,8 +258,6 @@ def test_cli_setup_with_template(sample_django_project, custom_templates_root, t
 
 
 def test_cli_template_export_interactive_wizard(sample_django_project, custom_templates_root, monkeypatch):
-    import questionary
-
     class MockPrompt:
         def __init__(self, value):
             self.value = value
@@ -290,8 +289,6 @@ def test_cli_template_export_interactive_wizard(sample_django_project, custom_te
 
 
 def test_cli_template_export_interactive_wizard_cancel(sample_django_project, custom_templates_root, monkeypatch):
-    import questionary
-
     class MockPrompt:
         def __init__(self, value):
             self.value = value
@@ -314,3 +311,30 @@ def test_cli_template_export_interactive_wizard_cancel(sample_django_project, cu
     assert result.exit_code == 0
     assert "Export cancelled by user" in result.output
     assert CustomTemplateManager.get_template("cancel-blog-tpl") is None
+
+
+def test_parameterize_content_word_boundaries():
+    text = "application = get_wsgi_application()\nfrom blog.models import Post\nSECRET_KEY = 'super-secret-123'\n"
+    res = CustomTemplateManager._parameterize_content(text, "blog")
+    assert "application = get_wsgi_application()" in res
+    assert "from [[ project_name ]].models import Post" in res
+    assert 'SECRET_KEY = "[[ secret_key ]]"' in res
+
+
+def test_sanitize_env_content_secrets():
+    raw_env = (
+        "SECRET_KEY=my-prod-secret-key\n"
+        "DATABASE_URL=postgres://dbadmin:mypassword@db.host.internal:5432/proddb\n"
+        "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE\n"
+        "STRIPE_API_KEY=sk_live_12345\n"
+        "DEBUG=False\n"
+        "PROJECT_TITLE=My Awesome blog\n"
+    )
+    sanitized = CustomTemplateManager._sanitize_env_content(raw_env, "blog")
+    assert "SECRET_KEY=your-secret-key" in sanitized
+    assert "DATABASE_URL=sqlite:///db.sqlite3" in sanitized
+    assert "AWS_SECRET_ACCESS_KEY=your-aws-secret-access-key" in sanitized
+    assert "STRIPE_API_KEY=your-stripe-api-key" in sanitized
+    assert "mypassword" not in sanitized
+    assert "DEBUG=False" in sanitized
+    assert "PROJECT_TITLE=My Awesome [[ project_name ]]" in sanitized

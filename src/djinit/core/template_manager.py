@@ -9,13 +9,16 @@ from __future__ import annotations
 import json
 import os
 import re
+import secrets
 import shutil
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from djinit.core.manifest import ManifestManager
 from djinit.ui.console import UIFormatter
+from djinit.utils.common import CommonUtils
 from djinit.utils.secretkey import generate_secret_key
 
 IGNORE_DIRS = frozenset(
@@ -57,12 +60,46 @@ class CustomTemplateManager:
     def get_templates_root(cls) -> Path:
         """Get the base directory for stored custom templates."""
         env_dir = os.environ.get("DJINIT_TEMPLATES_DIR")
-        if env_dir:
-            path = Path(env_dir)
-        else:
-            path = Path.home() / ".djinit" / "templates"
+        path = Path(env_dir) if env_dir else Path.home() / ".djinit" / "templates"
         path.mkdir(parents=True, exist_ok=True)
         return path
+
+    @staticmethod
+    def _parameterize_content(content: str, project_name: str) -> str:
+        """Replace project name with placeholder using word boundaries to avoid partial corruption."""
+        pattern = re.compile(r"\b" + re.escape(project_name) + r"\b")
+        parameterized = pattern.sub("[[ project_name ]]", content)
+        # Mask hardcoded SECRET_KEY in Django settings
+        return re.sub(
+            r'SECRET_KEY\s*=\s*["\'][^"\']+["\']',
+            'SECRET_KEY = "[[ secret_key ]]"',
+            parameterized,
+        )
+
+    @staticmethod
+    def _sanitize_env_content(env_content: str, project_name: str) -> str:
+        """Sanitize environment variables for safe export, preventing secret leakage."""
+        sensitive_keywords = ("SECRET", "PASSWORD", "KEY", "TOKEN", "CREDENTIAL", "AUTH", "PASS")
+        lines = []
+        for line in env_content.splitlines():
+            trimmed = line.strip()
+            if not trimmed or trimmed.startswith("#") or "=" not in line:
+                lines.append(line)
+                continue
+            key, _, val = line.partition("=")
+            key_name = key.strip()
+            key_upper = key_name.upper()
+
+            if "SECRET_KEY" in key_upper:
+                lines.append(f"{key_name}=your-secret-key")
+            elif any(s in key_upper for s in sensitive_keywords):
+                lines.append(f"{key_name}=your-{key_name.lower().replace('_', '-')}")
+            elif "DATABASE_URL" in key_upper or "DB_URL" in key_upper:
+                lines.append(f"{key_name}=sqlite:///db.sqlite3")
+            else:
+                pattern = re.compile(r"\b" + re.escape(project_name) + r"\b")
+                lines.append(f"{key_name}={pattern.sub('[[ project_name ]]', val)}")
+        return "\n".join(lines) + "\n"
 
     @classmethod
     def export_template(
@@ -84,10 +121,8 @@ class CustomTemplateManager:
             )
 
         target_dir = cls.get_templates_root() / clean_name
-        if target_dir.exists():
-            if not overwrite:
-                raise FileExistsError(f"A template named '{clean_name}' already exists at {target_dir}")
-            shutil.rmtree(target_dir, ignore_errors=True)
+        if target_dir.exists() and not overwrite:
+            raise FileExistsError(f"A template named '{clean_name}' already exists at {target_dir}")
 
         # Detect source project name via manifest or directory name
         project_name = source.name
@@ -95,7 +130,9 @@ class CustomTemplateManager:
         if manifest and manifest.project and manifest.project.name:
             project_name = manifest.project.name
 
-        target_dir.mkdir(parents=True, exist_ok=True)
+        # Use an isolated staging directory to avoid partial writes / race conditions
+        staging_dir = target_dir.parent / f".tmp_{clean_name}_{secrets.token_hex(4)}"
+        staging_dir.mkdir(parents=True, exist_ok=True)
 
         try:
             for root, dirs, files in os.walk(source):
@@ -106,7 +143,7 @@ class CustomTemplateManager:
 
                 # Remap directories named after the project to placeholder
                 mapped_parts = ["__project_name__" if part == project_name else part for part in rel_root.parts]
-                dest_dir = target_dir.joinpath(*mapped_parts)
+                dest_dir = staging_dir.joinpath(*mapped_parts)
                 dest_dir.mkdir(parents=True, exist_ok=True)
 
                 for file in files:
@@ -117,42 +154,19 @@ class CustomTemplateManager:
                     dest_file = dest_dir / file
 
                     try:
-                        # Try reading as text to parameterize
-                        with open(src_file, encoding="utf-8") as f:
-                            content = f.read()
-
-                        # Parameterize project name
-                        parameterized = content.replace(project_name, "[[ project_name ]]")
-
-                        # Mask hardcoded SECRET_KEY in settings
-                        parameterized = re.sub(
-                            r'SECRET_KEY\s*=\s*["\'][^"\']+["\']',
-                            'SECRET_KEY = "[[ secret_key ]]"',
-                            parameterized,
-                        )
-
-                        with open(dest_file, "w", encoding="utf-8") as f:
-                            f.write(parameterized)
+                        content = src_file.read_text(encoding="utf-8")
+                        dest_file.write_text(cls._parameterize_content(content, project_name), encoding="utf-8")
                     except (UnicodeDecodeError, OSError):
                         # Binary file: copy directly
                         shutil.copy2(src_file, dest_file)
 
             # If .env existed in source but .env.sample does not exist in target, create sanitized .env.sample
             source_env = source / ".env"
-            target_env_sample = target_dir / ".env.sample"
+            target_env_sample = staging_dir / ".env.sample"
             if source_env.is_file() and not target_env_sample.is_file():
-                try:
+                with suppress(OSError):
                     env_content = source_env.read_text(encoding="utf-8")
-                    # Sanitize secrets in .env.sample
-                    env_content = re.sub(
-                        r"(SECRET_KEY\s*=\s*).*",
-                        r"\1your-secret-key",
-                        env_content,
-                    )
-                    env_content = env_content.replace(project_name, "[[ project_name ]]")
-                    target_env_sample.write_text(env_content, encoding="utf-8")
-                except OSError:
-                    pass
+                    target_env_sample.write_text(cls._sanitize_env_content(env_content, project_name), encoding="utf-8")
 
             # Write template metadata
             meta: dict[str, Any] = {
@@ -161,15 +175,18 @@ class CustomTemplateManager:
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "source_project": project_name,
             }
-            with open(target_dir / "template_meta.json", "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
+            meta_json = json.dumps(meta, indent=2)
+            CommonUtils.write_text_atomic(staging_dir / "template_meta.json", meta_json)
 
-            return target_dir
-        except Exception:
-            # Clean up on failure
+            # Atomic swap to target_dir
             if target_dir.exists():
                 shutil.rmtree(target_dir, ignore_errors=True)
-            raise
+            staging_dir.replace(target_dir)
+
+            return target_dir
+        finally:
+            if staging_dir.exists():
+                shutil.rmtree(staging_dir, ignore_errors=True)
 
     @classmethod
     def list_templates(cls) -> list[dict[str, Any]]:
@@ -180,16 +197,12 @@ class CustomTemplateManager:
 
         templates: list[dict[str, Any]] = []
         for child in sorted(root.iterdir()):
-            if child.is_dir():
+            if child.is_dir() and not child.name.startswith("."):
                 meta_file = child / "template_meta.json"
                 if meta_file.is_file():
-                    try:
-                        with open(meta_file, encoding="utf-8") as f:
-                            meta = json.load(f)
-                        templates.append(meta)
+                    with suppress(json.JSONDecodeError, OSError):
+                        templates.append(json.loads(meta_file.read_text(encoding="utf-8")))
                         continue
-                    except Exception:
-                        pass
                 templates.append(
                     {
                         "name": child.name,
@@ -211,7 +224,7 @@ class CustomTemplateManager:
         """Delete a saved custom template."""
         target = cls.get_template(template_name)
         if target and target.is_dir():
-            shutil.rmtree(target)
+            shutil.rmtree(target, ignore_errors=True)
             return True
         return False
 
@@ -246,18 +259,17 @@ class CustomTemplateManager:
                     continue
 
                 src_file = Path(root) / file
-                dest_file = current_dest_dir / file
+                dest_file_name = file.replace("__project_name__", project_name)
+                dest_file = current_dest_dir / dest_file_name
 
                 try:
-                    with open(src_file, encoding="utf-8") as f:
-                        text = f.read()
-
-                    rendered = text.replace("[[ project_name ]]", project_name)
-                    rendered = rendered.replace("[[ secret_key ]]", new_secret_key)
-                    rendered = rendered.replace("[[ module_name ]]", project_name)
-
-                    with open(dest_file, "w", encoding="utf-8") as f:
-                        f.write(rendered)
+                    text = src_file.read_text(encoding="utf-8")
+                    rendered = (
+                        text.replace("[[ project_name ]]", project_name)
+                        .replace("[[ secret_key ]]", new_secret_key)
+                        .replace("[[ module_name ]]", project_name)
+                    )
+                    dest_file.write_text(rendered, encoding="utf-8")
                 except (UnicodeDecodeError, OSError):
                     shutil.copy2(src_file, dest_file)
 
@@ -265,14 +277,14 @@ class CustomTemplateManager:
         sample_env = dest / ".env.sample"
         env_file = dest / ".env"
         if sample_env.is_file() and not env_file.exists():
-            try:
-                sample_text = sample_env.read_text(encoding="utf-8")
-                sample_text = sample_text.replace("your-secret-key", new_secret_key)
-                sample_text = sample_text.replace("[[ secret_key ]]", new_secret_key)
-                sample_text = sample_text.replace("[[ project_name ]]", project_name)
+            with suppress(OSError):
+                sample_text = (
+                    sample_env.read_text(encoding="utf-8")
+                    .replace("your-secret-key", new_secret_key)
+                    .replace("[[ secret_key ]]", new_secret_key)
+                    .replace("[[ project_name ]]", project_name)
+                )
                 env_file.write_text(sample_text, encoding="utf-8")
-            except OSError:
-                pass
 
         UIFormatter.print_success(f"Project '{project_name}' created from template '{template_name}'!")
         return True
