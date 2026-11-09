@@ -45,22 +45,34 @@ dj setup
 
 The wizard walks you through these choices:
 
-1. **Project structure** - Standard, Predefined (`apps/` + `api/`), Unified (`core/` + `apps/`), or Single Folder
+1. **Project structure & architecture**:
+   - **Simple**: Standard, Single Folder, Lightweight
+   - **Application**: Predefined, Unified, Modular Monolith, Service Layer, Full-Stack HTMX
+   - **Advanced**: Domain-Driven Design (DDD), Clean Architecture, Multi-Tenant
 2. **Project name and directory**
 3. **Database** - PostgreSQL, MySQL, or SQLite3; `DATABASE_URL` or individual env vars
-4. **Frontend tools** - Tailwind CSS, HTMX, and/or Vite (optional)
+4. **Frontend tools** - Tailwind CSS, DaisyUI, HTMX, Alpine.js, and/or Vite (optional)
 5. **Django apps** - Name them; optionally nest under an `apps/` package
 6. **CI/CD** - GitHub Actions, GitLab CI, both, or none
 
 When you're done, you have a fully configured Django project ready to run.
 
-### Add apps later
+### Architecture-Aware `djinit app`
 
 ```bash
-djinit app users products orders
+djinit app accounts
+djinit app products orders
 ```
 
-Creates the apps, registers them in `INSTALLED_APPS`, and wires up URL includes.
+The `djinit app` command detects your project architecture via `.djinit.toml` and generates apps matching your architecture conventions:
+- **Modular Monolith**: creates `models/`, `services/`, `selectors/`, `views/`, `api/`, `tests/`, and `urls.py`.
+- **Service Layer**: creates `models.py`, `services.py`, `selectors.py`, `forms.py`, `views.py`, `api/`, and `tests/`.
+- **Full-Stack HTMX**: creates `views/`, `forms.py`, `urls.py`, and `templates/<app>/` with HTMX partials.
+- **Domain-Driven Design (DDD)**: creates `domain/`, `application/`, `infrastructure/`, and `presentation/` layers.
+- **Clean Architecture**: creates `domain/`, `use_cases/`, `interfaces/`, and `infrastructure/` layers.
+- **Multi-Tenant**: creates tenant-isolated models and services extending `tenancy.models.TenantAwareModel`.
+
+Apps are registered automatically in `USER_DEFINED_APPS` in `settings/base.py` with fully-qualified `AppConfig` paths and wired up safely to URL routing.
 
 ### Generate secret keys
 
@@ -166,6 +178,65 @@ myproject/
 │   ├── api/
 │   └── wsgi.py
 ```
+
+### Modular Monolith
+
+```
+myproject/
+├── manage.py
+├── config/             # Settings (base, development, production, testing)
+├── apps/
+│   ├── accounts/       # Independent business domain module
+│   │   ├── models/
+│   │   ├── services/
+│   │   ├── selectors/
+│   │   ├── views/
+│   │   ├── api/
+│   │   ├── tests/
+│   │   └── urls.py
+│   └── core/
+├── common/             # Reusable kernel (db, middleware, permissions, utils)
+└── tests/
+```
+
+### Service Layer
+
+```
+apps/
+└── products/
+    ├── models.py       # Persistence & constraints
+    ├── services.py     # Business operations & atomic transactions
+    ├── selectors.py    # Optimized database read queries
+    ├── forms.py        # Django forms & validation
+    ├── views.py        # HTTP views
+    ├── api/            # Serializers & viewsets
+    └── tests/
+```
+
+### Full-Stack HTMX
+
+```
+myproject/
+├── templates/
+│   ├── layouts/base.html   # HTMX + Tailwind + Alpine.js layout
+│   ├── components/         # Navbar, footer, modal
+│   └── includes/           # Messages & toasts
+├── apps/
+│   └── dashboard/
+│       ├── views/          # Full-page & partial handlers
+│       ├── forms.py
+│       └── templates/dashboard/
+│           ├── index.html
+│           └── partials/item_row.html
+```
+
+### Domain-Driven Design (DDD) & Clean Architecture
+
+Explicit separation of concerns across Domain (entities & value objects), Application / Use Cases (interactors & DTOs), Infrastructure (Django ORM persistence adapters), and Presentation (controllers & views).
+
+### Multi-Tenant
+
+Shared-schema multi-tenancy with `tenancy/` providing `Tenant`, `TenantMembership`, `TenantAwareModel`, `TenantMiddleware`, and tenant-scoped querysets preventing cross-tenant data leaks.
 
 ## Environment Setup
 
