@@ -154,6 +154,31 @@ class FileCreator(BaseService):
             "Created Dockerfile for containerization",
         )
 
+    def create_docker_compose(self) -> None:
+        context = {
+            "module_name": self.module_name,
+            "project_name": self.project_name,
+            "database_type": self.metadata.get("database_type", "sqlite3"),
+        }
+        self._render_and_create_file(
+            "docker-compose.yml",
+            "project/docker-compose.yml-tpl",
+            context,
+            "Created docker-compose.yml for container services",
+        )
+
+    def create_passenger_wsgi(self) -> None:
+        context = {
+            "module_name": self.module_name,
+            "project_name": self.project_name,
+        }
+        self._render_and_create_file(
+            "passenger_wsgi.py",
+            "project/passenger_wsgi.py-tpl",
+            context,
+            "Created passenger_wsgi.py for cPanel deployment",
+        )
+
     def create_dockerignore(self) -> None:
         self._render_and_create_file(
             ".dockerignore",
@@ -604,6 +629,33 @@ class FileCreator(BaseService):
         CommonUtils.create_file_with_content(
             filepath, json.dumps(config, indent=4), "Created .djinit configuration file"
         )
+
+    def add_app_url_route(self, app_name: str, app_module_path: str) -> None:
+        """Add an app's URLs to project urls.py idempotently."""
+        urls_path = os.path.join(self.project_configs, "urls.py")
+        if not os.path.exists(urls_path):
+            return
+
+        include_stmt = f'path("{app_name}/", include("{app_module_path}.urls")),'
+        try:
+            with open(urls_path, encoding="utf-8") as f:
+                content = f.read()
+
+            if include_stmt in content or f'"{app_module_path}.urls"' in content:
+                return
+
+            if "include" not in content:
+                content = content.replace("from django.urls import path", "from django.urls import include, path")
+
+            if "urlpatterns = [" in content:
+                idx = content.rfind("]")
+                if idx != -1:
+                    content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
+
+            with open(urls_path, "w", encoding="utf-8") as f:
+                f.write(content)
+        except Exception:
+            pass
 
     def create_standard_shared(self) -> None:
         """Create shared directory and inject base model for standard structure."""

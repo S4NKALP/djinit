@@ -1,0 +1,12 @@
+import os
+import sys
+
+# cPanel / Passenger entry point for [[ project_name ]]
+cwd = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, cwd)
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "[[ module_name ]].settings.production")
+
+from django.core.wsgi import get_wsgi_application
+
+application = get_wsgi_application()
