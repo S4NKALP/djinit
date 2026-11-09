@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from djinit.creators.architectures.base import ArchitectureHandler
+from djinit.creators.architectures.clean_architecture import CleanArchitectureHandler
 from djinit.creators.architectures.ddd import DDDHandler
 from djinit.creators.architectures.fullstack_htmx import FullStackHTMXHandler
 from djinit.creators.architectures.lightweight import LightweightHandler
@@ -13,11 +14,13 @@ ARCHITECTURE_HANDLERS: dict[str, type[ArchitectureHandler]] = {
     "fullstack_htmx": FullStackHTMXHandler,
     "lightweight": LightweightHandler,
     "ddd": DDDHandler,
+    "clean_architecture": CleanArchitectureHandler,
 }
 
 __all__ = [
     "ARCHITECTURE_HANDLERS",
     "ArchitectureHandler",
+    "CleanArchitectureHandler",
     "DDDHandler",
     "FullStackHTMXHandler",
     "LightweightHandler",
