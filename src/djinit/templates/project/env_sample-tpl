@@ -7,16 +7,24 @@ ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
 # Database URL (recommended for production)
 # @IF database_type == 'mysql'
 DATABASE_URL=mysql://user:password@localhost:3306/[[ project_name ]]
-# @ELSE
+# @ENDIF
+# @IF database_type == 'postgresql'
 DATABASE_URL=postgres://user:password@localhost:5432/[[ project_name ]]
+# @ENDIF
+# @IF database_type == 'sqlite3'
+DATABASE_URL=sqlite:///db.sqlite3
 # @ENDIF
 # @ELSE
 # Database (individual parameters)
+# @IF database_type == 'sqlite3'
+DB_NAME=db.sqlite3
+# @ELSE
 DB_NAME=
 DB_USER=
 DB_PASSWORD=
 DB_HOST=
 DB_PORT=
+# @ENDIF
 # @ENDIF
 
 # Frontend URL

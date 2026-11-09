@@ -170,6 +170,7 @@ class InputCollector:
         choices = [
             ("PostgreSQL", "postgresql"),
             ("MySQL", "mysql"),
+            ("SQLite3", "sqlite3"),
         ]
 
         return self._get_selection("Choose database:", choices, default="postgresql")
@@ -342,7 +343,15 @@ def confirm_setup(project_dir: str, project_name: str, app_names: list, metadata
     db_config = "DATABASE_URL" if metadata.get("use_database_url", True) else "Individual parameters"
     console.print(f"[{UIColors.HIGHLIGHT}]Database Config:[/{UIColors.HIGHLIGHT}] {db_config}")
 
-    db_type = metadata.get("database_type", "postgresql").capitalize()
+    db_display = {
+        "postgresql": "PostgreSQL",
+        "mysql": "MySQL",
+        "sqlite3": "SQLite3",
+    }
+    db_type = db_display.get(
+        metadata.get("database_type", "postgresql"),
+        metadata.get("database_type", "postgresql").capitalize(),
+    )
     console.print(f"[{UIColors.HIGHLIGHT}]Database Type:[/{UIColors.HIGHLIGHT}] {db_type}")
 
     use_tailwind = "Yes" if metadata.get("use_tailwind", False) else "No"

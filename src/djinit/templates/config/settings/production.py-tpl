@@ -17,6 +17,14 @@ DATABASES = {
 }
 # @ELSE
 # Using individual database parameters
+# @IF database_type == 'sqlite3'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / env('DB_NAME', default='db.sqlite3'),
+    }
+}
+# @ELSE
 DATABASES = {
     'default': {
         # @IF database_type == 'mysql'
@@ -32,6 +40,7 @@ DATABASES = {
         'HOST': env('DB_HOST'),
     }
 }
+# @ENDIF
 # @ENDIF
 
 # CORS settings for production

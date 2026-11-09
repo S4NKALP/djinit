@@ -47,7 +47,7 @@ The wizard walks you through these choices:
 
 1. **Project structure** - Standard, Predefined (`apps/` + `api/`), Unified (`core/` + `apps/`), or Single Folder
 2. **Project name and directory**
-3. **Database** - PostgreSQL or MySQL; `DATABASE_URL` or individual env vars
+3. **Database** - PostgreSQL, MySQL, or SQLite3; `DATABASE_URL` or individual env vars
 4. **Frontend tools** - Tailwind CSS, HTMX, and/or Vite (optional)
 5. **Django apps** - Name them; optionally nest under an `apps/` package
 6. **CI/CD** - GitHub Actions, GitLab CI, both, or none

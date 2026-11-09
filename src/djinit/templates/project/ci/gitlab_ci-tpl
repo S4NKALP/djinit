@@ -25,7 +25,8 @@ services:
 variables:
   MYSQL_DATABASE: test_db
   MYSQL_ROOT_PASSWORD: test_password
-# @ELSE
+# @ENDIF
+# @IF database_type == 'postgresql'
 services:
   - postgres:15
 

@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
-# @ELSE
+# @ENDIF
+# @IF database_type == 'postgresql'
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
