@@ -6,6 +6,7 @@ from djinit.creators.architectures.ddd import DDDHandler
 from djinit.creators.architectures.fullstack_htmx import FullStackHTMXHandler
 from djinit.creators.architectures.lightweight import LightweightHandler
 from djinit.creators.architectures.modular_monolith import ModularMonolithHandler
+from djinit.creators.architectures.multi_tenant import MultiTenantHandler
 from djinit.creators.architectures.service_layer import ServiceLayerHandler
 
 ARCHITECTURE_HANDLERS: dict[str, type[ArchitectureHandler]] = {
@@ -15,6 +16,7 @@ ARCHITECTURE_HANDLERS: dict[str, type[ArchitectureHandler]] = {
     "lightweight": LightweightHandler,
     "ddd": DDDHandler,
     "clean_architecture": CleanArchitectureHandler,
+    "multi_tenant": MultiTenantHandler,
 }
 
 __all__ = [
@@ -25,5 +27,6 @@ __all__ = [
     "FullStackHTMXHandler",
     "LightweightHandler",
     "ModularMonolithHandler",
+    "MultiTenantHandler",
     "ServiceLayerHandler",
 ]
