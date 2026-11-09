@@ -254,3 +254,63 @@ def test_cli_setup_with_template(sample_django_project, custom_templates_root, t
     assert result.exit_code == 0
     assert (target / "manage.py").is_file()
     assert (target / ".env").is_file()
+
+
+def test_cli_template_export_interactive_wizard(sample_django_project, custom_templates_root, monkeypatch):
+    import questionary
+
+    class MockPrompt:
+        def __init__(self, value):
+            self.value = value
+
+        def ask(self):
+            return self.value
+
+    responses = {
+        "Enter path to Django project to export:": str(sample_django_project),
+        "Enter unique name for this template:": "interactive-blog-tpl",
+        "Enter template description (optional):": "Interactive blog template",
+    }
+
+    monkeypatch.setattr(
+        questionary,
+        "text",
+        lambda msg, **kwargs: MockPrompt(responses.get(msg, kwargs.get("default", ""))),
+    )
+    monkeypatch.setattr(
+        questionary,
+        "confirm",
+        lambda msg, **kwargs: MockPrompt(True),
+    )
+
+    result = runner.invoke(app, ["template", "export"])
+    assert result.exit_code == 0
+    assert "Template 'interactive-blog-tpl' successfully exported!" in result.output
+    assert CustomTemplateManager.get_template("interactive-blog-tpl") is not None
+
+
+def test_cli_template_export_interactive_wizard_cancel(sample_django_project, custom_templates_root, monkeypatch):
+    import questionary
+
+    class MockPrompt:
+        def __init__(self, value):
+            self.value = value
+
+        def ask(self):
+            return self.value
+
+    monkeypatch.setattr(
+        questionary,
+        "text",
+        lambda msg, **kwargs: MockPrompt(str(sample_django_project) if "path" in msg else "cancel-blog-tpl"),
+    )
+    monkeypatch.setattr(
+        questionary,
+        "confirm",
+        lambda msg, **kwargs: MockPrompt(False),
+    )
+
+    result = runner.invoke(app, ["template", "export"])
+    assert result.exit_code == 0
+    assert "Export cancelled by user" in result.output
+    assert CustomTemplateManager.get_template("cancel-blog-tpl") is None
