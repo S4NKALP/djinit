@@ -99,7 +99,9 @@ class TenantAwareModel(models.Model):
             os.path.join(tenancy_dir, "models.py"), models_py, "Created tenancy/models.py"
         )
 
-        middleware_py = '''from .models import Tenant
+        middleware_py = '''import uuid
+from django.db.models import Q
+from .models import Tenant
 
 
 class TenantMiddleware:
@@ -113,18 +115,17 @@ class TenantMiddleware:
         request.tenant = None
         if tenant_id:
             try:
-                request.tenant = Tenant.objects.filter(is_active=True).filter(
-                    models_q_filter(tenant_id)
-                ).first()
+                try:
+                    uuid_val = uuid.UUID(str(tenant_id))
+                    q_filter = Q(id=uuid_val)
+                except (ValueError, TypeError, AttributeError):
+                    q_filter = Q(slug=tenant_id)
+
+                request.tenant = Tenant.objects.filter(is_active=True).filter(q_filter).first()
             except Exception:
                 request.tenant = None
 
         return self.get_response(request)
-
-
-def models_q_filter(tenant_id):
-    from django.db.models import Q
-    return Q(id=tenant_id) if "-" in tenant_id else Q(slug=tenant_id)
 '''
         CommonUtils.create_file_with_content(
             os.path.join(tenancy_dir, "middleware.py"), middleware_py, "Created tenancy/middleware.py"

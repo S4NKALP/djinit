@@ -114,8 +114,17 @@ class SetupCreator:
                             content, ["tenancy.apps.TenancyConfig"]
                         )
                         if updated:
-                            with open(base_settings_path, "w", encoding="utf-8") as f:
-                                f.write(updated)
+                            content = updated
+
+                    if content and "tenancy.middleware.TenantMiddleware" not in content:
+                        content = content.replace(
+                            '"django.contrib.auth.middleware.AuthenticationMiddleware",',
+                            '"django.contrib.auth.middleware.AuthenticationMiddleware",\n    "tenancy.middleware.TenantMiddleware",',
+                        )
+
+                    if content:
+                        with open(base_settings_path, "w", encoding="utf-8") as f:
+                            f.write(content)
                     self.project_creator.add_apps_to_settings()
 
                 steps.append(("Adding apps to settings", add_tenancy_and_apps))
