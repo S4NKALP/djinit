@@ -8,6 +8,8 @@ import os
 
 from djinit.core.config import DJANGO_VERSION
 from djinit.utils.common import CommonUtils
+from djinit.utils.exceptions import DjinitError
+from djinit.utils.secretkey import generate_secret_key
 
 
 class DjangoHelper:
@@ -16,8 +18,6 @@ class DjangoHelper:
     @staticmethod
     def startproject(project_name: str, directory: str, unified: bool = False, metadata: dict = None) -> None:
         try:
-            from djinit.utils.secretkey import generate_secret_key
-
             os.makedirs(directory, exist_ok=True)
 
             manage_py_path = os.path.join(directory, "manage.py")
@@ -75,8 +75,6 @@ class DjangoHelper:
             CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
         except Exception as e:
-            from djinit.utils.exceptions import DjinitError
-
             raise DjinitError(f"Error creating Django project: {e}", details=str(e)) from e
 
     @staticmethod
@@ -132,6 +130,4 @@ class DjangoHelper:
             return True
 
         except Exception as e:
-            from djinit.utils.exceptions import DjinitError
-
             raise DjinitError(f"Error creating Django app: {e}", details=str(e)) from e

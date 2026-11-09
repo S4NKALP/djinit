@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from djinit.utils.common import CommonUtils
+
 try:
     import tomllib
 except ImportError:  # pragma: no cover
@@ -285,7 +287,5 @@ class ManifestManager:
     @classmethod
     def save_manifest(cls, target_dir: str, manifest: ProjectManifest) -> None:
         """Write .djinit.toml in target_dir atomically."""
-        from djinit.utils.common import CommonUtils
-
         toml_path = os.path.join(target_dir, ".djinit.toml")
         CommonUtils.write_text_atomic(toml_path, manifest.to_toml())

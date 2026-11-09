@@ -3,6 +3,7 @@ Shared utility functions.
 Contains common operations used across multiple managers.
 """
 
+import json
 import os
 import secrets
 import subprocess
@@ -350,8 +351,6 @@ class CommonUtils(BaseUtils):
     @staticmethod
     def get_djinit_config(project_root: str = None) -> dict | None:
         """Read .djinit configuration file."""
-        import json
-
         if project_root is None:
             project_root = os.getcwd()
 

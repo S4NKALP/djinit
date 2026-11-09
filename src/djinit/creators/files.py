@@ -3,12 +3,22 @@ File management utilities for djinit.
 Handles creation and modification of project files.
 """
 
+import json
 import os
 
 from djinit.core.base import BaseService
+from djinit.core.manifest import (
+    DatabaseSection,
+    DeploymentSection,
+    FeaturesSection,
+    ManifestManager,
+    ProjectManifest,
+    ProjectSection,
+)
 from djinit.templater import template_engine
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
+from djinit.utils.secretkey import generate_secret_key
 
 
 class FileCreator(BaseService):
@@ -74,8 +84,6 @@ class FileCreator(BaseService):
 
     def _create_settings_package(self, settings_dir: str, base_context: dict, prefix: str) -> None:
         """Helper to create settings package files (base, development, production)."""
-        from djinit.utils.secretkey import generate_secret_key
-
         secret_key = generate_secret_key()
         dev_context = {"secret_key": secret_key}
         dev_context["use_vite"] = self.metadata.get("use_vite", False)
@@ -635,17 +643,6 @@ __all__ = [
 
     def create_djinit_config(self) -> None:
         """Create .djinit configuration file."""
-        import json
-
-        from djinit.core.manifest import (
-            DatabaseSection,
-            DeploymentSection,
-            FeaturesSection,
-            ManifestManager,
-            ProjectManifest,
-            ProjectSection,
-        )
-
         arch = self.metadata.get("architecture")
         if not arch:
             if self.metadata.get("predefined_structure"):

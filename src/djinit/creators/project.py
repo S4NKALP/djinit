@@ -254,6 +254,4 @@ class ProjectCreator(BaseService):
         for file_path in missing_files:
             UIFormatter.print_error(f"  Missing: {file_path}")
 
-        from djinit.utils.exceptions import ConfigError
-
         raise ConfigError("Project structure validation failed", details=f"Missing files: {missing_files}")

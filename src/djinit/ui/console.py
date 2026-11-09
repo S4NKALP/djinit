@@ -14,6 +14,8 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn
 from rich.table import Table
 from rich.text import Text
 
+from djinit.utils.exceptions import DjinitError
+
 console = Console()
 
 
@@ -191,8 +193,6 @@ class UIFormatter:
     @staticmethod
     def handle_exception(e: Exception):
         """Handle and display exceptions gracefully"""
-        from djinit.utils.exceptions import DjinitError
-
         if isinstance(e, DjinitError):
             UIFormatter.print_error(e.message, details=e.details)
         else:

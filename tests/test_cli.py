@@ -1,6 +1,10 @@
 from typer.testing import CliRunner
 
 from djinit.cli import app
+from djinit.ui.input import InputCollector
+from djinit.utils.common import CommonUtils
+from djinit.utils.secretkey import generate_multiple_keys, generate_secret_key
+from djinit.utils.validators import validate_app_name, validate_project_name
 
 runner = CliRunner()
 
@@ -44,8 +48,6 @@ def test_cli_app_invalid_name(tmp_path, monkeypatch):
 
 
 def test_input_collector_frontend_stack_by_architecture():
-    from djinit.ui.input import InputCollector
-
     collector = InputCollector()
 
     # fullstack_htmx preset auto-configures htmx + tailwind
@@ -71,8 +73,6 @@ def test_input_collector_frontend_stack_by_architecture():
 
 
 def test_reserved_names_validation():
-    from djinit.utils.validators import validate_app_name, validate_project_name
-
     for name in ["django", "test", "admin"]:
         valid, msg = validate_app_name(name)
         assert valid is False
@@ -87,8 +87,6 @@ def test_reserved_names_validation():
 
 
 def test_secret_key_minimum_length_and_count():
-    from djinit.utils.secretkey import generate_multiple_keys, generate_secret_key
-
     # Clamps to safe minimum length of 16
     key = generate_secret_key(length=5)
     assert len(key) >= 16
@@ -100,8 +98,6 @@ def test_secret_key_minimum_length_and_count():
 
 
 def test_atomic_file_write(tmp_path):
-    from djinit.utils.common import CommonUtils
-
     target_file = str(tmp_path / "deep" / "nested" / "output.txt")
     CommonUtils.create_file_with_content(target_file, "hello atomic world", "Success")
 

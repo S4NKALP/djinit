@@ -1,7 +1,9 @@
 import logging
+from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated, Optional
 
+import questionary
 import typer
 from rich.panel import Panel
 from rich.table import Table
@@ -35,8 +37,6 @@ app.add_typer(template_app, name="template")
 
 def version_callback(value: bool):
     if value:
-        from importlib.metadata import version
-
         try:
             typer.echo(f"djinit v{version('djinitx')}")
         except Exception:
@@ -254,8 +254,6 @@ def _apply_template_flow(
     project_dir: str | None = None,
 ) -> None:
     """Helper to instantiate a project from a custom template."""
-    import questionary
-
     if not CustomTemplateManager.get_template(template_name):
         UIFormatter.print_error(f"Template '{template_name}' not found.")
         UIFormatter.print_info("Use 'djinit template list' to view available templates.")
@@ -347,8 +345,6 @@ def _interactive_export_wizard(
     force: bool = False,
 ) -> tuple[Path, str, str, bool]:
     """Interactive questionary wizard for exporting custom project templates."""
-    import questionary
-
     UIFormatter.print_info("")
     UIFormatter.print_header("Export Custom Django Template")
     UIFormatter.print_info("Transform an existing Django project into a reusable starter template.\n")
@@ -543,8 +539,6 @@ def delete_template(
     """
     Delete a saved custom template.
     """
-    import questionary
-
     template_path = CustomTemplateManager.get_template(name)
     if not template_path:
         UIFormatter.print_error(f"Template '{name}' not found.")
