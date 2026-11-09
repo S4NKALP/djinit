@@ -61,6 +61,3 @@
 - [ ] **Authentication Presets**: Optional `django-allauth` integration for social authentication (OAuth2 / Google / GitHub)
 - [ ] **Observability**: OpenTelemetry, Sentry, or Prometheus metrics integration
 - [ ] **Caching Layers**: Redis cache backend configuration out of the box
-
-### Enhancements
-- [ ] **Interactive TUI**: Rich-based terminal dashboard for project health checks
