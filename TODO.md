@@ -60,4 +60,3 @@
 ### Enhancements
 - [ ] **Interactive TUI**: Rich-based terminal dashboard for project health checks
 - [ ] **Export to Template**: Ability to export existing projects as reusable custom templates
-- [ ] **Interactive Migration Assistant**: Migration helper for updating older `djinit` projects to `.djinit.toml`
