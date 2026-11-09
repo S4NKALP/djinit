@@ -586,7 +586,6 @@ class FileCreator(BaseService):
                 tailwind=self.metadata.get("use_tailwind", False),
                 alpine=self.metadata.get("use_alpine", False),
                 vite=self.metadata.get("use_vite", False),
-                ninja=self.metadata.get("use_ninja", False),
             ),
             database=DatabaseSection(
                 engine=self.metadata.get("database_type", "sqlite3"),

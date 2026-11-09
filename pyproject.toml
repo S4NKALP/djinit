@@ -12,7 +12,7 @@ description = "A CLI tool to setup Django project"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
-{ name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" }
+    { name = "Sankalp Tharu", email = "sankalptharu50028@gmail.com" }
 ]
 license = { text = "MIT" }
 keywords = [
@@ -24,28 +24,28 @@ keywords = [
     "dj",
     "django-init",
     "django project",
-    "django starter"
+    "django starter",
 ]
-classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Environment :: Web Environment",
-        "Framework :: Django",
-        "Framework :: Django :: 4.2",
-        "Framework :: Django :: 5.1",
-        "Framework :: Django :: 5.2",
-        "Framework :: Django :: 6.0",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Software Development :: Code Generators",
-    ]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "rich>=14.2.0",
     "questionary>=2.0.1",

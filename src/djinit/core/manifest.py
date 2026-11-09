@@ -71,7 +71,6 @@ class FeaturesSection:
     tailwind: bool = False
     alpine: bool = False
     vite: bool = False
-    ninja: bool = False
 
 
 @dataclass
@@ -108,7 +107,6 @@ class ProjectManifest:
                 "tailwind": self.features.tailwind,
                 "alpine": self.features.alpine,
                 "vite": self.features.vite,
-                "ninja": self.features.ninja,
             },
             "database": {
                 "engine": self.database.engine,
@@ -142,7 +140,6 @@ class ProjectManifest:
                 f"tailwind = {str(self.features.tailwind).lower()}",
                 f"alpine = {str(self.features.alpine).lower()}",
                 f"vite = {str(self.features.vite).lower()}",
-                f"ninja = {str(self.features.ninja).lower()}",
                 "",
                 "[database]",
                 f"engine = {json.dumps(self.database.engine)}",
@@ -177,7 +174,6 @@ class ProjectManifest:
                 tailwind=feat_data.get("tailwind", False),
                 alpine=feat_data.get("alpine", False),
                 vite=feat_data.get("vite", False),
-                ninja=feat_data.get("ninja", False),
             ),
             database=DatabaseSection(
                 engine=db_data.get("engine", "sqlite3"),
