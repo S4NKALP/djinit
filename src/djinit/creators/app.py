@@ -361,8 +361,9 @@ class AppCreator(BaseService):
                 content = content.replace("from django.urls import path", "from django.urls import include, path")
 
             if "urlpatterns = [" in content:
-                # Find the best place to insert (before the closing bracket of urlpatterns)
-                idx = content.rfind("]")
+                # Find closing bracket of the urlpatterns list specifically
+                start_idx = content.find("urlpatterns = [")
+                idx = content.find("]", start_idx)
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
@@ -390,7 +391,8 @@ class AppCreator(BaseService):
                 return
 
             if "urlpatterns = [" in content:
-                idx = content.rfind("]")
+                start_idx = content.find("urlpatterns = [")
+                idx = content.find("]", start_idx)
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 

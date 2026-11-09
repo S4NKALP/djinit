@@ -647,7 +647,8 @@ class FileCreator(BaseService):
                 content = content.replace("from django.urls import path", "from django.urls import include, path")
 
             if "urlpatterns = [" in content:
-                idx = content.rfind("]")
+                start_idx = content.find("urlpatterns = [")
+                idx = content.find("]", start_idx)
                 if idx != -1:
                     content = content[:idx] + f"    {include_stmt}\n" + content[idx:]
 
