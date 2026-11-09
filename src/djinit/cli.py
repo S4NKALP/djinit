@@ -8,7 +8,7 @@ from rich.table import Table
 from rich.text import Text
 
 from djinit.core.manifest import ManifestManager
-from djinit.core.template_manager import CustomTemplateManager
+from djinit.core.template_manager import NAME_REGEX, CustomTemplateManager
 from djinit.creators.app import AppCreator
 from djinit.creators.setup import SetupCreator
 from djinit.ui.console import UIColors, UIFormatter, console
@@ -233,12 +233,134 @@ def list_templates():
     console.print()
 
 
+def _interactive_export_wizard(
+    source_dir: str | None = None,
+    name: str | None = None,
+    description: str | None = None,
+    force: bool = False,
+) -> tuple[Path, str, str, bool]:
+    """Interactive questionary wizard for exporting custom project templates."""
+    import questionary
+
+    UIFormatter.print_info("")
+    UIFormatter.print_header("Export Custom Django Template")
+    UIFormatter.print_info("Transform an existing Django project into a reusable starter template.\n")
+
+    # 1. Source project directory
+    if not source_dir:
+
+        def validate_src(val: str):
+            val = val.strip() or "."
+            p = Path(val).resolve()
+            if not p.is_dir():
+                return f"Directory '{val}' does not exist."
+            if not (p / "manage.py").is_file():
+                return f"'{val}' is not a valid Django project (missing manage.py)."
+            return True
+
+        source_input = questionary.text(
+            "Enter path to Django project to export:",
+            default=".",
+            validate=validate_src,
+        ).ask()
+        if source_input is None:
+            raise KeyboardInterrupt
+        source_path = Path(source_input.strip() or ".").resolve()
+    else:
+        source_path = Path(source_dir).resolve()
+        if not (source_path / "manage.py").is_file():
+            UIFormatter.print_error(f"'{source_path}' is not a valid Django project (missing manage.py).")
+            raise typer.Exit(1)
+
+    # Detect default template name
+    default_name = source_path.name
+    manifest = ManifestManager.load_manifest(str(source_path))
+    if manifest and manifest.project and manifest.project.name:
+        default_name = manifest.project.name
+
+    # 2. Template name
+    if not name:
+
+        def validate_name(val: str):
+            val = val.strip()
+            if not val:
+                return "Template name cannot be empty."
+            if not NAME_REGEX.match(val):
+                return "Name must contain only letters, numbers, underscores, and hyphens."
+            return True
+
+        template_name = questionary.text(
+            "Enter unique name for this template:",
+            default=default_name,
+            validate=validate_name,
+        ).ask()
+        if template_name is None:
+            raise KeyboardInterrupt
+        template_name = template_name.strip()
+    else:
+        template_name = name.strip()
+        if not NAME_REGEX.match(template_name):
+            UIFormatter.print_error(f"Invalid template name '{template_name}'.")
+            raise typer.Exit(1)
+
+    # 3. Handle overwrite if already exists
+    target_force = force
+    if CustomTemplateManager.get_template(template_name) and not force:
+        confirm_overwrite = questionary.confirm(
+            f"Template '{template_name}' already exists. Overwrite?",
+            default=False,
+        ).ask()
+        if confirm_overwrite is None:
+            raise KeyboardInterrupt
+        if not confirm_overwrite:
+            UIFormatter.print_info("Export cancelled.")
+            raise typer.Exit(0)
+        target_force = True
+
+    # 4. Description
+    if description is None or description == "":
+        desc_input = questionary.text(
+            "Enter template description (optional):",
+            default=f"Template exported from {default_name}",
+        ).ask()
+        if desc_input is None:
+            raise KeyboardInterrupt
+        template_desc = desc_input.strip()
+    else:
+        template_desc = description.strip()
+
+    # 5. Summary & Confirmation
+    target_path = CustomTemplateManager.get_templates_root() / template_name
+    console.print()
+    UIFormatter.print_separator()
+    console.print()
+    console.print(f"[{UIColors.INFO}]Template Export Summary[/{UIColors.INFO}]")
+    console.print()
+    console.print(f"[{UIColors.HIGHLIGHT}]Source Directory:[/{UIColors.HIGHLIGHT}] {source_path}")
+    console.print(f"[{UIColors.HIGHLIGHT}]Template Name:[/{UIColors.HIGHLIGHT}] {template_name}")
+    console.print(f"[{UIColors.HIGHLIGHT}]Description:[/{UIColors.HIGHLIGHT}] {template_desc}")
+    console.print(f"[{UIColors.HIGHLIGHT}]Destination:[/{UIColors.HIGHLIGHT}] {target_path}")
+    console.print(
+        f"[{UIColors.HIGHLIGHT}]Sanitization:[/{UIColors.HIGHLIGHT}] Ignores .venv, caches, db.sqlite3, masks SECRET_KEY"
+    )
+    console.print()
+    UIFormatter.print_separator()
+    console.print()
+
+    proceed = questionary.confirm("Proceed with template export?", default=True).ask()
+    if proceed is None or not proceed:
+        UIFormatter.print_info("\nExport cancelled by user.")
+        raise typer.Exit(0)
+
+    return source_path, template_name, template_desc, target_force
+
+
 @template_app.command("export")
 def export_template(
     source_dir: Annotated[
-        str,
-        typer.Argument(help="Path to the Django project to export (defaults to current directory)."),
-    ] = ".",
+        Optional[str],
+        typer.Argument(help="Path to the Django project to export (defaults to current directory if not prompted)."),
+    ] = None,
     name: Annotated[
         Optional[str],
         typer.Option("--name", "-n", help="Unique template name."),
@@ -254,34 +376,34 @@ def export_template(
 ):
     """
     Export an existing Django project as a reusable custom template.
+    Shows an interactive wizard with Questionary prompts when options are omitted.
     """
-    import questionary
-
-    source_path = Path(source_dir).resolve()
-    if not (source_path / "manage.py").is_file():
-        UIFormatter.print_error(f"'{source_path}' is not a valid Django project (missing manage.py).")
-        raise typer.Exit(1)
-
-    template_name = name
-    if not template_name:
-        default_name = source_path.name
-        manifest = ManifestManager.load_manifest(str(source_path))
-        if manifest and manifest.project and manifest.project.name:
-            default_name = manifest.project.name
-        template_name = questionary.text(
-            "Enter a name for the template:",
-            default=default_name,
-        ).ask()
-        if not template_name:
-            UIFormatter.print_error("Template name cannot be empty.")
-            raise typer.Exit(1)
+    try:
+        if not name:
+            source_path, template_name, template_desc, should_overwrite = _interactive_export_wizard(
+                source_dir=source_dir,
+                name=name,
+                description=description,
+                force=force,
+            )
+        else:
+            source_path = Path(source_dir or ".").resolve()
+            if not (source_path / "manage.py").is_file():
+                UIFormatter.print_error(f"'{source_path}' is not a valid Django project (missing manage.py).")
+                raise typer.Exit(1)
+            template_name = name.strip()
+            template_desc = description
+            should_overwrite = force
+    except KeyboardInterrupt:
+        UIFormatter.print_info("\nExport cancelled by user.")
+        raise typer.Exit(0) from None
 
     try:
         exported_path = CustomTemplateManager.export_template(
             source_dir=source_path,
             template_name=template_name,
-            description=description,
-            overwrite=force,
+            description=template_desc,
+            overwrite=should_overwrite,
         )
         UIFormatter.print_info("")
         UIFormatter.print_success(f"Template '{template_name}' successfully exported!")
