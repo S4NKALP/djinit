@@ -1,290 +1,448 @@
-# djinit
+# djinit (djinitx)
 
-> PyPI didn't allow the original name, so you'll find it as **djinitx** on PyPI
+> **Note**: Published as **[djinitx](https://pypi.org/project/djinitx/)** on PyPI.
 
 <div align="center">
 
-<img src="https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white" alt="PyPI">
-<img src="https://img.shields.io/badge/Django-5.1%20%7C%205.2%20%7C%206.0-0C4B33?logo=django&logoColor=white" alt="Django">
-<img src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white" alt="Python">
-<a href="https://github.com/S4NKALP/djinit/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+[![PyPI version](https://img.shields.io/pypi/v/djinitx?color=blue&label=PyPI&logo=pypi&logoColor=white)](https://pypi.org/project/djinitx/)
+[![Django versions](https://img.shields.io/badge/Django-4.2%20%7C%205.1%20%7C%205.2%20%7C%206.0-0C4B33?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Python versions](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/S4NKALP/djinit/blob/main/LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 </div>
 
-A CLI that scaffolds production-ready Django projects with DRF, JWT auth, API docs, and deployment configs - all through an interactive wizard. No more copy-pasting settings or wiring up apps by hand.
+A modern, production-grade CLI project generator for Django. `djinit` scaffolds robust Django projects with modular architecture presets, Django REST Framework, JWT authentication, OpenAPI docs, deployment configurations, frontend integrations, and architecture-aware app scaffolding through an intuitive interactive wizard.
 
 ```bash
+# Quick install & run
 pipx install djinitx
 djinit setup
 ```
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [CLI Commands](#cli-commands)
+  - [`djinit setup` / `dj setup`](#djinit-setup--dj-setup)
+  - [`djinit app`](#djinit-app-architecture-aware)
+  - [`djinit secret`](#djinit-secret)
+- [Architecture Presets](#architecture-presets)
+  - [Overview Table](#architecture-overview)
+  - [Simple Layouts](#simple-layouts)
+  - [Application Presets](#application-presets)
+  - [Advanced Presets](#advanced-presets)
+- [Production Base Models](#production-base-models)
+- [Project Manifest (`.djinit.toml`)](#project-manifest-djinittoml)
+- [Frontend Integrations](#frontend-integrations)
+- [Deployment Ready](#deployment-ready)
+- [Development Workflow](#development-workflow)
+- [API Endpoints](#api-endpoints)
+- [Contributing & License](#contributing)
+
+---
 
 ## Installation
 
 ```bash
-# Recommended - isolated environment
+# Recommended (isolated global environment via pipx)
 pipx install djinitx
 
-# Or with uv
+# Or via uv tool
 uv tool install djinitx
 
-# Or with pip
+# Or inside a virtualenv via pip / uv
 pip install djinitx
+# or
+uv pip install djinitx
 ```
 
-Requires Python 3.13+.
+*Requires Python 3.11+.*
 
-## Usage
+---
 
-### Create a project
+## CLI Commands
+
+### `djinit setup` / `dj setup`
+
+Starts the interactive configuration wizard:
 
 ```bash
 djinit setup
-# or
+# or use the short alias
 dj setup
 ```
 
-The wizard walks you through these choices:
+The interactive wizard walks you through:
 
-1. **Project structure & architecture**:
-   - **Simple**: Standard, Single Folder, Lightweight
-   - **Application**: Predefined, Unified, Modular Monolith, Service Layer, Full-Stack HTMX
-   - **Advanced**: Domain-Driven Design (DDD), Clean Architecture, Multi-Tenant
-2. **Project name and directory**
-3. **Database** - PostgreSQL, MySQL, or SQLite3; `DATABASE_URL` or individual env vars
-4. **Frontend tools** - Tailwind CSS, DaisyUI, HTMX, Alpine.js, and/or Vite (optional)
-5. **Django apps** - Name them; optionally nest under an `apps/` package
-6. **CI/CD** - GitHub Actions, GitLab CI, both, or none
+1. **Architecture preset**: Categorized into **Simple**, **Application**, and **Advanced**.
+2. **Project name & directory**: Select target path or current directory.
+3. **Database selection**: PostgreSQL, MySQL, or SQLite3 (with automatic `DATABASE_URL` or local path setup).
+4. **Frontend stack**: Clean selection of Tailwind CSS, HTMX, Alpine.js, Vite, or pure Django templates.
+5. **App initialization**: Add your core domain apps automatically.
+6. **CI/CD configuration**: GitHub Actions, GitLab CI, both, or none.
 
-When you're done, you have a fully configured Django project ready to run.
+### `djinit app` (Architecture-Aware)
 
-### Architecture-Aware `djinit app`
+Generate one or multiple Django apps that automatically match your active project's architecture:
 
 ```bash
+# Single app
 djinit app accounts
-djinit app products orders
+
+# Multiple apps in one invocation
+djinit app products orders billing
 ```
 
-The `djinit app` command detects your project architecture via `.djinit.toml` and generates apps matching your architecture conventions:
-- **Modular Monolith**: creates `models/`, `services/`, `selectors/`, `views/`, `api/`, `tests/`, and `urls.py`.
-- **Service Layer**: creates `models.py`, `services.py`, `selectors.py`, `forms.py`, `views.py`, `api/`, and `tests/`.
-- **Full-Stack HTMX**: creates `views/`, `forms.py`, `urls.py`, and `templates/<app>/` with HTMX partials.
-- **Domain-Driven Design (DDD)**: creates `domain/`, `application/`, `infrastructure/`, and `presentation/` layers.
-- **Clean Architecture**: creates `domain/`, `use_cases/`, `interfaces/`, and `infrastructure/` layers.
-- **Multi-Tenant**: creates tenant-isolated models and services extending `tenancy.models.TenantAwareModel`.
+**Architecture-aware capabilities:**
+- Reads project architecture from `.djinit.toml` (with backward compatibility for `.djinit` JSON).
+- Places files in the correct directory (`apps/<app>` vs root).
+- Configures full `AppConfig` paths in `USER_DEFINED_APPS` in `settings/base.py`.
+- Generates architecture-specific layers:
+  - **Modular Monolith**: `models/`, `services/`, `selectors/`, `views/`, `api/`, `tests/`
+  - **Service Layer**: `models.py`, `services.py`, `selectors.py`, `forms.py`, `views.py`, `api/`, `tests/`
+  - **Full-Stack HTMX**: `views/`, `forms.py`, `urls.py`, and `templates/<app>/` with partial templates
+  - **DDD**: `domain/`, `application/`, `infrastructure/`, and `presentation/`
+  - **Clean Architecture**: `domain/`, `use_cases/`, `interfaces/`, and `infrastructure/`
+  - **Multi-Tenant**: Tenant-scoped models, tenant services, and isolation unit tests
+- Safely and idempotently wires up URL includes in `config/urls.py`.
 
-Apps are registered automatically in `USER_DEFINED_APPS` in `settings/base.py` with fully-qualified `AppConfig` paths and wired up safely to URL routing.
+### `djinit secret`
 
-### Generate secret keys
+Generate cryptographically secure Django `SECRET_KEY` tokens:
 
 ```bash
+# Generate 3 keys of 50 characters (default)
 djinit secret
+
+# Generate custom count and length
 djinit secret --count 5 --length 64
 ```
 
-## What You Get
+---
 
-Every project ships with:
+## Architecture Presets
 
-- **Split settings** - `base.py`, `development.py`, `production.py` with sensible defaults
-- **Django REST Framework** - With JWT authentication (access + refresh tokens)
-- **API documentation** - Swagger UI at `/docs/`, ReDoc at `/schema/`
-- **CORS** - Configured for local dev, locked down for production
-- **WhiteNoise** - Static file serving, production-ready
-- **django-jazzmin** - Modern admin interface
-- **Environment management** - `.env.sample` with `django-environ`
-- **Deployment configs** - `Dockerfile`, `Procfile`, `runtime.txt`
-- **CI/CD pipelines** - GitHub Actions and/or GitLab CI
-- **Task runner** - `Justfile` with common commands
-- **`.gitignore`** - Python + Node defaults
+### Architecture Overview
 
-Optional add-ons when selected:
+| Preset | Category | Best For | App Structure |
+|---|---|---|---|
+| **Standard** | Simple | Classical Django applications | Flat app root or nested `apps/` |
+| **Single Folder** | Simple | Single-package projects | Everything inside `{module_name}/` |
+| **Lightweight** | Simple | Micro-services, prototypes, MVPs | Minimal Django, zero boilerplate |
+| **Predefined** | Application | Dedicated REST APIs | Dedicated `api/v1/` and `apps/` |
+| **Unified** | Application | Shared application root | `core/` config with unified `apps/` |
+| **Modular Monolith** | Application | ERP, CRM, LMS, enterprise business systems | Packaged submodules (`services/`, `selectors/`) |
+| **Service Layer** | Application | Medium-to-large business applications | Explicit separation of read/write logic |
+| **Full-Stack HTMX** | Application | Interactive server-rendered SPAs | Templates, HTMX partials, Alpine.js |
+| **Domain-Driven Design** | Advanced | Complex enterprise domains | `domain/`, `application/`, `infrastructure/` |
+| **Clean Architecture** | Advanced | Layered software with strict inversion of control | `domain/`, `use_cases/`, `interfaces/` |
+| **Multi-Tenant** | Advanced | B2B SaaS with organization data isolation | Shared-schema, `TenantMiddleware`, scoped queries |
 
-| Feature | Package | What's configured |
-|---|---|---|
-| Tailwind CSS | django-tailwind-cli | Settings, DaisyUI theme, Node install in Docker |
-| HTMX | django-htmx | Installed app + HtmxMiddleware |
-| Vite | django-vite | `vite.config.ts`, dev/prod mode toggles, CI build step |
+---
 
-### Development workflow
+### Simple Layouts
 
-```bash
-just dev              # Start dev server
-just migrate          # Run migrations
-just test             # Run tests
-just lint             # Lint with ruff
-just format           # Format with ruff
-just vite             # Start Vite dev server (if selected)
-just dev-full         # Django + Vite together (if selected)
-```
+#### 1. Standard
 
-No `just` installed? These map directly to Django management commands.
+Classic Django layout with split environments:
 
-## Project Structures
-
-### Standard
-
-```
+```text
 myproject/
 ├── manage.py
-├── myproject/          # Config module
+├── myproject/          # Configuration module
 │   ├── settings/       # base.py, development.py, production.py
 │   ├── urls.py
 │   └── wsgi.py
-└── apps/               # Your apps (optional)
+├── shared/             # Reusable base models & utilities
+└── apps/               # Business logic applications
     └── users/
 ```
 
-### Predefined
+#### 2. Lightweight
 
-```
+Minimal, fast-bootstrapping Django preset without unnecessary overhead:
+
+```text
 myproject/
 ├── manage.py
-├── config/             # Django config
-│   ├── settings/
-│   └── urls.py
-├── apps/               # Business logic
-│   ├── users/
-│   └── core/
-└── api/                # API routes
-    └── v1/
-```
-
-### Unified
-
-```
-myproject/
-├── manage.py
-├── core/               # Django config
-│   ├── settings/
-│   └── urls.py
-└── apps/               # Main application package
-    ├── admin/
-    ├── models/
-    ├── serializers/
-    ├── views/
-    ├── urls/
-    └── api/
-```
-
-### Single Folder
-
-```
-myproject/
-├── manage.py
-├── project/            # Configurable name
+├── config/
 │   ├── settings/
 │   ├── urls.py
-│   ├── models/
-│   ├── api/
 │   └── wsgi.py
+└── templates/
+    └── home.html
 ```
 
-### Modular Monolith
+---
 
-```
+### Application Presets
+
+#### 1. Modular Monolith
+
+Enterprise-scale modular structure designed for large development teams and clear bounded contexts:
+
+```text
 myproject/
 ├── manage.py
 ├── config/             # Settings (base, development, production, testing)
+│   ├── settings/
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
 ├── apps/
-│   ├── accounts/       # Independent business domain module
-│   │   ├── models/
-│   │   ├── services/
-│   │   ├── selectors/
-│   │   ├── views/
-│   │   ├── api/
-│   │   ├── tests/
-│   │   └── urls.py
-│   └── core/
-├── common/             # Reusable kernel (db, middleware, permissions, utils)
-└── tests/
+│   └── accounts/       # Independent domain module
+│       ├── models/     # Model package discoverable by migrations
+│       │   ├── __init__.py
+│       │   └── item.py
+│       ├── services/   # Business writes & atomic transactions
+│       ├── selectors/  # Optimized read queries
+│       ├── views/      # HTTP request handling
+│       ├── api/        # DRF serializers & viewsets
+│       ├── tests/      # Domain unit tests
+│       ├── apps.py
+│       └── urls.py
+├── common/             # Reusable kernel across modules
+│   ├── db/             # Base models & querysets
+│   ├── middleware/     # Request ID & logging middleware
+│   ├── permissions/    # Object & role permissions
+│   └── utils/
+└── pyproject.toml
 ```
 
-### Service Layer
+#### 2. Service Layer
 
-```
+Separates state invariants, database queries, and business workflows cleanly:
+
+```text
 apps/
-└── products/
-    ├── models.py       # Persistence & constraints
-    ├── services.py     # Business operations & atomic transactions
-    ├── selectors.py    # Optimized database read queries
+└── billing/
+    ├── models.py       # Persistence & model invariants
+    ├── services.py     # Business operations (writes & mutations)
+    ├── selectors.py    # Read queries & database lookups
     ├── forms.py        # Django forms & validation
-    ├── views.py        # HTTP views
+    ├── views.py        # HTTP controllers
     ├── api/            # Serializers & viewsets
-    └── tests/
+    ├── tests/
+    └── apps.py
 ```
 
-### Full-Stack HTMX
+#### 3. Full-Stack HTMX
 
-```
+Modern interactive user experiences without Node.js or heavy client frameworks:
+
+```text
 myproject/
 ├── templates/
-│   ├── layouts/base.html   # HTMX + Tailwind + Alpine.js layout
-│   ├── components/         # Navbar, footer, modal
-│   └── includes/           # Messages & toasts
+│   ├── layouts/
+│   │   └── base.html   # Tailwind CSS + HTMX + Alpine.js shell
+│   ├── components/     # Navbars, modals, alerts
+│   └── includes/       # Toasts and messages
 ├── apps/
 │   └── dashboard/
-│       ├── views/          # Full-page & partial handlers
+│       ├── views/      # Full-page and request.htmx partial views
 │       ├── forms.py
+│       ├── urls.py
 │       └── templates/dashboard/
 │           ├── index.html
 │           └── partials/item_row.html
+└── static/
 ```
 
-### Domain-Driven Design (DDD) & Clean Architecture
+---
 
-Explicit separation of concerns across Domain (entities & value objects), Application / Use Cases (interactors & DTOs), Infrastructure (Django ORM persistence adapters), and Presentation (controllers & views).
+### Advanced Presets
 
-### Multi-Tenant
+#### 1. Domain-Driven Design (DDD)
 
-Shared-schema multi-tenancy with `tenancy/` providing `Tenant`, `TenantMembership`, `TenantAwareModel`, `TenantMiddleware`, and tenant-scoped querysets preventing cross-tenant data leaks.
+Strict separation between business entities and framework persistence:
 
-## Environment Setup
+```text
+apps/
+└── orders/
+    ├── domain/         # Pure Python entities & value objects
+    │   ├── entity.py
+    │   └── value_objects.py
+    ├── application/    # Use cases, commands, and DTOs
+    │   └── use_cases.py
+    ├── infrastructure/ # Django ORM models & repository adapters
+    │   ├── models/
+    │   └── repository.py
+    ├── presentation/   # Views, serializers, and endpoints
+    │   ├── views.py
+    │   └── urls.py
+    └── apps.py
+```
+
+#### 2. Clean Architecture
+
+Hexagonal / Ports-and-Adapters structure prioritizing dependency inversion:
+
+```text
+apps/
+└── delivery/
+    ├── domain/         # Enterprise business rules
+    ├── use_cases/      # Application-specific business rules
+    ├── interfaces/     # Repository interfaces & gateway contracts
+    ├── infrastructure/ # Django ORM persistence & external clients
+    └── apps.py
+```
+
+#### 3. Multi-Tenant (Shared-Schema)
+
+Native tenant isolation for B2B SaaS applications:
+
+```text
+myproject/
+├── tenancy/            # Tenancy core module
+│   ├── models.py       # Tenant, TenantMembership, TenantAwareModel
+│   ├── middleware.py   # TenantMiddleware (resolves UUID or slug header)
+│   └── apps.py
+└── apps/
+    └── inventory/
+        ├── models.py   # Models inherit TenantAwareModel
+        ├── services.py # Scoped to current tenant
+        ├── tests/
+        │   └── test_isolation.py  # Verifies cross-tenant data isolation
+        └── apps.py
+```
+
+---
+
+## Production Base Models
+
+Every generated project includes ready-to-use abstract base models in `shared/base.py` (or `common/db/models.py`):
+
+```python
+from shared import (
+    BaseModel,  # UUIDModel + TimeStampedModel
+    TimeStampedModel,  # created_at (indexed), updated_at
+    UUIDModel,  # id = UUIDField(primary_key=True)
+    OrderedModel,  # sort_order, is_active
+    ActivatableModel,  # is_active flag
+    SluggedModel,  # slug = SlugField(unique=True)
+    SoftDeleteModel,  # Soft-delete support with .delete(), .restore(), .hard_delete()
+)
+
+
+class Product(SoftDeleteModel, BaseModel):
+    name = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+```
+
+### Soft-Delete Features:
+- `.delete()`: Sets `deleted_at = timezone.now()` and `is_deleted = True`.
+- `.restore()`: Clears `deleted_at` and restores the record.
+- `.hard_delete()`: Permanently deletes the database row.
+- `.objects`: Default manager automatically filters active records (`.alive()`).
+- `.all_objects`: QuerySet manager accessing both active and soft-deleted records.
+
+---
+
+## Project Manifest (`.djinit.toml`)
+
+Projects created with `djinit` include a `.djinit.toml` manifest file, enabling architecture detection across CLI commands:
+
+```toml
+# Generated by djinit
+[project]
+name = "myproject"
+structure = "modular_monolith"
+schema_version = 1
+apps_dir = "apps"
+module_name = "config"
+
+[features]
+drf = true
+jwt = true
+htmx = false
+tailwind = true
+alpine = false
+vite = false
+
+[database]
+engine = "postgresql"
+use_database_url = true
+
+[deployment]
+target = "docker"
+```
+
+---
+
+## Frontend Integrations
+
+Customize your frontend during project setup:
+
+| Tool | Integration | Features |
+|---|---|---|
+| **Tailwind CSS** | `django-tailwind-cli` | Zero-Node CLI executable, DaisyUI components preconfigured |
+| **HTMX** | `django-htmx` | `HtmxMiddleware`, `request.htmx` partial view support |
+| **Alpine.js** | Standalone Script | Lightweight client-side UI interactivity (tabs, modals, transitions) |
+| **Vite** | `django-vite` | Fast HMR asset bundler for React, Vue, Svelte, and TypeScript |
+
+---
+
+## Deployment Ready
+
+Every generated project ships with production deployment assets:
+
+- **Docker Compose (`docker-compose.yml`)**: Multi-container setup orchestrating the Django web service and PostgreSQL / MySQL / SQLite volume storage.
+- **cPanel & Shared Hosting (`passenger_wsgi.py`)**: Out-of-the-box WSGI configuration for Apache Phusion Passenger environments.
+- **Containerization (`Dockerfile`)**: Production container image with security best practices and non-root user.
+- **Static Asset Delivery (`whitenoise`)**: Gzip and Brotli asset compression for direct production serving.
+- **Production WSGI Server (`gunicorn`)**: Preconfigured for high-throughput concurrency.
+
+---
+
+## Development Workflow
+
+Generated projects come pre-configured with a `Justfile` for common development tasks:
 
 ```bash
-cp .env.sample .env
+just dev              # Start Django development server
+just migrate          # Apply database migrations
+just makemigrations   # Create new migrations
+just test             # Run test suite
+just lint             # Lint with ruff
+just format           # Format with ruff
+just vite             # Start Vite asset server (if selected)
 ```
 
-SQLite works out of the box for development. Swap in your production database when you're ready.
+*(If `just` is not installed, standard `python manage.py` commands work out of the box).*
 
-## Packages
-
-| Package | Role |
-|---|---|
-| Django | Web framework |
-| django-environ | Environment variable management |
-| django-jazzmin | Admin UI |
-| djangorestframework | REST API toolkit |
-| djangorestframework-simplejwt | JWT authentication |
-| drf-yasg | Swagger/OpenAPI docs |
-| django-cors-headers | CORS handling |
-| whitenoise | Static file serving |
-| gunicorn | Production WSGI server |
-| psycopg[binary] | PostgreSQL driver |
-| django-tailwind-cli | Tailwind CSS _(optional)_ |
-| django-htmx | HTMX _(optional)_ |
-| django-vite | Vite bundler _(optional)_ |
+---
 
 ## API Endpoints
 
-| Endpoint | Description |
-|---|---|
-| `/admin/` | Django admin |
-| `/token/` | Obtain JWT pair |
-| `/token/refresh/` | Refresh access token |
-| `/docs/` | Swagger UI |
-| `/schema/` | ReDoc |
+Every API-enabled project includes preconfigured authentication and documentation routes:
+
+| Route | Provider | Description |
+|---|---|---|
+| `/admin/` | `django-jazzmin` | Modern, responsive Django administration panel |
+| `/token/` | `rest_framework_simplejwt` | Obtain JWT access and refresh token pair |
+| `/token/refresh/` | `rest_framework_simplejwt` | Refresh expired access tokens |
+| `/docs/` | `drf-yasg` | Interactive Swagger UI API documentation |
+| `/schema/` | `drf-yasg` | ReDoc API specification viewer |
+
+---
 
 ## Contributing
 
-Contributions are welcome. Open an issue or submit a PR.
+Contributions, feedback, and pull requests are warmly welcome!
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/whatever`)
-3. Make your changes and run `just test`
-4. Submit a pull request
+1. Fork the repository on GitHub.
+2. Create a feature branch (`git checkout -b feat/my-improvement`).
+3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org/).
+4. Verify with `uv run pytest` and `uv run ruff check .`.
+5. Open a Pull Request.
 
-Match the existing code style - ruff linting and formatting are enforced.
+---
 
 ## License
 
-MIT © [Sankalp Tharu](https://sankalptharu.com.np)
+Distributed under the [MIT License](https://github.com/S4NKALP/djinit/blob/main/LICENSE).
+
+Copyright © 2026 [Sankalp Tharu](https://sankalptharu.com.np).
