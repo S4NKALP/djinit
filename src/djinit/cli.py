@@ -56,6 +56,12 @@ def secret(
     """
     Generate Django secret keys.
     """
+    if length < 16:
+        UIFormatter.print_warning("Secret key length increased to minimum recommended length (16 characters).")
+        length = 16
+    if count < 1:
+        count = 1
+
     keys = generate_multiple_keys(count, length)
     UIFormatter.print_info("")
     display_secret_keys(keys)

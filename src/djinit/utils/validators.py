@@ -7,7 +7,7 @@ import keyword
 import re
 from typing import Any, Callable, Tuple
 
-from djinit.core.config import PYTHON_BUILTINS
+from djinit.core.config import DJANGO_RESERVED, PYTHON_BUILTINS
 
 NAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 
@@ -28,6 +28,10 @@ def _validate_name(name: str, name_type: str = "name") -> Tuple[bool, str]:
         (
             lambda n: n.strip().lower() not in PYTHON_BUILTINS,
             f"'{name.strip()}' conflicts with Python builtin module. Choose a different name",
+        ),
+        (
+            lambda n: n.strip().lower() not in DJANGO_RESERVED,
+            f"'{name.strip()}' is a reserved Django name. Choose a different name",
         ),
         (lambda n: not n.strip().startswith("_"), f"{name_type.capitalize()} should not start with underscore"),
     ]

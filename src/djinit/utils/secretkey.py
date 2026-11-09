@@ -14,12 +14,14 @@ console = Console()
 
 
 def generate_secret_key(length: int = 50) -> str:
+    safe_length = max(16, length)
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*(-_=+)"
-    return "".join(secrets.choice(alphabet) for _ in range(length))
+    return "".join(secrets.choice(alphabet) for _ in range(safe_length))
 
 
 def generate_multiple_keys(count: int = 3, length: int = 50) -> list[str]:
-    return [generate_secret_key(length) for _ in range(count)]
+    safe_count = max(1, count)
+    return [generate_secret_key(length) for _ in range(safe_count)]
 
 
 def display_secret_keys(keys: list[str]) -> None:
