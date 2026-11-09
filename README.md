@@ -126,7 +126,10 @@ djinit secret --count 5 --length 64
 Export any existing Django project into a reusable, sanitized custom starter template:
 
 ```bash
-# Export the current project as a custom starter template
+# Launch interactive export wizard (prompts for directory, name, description & confirmation)
+djinit template export
+
+# Or export directly with options
 djinit template export . --name my-custom-starter --description "Company SaaS Starter"
 
 # List all saved custom templates
