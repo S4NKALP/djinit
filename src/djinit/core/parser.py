@@ -60,24 +60,32 @@ _FORBIDDEN_ATTRIBUTES = frozenset(
     {
         "__import__",
         "breakpoint",
+        "co_code",
         "compile",
+        "cr_frame",
         "delattr",
         "eval",
         "exec",
         "exit",
+        "f_code",
+        "f_globals",
+        "f_locals",
         "format",
         "format_map",
         "fork",
         "getattr",
+        "gi_frame",
         "globals",
         "input",
         "locals",
+        "mro",
         "open",
         "popen",
         "quit",
         "setattr",
         "spawn",
         "system",
+        "tb_frame",
         "vars",
     }
 )
@@ -87,8 +95,10 @@ _FORBIDDEN_ATTRIBUTES = frozenset(
 # (dangerous) surface through dotted access.
 _PLAIN_DATA_TYPES = (str, bytes, bytearray, bool, int, float, complex, list, tuple, dict, set, frozenset, Mapping)
 
-# Guards against cheap resource exhaustion such as ``2 ** 99999999``.
+# Guards against cheap resource exhaustion such as ``2 ** 99999999`` or huge sequence allocations.
 _MAX_EXPONENT = 1000
+_MAX_SEQUENCE_ITEMS = 100_000
+_MAX_COMPREHENSION_ITEMS = 10_000
 
 
 class _SafeExpressionEvaluator(ast.NodeVisitor):
@@ -128,6 +138,7 @@ class _SafeExpressionEvaluator(ast.NodeVisitor):
         # Outermost scope is the render context; comprehension bodies push their own
         # dicts so loop variables never leak into the surrounding scope.
         self._scopes: List[Any] = [context]
+        self._comprehension_count: int = 0
 
     # -- entry point ---------------------------------------------------------
 
@@ -237,6 +248,13 @@ class _SafeExpressionEvaluator(ast.NodeVisitor):
         if isinstance(node.op, ast.Pow) and isinstance(left, int) and isinstance(right, int):
             if abs(right) > _MAX_EXPONENT:
                 raise SafeExpressionError("Exponent is too large")
+        if isinstance(node.op, ast.Mult):
+            if isinstance(left, (str, bytes, list, tuple)) and isinstance(right, int):
+                if right > 0 and len(left) * right > _MAX_SEQUENCE_ITEMS:
+                    raise SafeExpressionError("Sequence multiplication result is too large")
+            elif isinstance(right, (str, bytes, list, tuple)) and isinstance(left, int):
+                if left > 0 and len(right) * left > _MAX_SEQUENCE_ITEMS:
+                    raise SafeExpressionError("Sequence multiplication result is too large")
         return handler(left, right)
 
     def visit_Compare(self, node: ast.Compare) -> bool:
@@ -318,6 +336,9 @@ class _SafeExpressionEvaluator(ast.NodeVisitor):
 
     def _run_comprehension(self, generators: List[ast.comprehension], index: int, emit) -> None:
         if index >= len(generators):
+            self._comprehension_count += 1
+            if self._comprehension_count > _MAX_COMPREHENSION_ITEMS:
+                raise SafeExpressionError("Comprehension produced too many items")
             emit()
             return
 

@@ -79,7 +79,18 @@ class CustomTemplateManager:
     @staticmethod
     def _sanitize_env_content(env_content: str, project_name: str) -> str:
         """Sanitize environment variables for safe export, preventing secret leakage."""
-        sensitive_keywords = ("SECRET", "PASSWORD", "KEY", "TOKEN", "CREDENTIAL", "AUTH", "PASS")
+        sensitive_keywords = (
+            "SECRET",
+            "PASSWORD",
+            "KEY",
+            "TOKEN",
+            "CREDENTIAL",
+            "AUTH",
+            "PASS",
+            "SALT",
+            "CERT",
+            "SIGNATURE",
+        )
         lines = []
         for line in env_content.splitlines():
             trimmed = line.strip()
@@ -96,6 +107,11 @@ class CustomTemplateManager:
                 lines.append(f"{key_name}=your-{key_name.lower().replace('_', '-')}")
             elif "DATABASE_URL" in key_upper or "DB_URL" in key_upper:
                 lines.append(f"{key_name}=sqlite:///db.sqlite3")
+            elif any(k in key_upper for k in ("REDIS_URL", "CACHE_URL", "BROKER_URL")):
+                lines.append(f"{key_name}=redis://127.0.0.1:6379/1")
+            elif "://" in val and "@" in val:
+                sanitized_val = re.sub(r"://([^:]+):([^@]+)@", "://user:password@", val)
+                lines.append(f"{key_name}={sanitized_val}")
             else:
                 pattern = re.compile(r"\b" + re.escape(project_name) + r"\b")
                 lines.append(f"{key_name}={pattern.sub('[[ project_name ]]', val)}")
@@ -143,7 +159,9 @@ class CustomTemplateManager:
 
                 # Remap directories named after the project to placeholder
                 mapped_parts = ["__project_name__" if part == project_name else part for part in rel_root.parts]
-                dest_dir = staging_dir.joinpath(*mapped_parts)
+                dest_dir = staging_dir.joinpath(*mapped_parts).resolve()
+                if not dest_dir.is_relative_to(staging_dir.resolve()):
+                    continue
                 dest_dir.mkdir(parents=True, exist_ok=True)
 
                 for file in files:
@@ -151,7 +169,9 @@ class CustomTemplateManager:
                         continue
 
                     src_file = Path(root) / file
-                    dest_file = dest_dir / file
+                    dest_file = (dest_dir / file).resolve()
+                    if not dest_file.is_relative_to(staging_dir.resolve()):
+                        continue
 
                     try:
                         content = src_file.read_text(encoding="utf-8")
@@ -215,8 +235,14 @@ class CustomTemplateManager:
 
     @classmethod
     def get_template(cls, template_name: str) -> Path | None:
-        """Get template directory path if it exists."""
-        target = cls.get_templates_root() / template_name.strip()
+        """Get template directory path if it exists, safely preventing path traversal."""
+        clean_name = template_name.strip()
+        if not clean_name or not NAME_REGEX.match(clean_name):
+            return None
+        root = cls.get_templates_root().resolve()
+        target = (root / clean_name).resolve()
+        if not target.is_relative_to(root):
+            return None
         return target if target.is_dir() else None
 
     @classmethod
@@ -236,6 +262,13 @@ class CustomTemplateManager:
         project_name: str,
     ) -> bool:
         """Instantiate a new project from a custom template."""
+        clean_proj = project_name.strip()
+        if not clean_proj or not NAME_REGEX.match(clean_proj):
+            UIFormatter.print_error(
+                f"Invalid project name '{project_name}'. Name must contain only letters, numbers, underscores, and hyphens."
+            )
+            return False
+
         template_path = cls.get_template(template_name)
         if not template_path:
             UIFormatter.print_error(f"Template '{template_name}' not found.")
@@ -250,8 +283,10 @@ class CustomTemplateManager:
             rel_root = Path(root).relative_to(template_path)
 
             # Map __project_name__ placeholder back to actual project name
-            mapped_parts = [project_name if part == "__project_name__" else part for part in rel_root.parts]
-            current_dest_dir = dest.joinpath(*mapped_parts)
+            mapped_parts = [clean_proj if part == "__project_name__" else part for part in rel_root.parts]
+            current_dest_dir = dest.joinpath(*mapped_parts).resolve()
+            if not current_dest_dir.is_relative_to(dest):
+                continue
             current_dest_dir.mkdir(parents=True, exist_ok=True)
 
             for file in files:
@@ -259,15 +294,17 @@ class CustomTemplateManager:
                     continue
 
                 src_file = Path(root) / file
-                dest_file_name = file.replace("__project_name__", project_name)
-                dest_file = current_dest_dir / dest_file_name
+                dest_file_name = file.replace("__project_name__", clean_proj)
+                dest_file = (current_dest_dir / dest_file_name).resolve()
+                if not dest_file.is_relative_to(dest):
+                    continue
 
                 try:
                     text = src_file.read_text(encoding="utf-8")
                     rendered = (
-                        text.replace("[[ project_name ]]", project_name)
+                        text.replace("[[ project_name ]]", clean_proj)
                         .replace("[[ secret_key ]]", new_secret_key)
-                        .replace("[[ module_name ]]", project_name)
+                        .replace("[[ module_name ]]", clean_proj)
                     )
                     dest_file.write_text(rendered, encoding="utf-8")
                 except (UnicodeDecodeError, OSError):
@@ -282,9 +319,9 @@ class CustomTemplateManager:
                     sample_env.read_text(encoding="utf-8")
                     .replace("your-secret-key", new_secret_key)
                     .replace("[[ secret_key ]]", new_secret_key)
-                    .replace("[[ project_name ]]", project_name)
+                    .replace("[[ project_name ]]", clean_proj)
                 )
                 env_file.write_text(sample_text, encoding="utf-8")
 
-        UIFormatter.print_success(f"Project '{project_name}' created from template '{template_name}'!")
+        UIFormatter.print_success(f"Project '{clean_proj}' created from template '{template_name}'!")
         return True
