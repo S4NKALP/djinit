@@ -48,10 +48,10 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
 # @ENDIF
-# @IF include_api and comment_out_api_url
+# @IF include_api and api_module and comment_out_api_url
     # path("api/", include("[[ api_module ]].urls")),
 # @ENDIF
-# @IF include_api and not comment_out_api_url
+# @IF include_api and api_module and not comment_out_api_url
     path("api/", include("[[ api_module ]].urls")),
 # @ENDIF
 # @IF include_apps
@@ -61,14 +61,6 @@ urlpatterns = [
 # @ENDLOOP
 # @ENDIF
 ]
-# @IF use_tailwind
-
-# django-browser-reload for tailwind live reload (dev only)
-if settings.DEBUG:
-    urlpatterns += [
-        path("__reload__/", include("django_browser_reload.urls")),
-    ]
-# @ENDIF
 
 urlpatterns += [
     re_path(
