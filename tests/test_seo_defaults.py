@@ -60,7 +60,7 @@ def test_fullstack_htmx_includes_seo_meta_partial(tmp_path, monkeypatch):
     assert 'rel="canonical"' in seo_meta_text
 
     base_html = (root / "templates" / "layouts" / "base.html").read_text(encoding="utf-8")
-    assert 'includes/seo_meta.html' in base_html
+    assert "includes/seo_meta.html" in base_html
 
 
 def test_lightweight_includes_seo_in_home_template(tmp_path, monkeypatch):
