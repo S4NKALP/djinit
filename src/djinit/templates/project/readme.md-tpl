@@ -1,16 +1,25 @@
 # [[ project_name ]]
 
-A Django project folder structure is generated with [djinitx/djinit/dj](https://github.com/S4NKALP/djinit).
+A production-ready Django project generated with [djinit](https://github.com/S4NKALP/djinit) (`[[ architecture ]]` architecture, `[[ database_type ]]` database).
 
 ## Features
 
-- Modern project structure with environment-specific settings
-- Pre-configured REST API with JWT authentication
-- Essential dependencies and utilities
-- Production-ready configuration
+- **Environment-Split Settings**: Dedicated `base.py`, `development.py`, and `production.py` configurations via `django-environ`
+- **REST API & JWT Auth**: Pre-configured Django REST Framework with `djangorestframework-simplejwt` token endpoints
+- **Zero-Config SEO**: Built-in `/sitemap.xml` (`django.contrib.sitemaps`), `/robots.txt`, and `seo_context` processor (`SITE_NAME`, `SITE_DESCRIPTION`, canonical URLs)
+- **Production Deployment Ready**: Includes `Dockerfile`, `docker-compose.yml`, `Procfile`, `runtime.txt`, `passenger_wsgi.py`, and WhiteNoise static serving
+# @IF use_tailwind
+- **Tailwind CSS**: Configured with `django-tailwind-cli` and DaisyUI
+# @ENDIF
+# @IF use_htmx
+- **HTMX**: Configured with `django-htmx` middleware and partial rendering support
+# @ENDIF
+# @IF use_vite
+- **Vite**: Configured with `django-vite` for modern frontend asset bundling
+# @ENDIF
 
 # @IF app_list
-## Apps
+## Registered Apps
 
 Registered in `[[ module_name ]]/settings/base.py`:
 
@@ -18,69 +27,85 @@ Registered in `[[ module_name ]]/settings/base.py`:
 - `[[ app ]]`
 # @ENDLOOP
 
+> Tip: Add new architecture-aware apps anytime with `djinit app <app_name>`.
+
 # @ENDIF
-## Setup
+## Quick Start
 
-### Using Just (Recommended)
+### 1. Using `just` (Recommended)
 
-1. Set environment variables in `.env` file
-
-2. Run setup (installs dependencies, runs migrations, creates superuser):
+1. Copy `.env.sample` to `.env` and review your environment variables:
+   ```bash
+   cp .env.sample .env
+   ```
+2. Run initial setup (installs dependencies, runs migrations, creates superuser):
    ```bash
    just setup
    ```
-
-3. Start development server:
+3. Start the development server:
    ```bash
    just dev
    ```
 
-### Traditional Method
+### 2. Using `uv` or `pip`
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+# Install dependencies (uv)
+uv sync
+# Or using pip
+pip install -r requirements.txt
 
-2. Set environment variables in `.env` file
+# Configure environment
+cp .env.sample .env
 
-3. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
+# Apply migrations & create superuser
+python manage.py migrate
+python manage.py createsuperuser
 
-4. Create superuser:
-   ```bash
-   python manage.py createsuperuser
-   ```
+# Start development server
+python manage.py runserver
+```
 
-5. Start development server:
-   ```bash
-   python manage.py runserver
-   ```
+### 3. Using Docker
 
-## Available Commands
+```bash
+cp .env.sample .env
+docker compose up --build
+```
 
-Run `just` to see all available commands, including:
+## Built-in Endpoints
 
-- `just dev` - Run development server
-- `just migrate` - Run migrations
-- `just makemigrations` - Create migrations
-- `just createsuperuser` - Create superuser
-- `just test` - Run tests
-- `just lint` - Lint code
-- `just format` - Format code
-- `just shell` - Django shell
-- `just clean` - Clean cache files
-- `just install <package>` - Install package
-- `just remove <package>` - Remove package
-- `just server` - Run production server
-- `just ci` - Run all linting and checks
-- `just test-coverage` - Run tests with coverage
+| Endpoint | Purpose |
+|---|---|
+| `/admin/` | Django Admin (styled with Jazzmin) |
+| `/token/` | Obtain JWT access & refresh pair |
+| `/token/refresh/` | Refresh JWT access token |
+| `/token/blacklist/` | Blacklist a refresh token |
+| `/sitemap.xml` | XML sitemap (`StaticViewSitemap` in `[[ module_name ]]/sitemaps.py`) |
+| `/robots.txt` | Crawler directives pointing to `/sitemap.xml` |
+
+## Available `just` Commands
+
+Run `just` to list all tasks:
+
+| Command | Description |
+|---|---|
+| `just dev` | Start Django development server |
+| `just migrate` | Apply database migrations |
+| `just makemigrations` | Generate new database migrations |
+| `just createsuperuser` | Create an admin superuser |
+| `just test` | Run test suite |
+| `just test-coverage` | Run tests with coverage report |
+| `just lint` | Run linter checks |
+| `just format` | Format codebase |
+| `just ci` | Run all linting and check tasks |
+| `just shell` | Open Django interactive shell |
+| `just clean` | Clean temporary cache files |
+| `just server` | Start production WSGI server |
 
 ## Project Structure
 
-```
+```text
 # @IF predefined_structure
 [[ project_name ]]/
 ├── [[ module_name ]]/
@@ -88,6 +113,8 @@ Run `just` to see all available commands, including:
 │   │   ├── base.py
 │   │   ├── development.py
 │   │   └── production.py
+│   ├── context_processors.py
+│   ├── sitemaps.py
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
@@ -95,35 +122,25 @@ Run `just` to see all available commands, including:
 │   ├── users/
 │   │   ├── apps.py
 │   │   ├── models/
-│   │   │   └── user.py
 │   │   ├── serializers/
-│   │   │   └── user_serializer.py
 │   │   ├── services/
-│   │   │   └── user_service.py
 │   │   ├── views/
-│   │   │   └── user_view.py
 │   │   ├── urls.py
 │   │   └── tests/
-│   │       └── test_user_api.py
 │   └── core/
 │       ├── utils/
-│       │   └── responses.py
 │       ├── mixins/
-│       │   └── timestamped_model.py
 │       ├── exceptions.py
 │       └── middleware/
-│           └── request_logger.py
 ├── api/
-│   ├── __init__.py
-│   ├── urls.py
 │   └── v1/
-│       ├── __init__.py
-│       └── urls.py
 ├── manage.py
-├── requirements.txt
 ├── pyproject.toml
-├── uv.lock
+├── requirements.txt
+├── .djinit.toml
 ├── .env.sample
+├── Dockerfile
+├── docker-compose.yml
 ├── justfile
 ├── Procfile
 ├── runtime.txt
@@ -132,38 +149,30 @@ Run `just` to see all available commands, including:
 [[ project_name ]]/
 ├── apps/
 │   ├── admin/
-│   │   └── __init__.py
 │   ├── api/
-│   │   ├── __init__.py
-│   │   ├── urls.py
 │   │   └── v1/
-│   │       ├── __init__.py
-│   │       └── urls.py
 │   ├── models/
-│   │   └── __init__.py
 │   ├── serializers/
-│   │   └── __init__.py
 │   ├── tests/
-│   │   └── __init__.py
 │   ├── urls/
-│   │   └── __init__.py
 │   └── views/
-│       └── __init__.py
 ├── core/
-│   ├── asgi.py
-│   ├── __init__.py
 │   ├── settings/
 │   │   ├── base.py
 │   │   ├── development.py
-│   │   ├── __init__.py
 │   │   └── production.py
+│   ├── context_processors.py
+│   ├── sitemaps.py
 │   ├── urls.py
-│   └── wsgi.py
+│   ├── wsgi.py
+│   └── asgi.py
 ├── manage.py
-├── requirements.txt
 ├── pyproject.toml
-├── uv.lock
+├── requirements.txt
+├── .djinit.toml
 ├── .env.sample
+├── Dockerfile
+├── docker-compose.yml
 ├── justfile
 ├── Procfile
 ├── runtime.txt
@@ -175,37 +184,32 @@ Run `just` to see all available commands, including:
 │   │   ├── base.py
 │   │   ├── development.py
 │   │   └── production.py
-│   ├── admin/
-│   ├── api/              # API endpoints organized by model
-│   │   ├── user/         # Example: if you have a User model
-│   │   │   ├── views.py
-│   │   │   ├── serializers.py
-│   │   │   └── urls.py
-│   │   └── urls.py
-│   ├── models/           # Django models
-│   ├── tests/
+│   ├── context_processors.py
+│   ├── sitemaps.py
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
 ├── manage.py
-├── requirements.txt
 ├── pyproject.toml
-├── uv.lock
+├── requirements.txt
+├── .djinit.toml
 ├── .env.sample
+├── Dockerfile
+├── docker-compose.yml
+├── justfile
+├── Procfile
+├── runtime.txt
 └── README.md
-
-**Note:** For the single folder layout, organize your API endpoints by model name under the `api/` directory.
-For example, if you have a `User` model in `models/user.py`, create:
-- `api/user/views.py` - API views for User
-- `api/user/serializers.py` - Serializers for User
-- `api/user/urls.py` - URL patterns for User endpoints
-
-See the README files in `api/` and `models/` directories for more details.
 # @ENDIF
 ```
+# @IF single_structure
 
-## API Documentation
+> **Single Folder Note:** Organize API endpoints by model under `api/` (for example, `api/user/views.py`, `api/user/serializers.py`, and `api/user/urls.py`).
+# @ENDIF
 
-When running in development mode, API documentation is available at:
-- Swagger UI: http://localhost:8000/docs/
-- Schema: http://localhost:8000/schema/
+## SEO Customization
+
+Default SEO values are loaded in `[[ module_name ]]/settings/base.py` and exposed to all templates via `[[ module_name ]]/context_processors.py`:
+
+- Override `SITE_NAME`, `SITE_DESCRIPTION`, `SITE_AUTHOR`, or `DEFAULT_OG_IMAGE` in `.env`
+- Add model sitemaps in `[[ module_name ]]/sitemaps.py` and register them in `[[ module_name ]]/urls.py`

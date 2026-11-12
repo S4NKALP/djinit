@@ -253,6 +253,11 @@ class FileCreator(BaseService):
             "predefined_structure": bool(self.metadata.get("predefined_structure")),
             "unified_structure": bool(self.metadata.get("unified_structure")),
             "single_structure": bool(self.metadata.get("single_structure")),
+            "architecture": self.metadata.get("architecture") or "standard",
+            "database_type": self.metadata.get("database_type", "postgresql"),
+            "use_tailwind": self.metadata.get("use_tailwind", False),
+            "use_htmx": self.metadata.get("use_htmx", False),
+            "use_vite": self.metadata.get("use_vite", False),
             "module_name": self.module_name,
         }
         self._render_and_create_file("README.md", "project/readme.md-tpl", context, "Created README.md file")
