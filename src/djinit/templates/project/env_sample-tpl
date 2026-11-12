@@ -38,3 +38,7 @@ EMAIL_HOST_USER=
 EMAIL_HOST_PASSWORD=
 DEFAULT_FROM_EMAIL=
 SERVER_EMAIL=
+
+# SEO settings (optional; defaults are preconfigured in settings/base.py)
+SITE_NAME=[[ project_name ]]
+SITE_DESCRIPTION=[[ project_name ]] - Built with Django and djinit.

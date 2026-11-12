@@ -1,0 +1,20 @@
+"""Default sitemap configuration for SEO.
+
+Add your model sitemaps to the `sitemaps` dictionary in `urls.py`
+or extend `StaticViewSitemap` with your named URL patterns.
+"""
+
+from django.contrib.sitemaps import Sitemap
+
+
+class StaticViewSitemap(Sitemap):
+    """Default sitemap for static / root views."""
+
+    priority = 0.8
+    changefreq = "weekly"
+
+    def items(self):
+        return ["/"]
+
+    def location(self, item):
+        return item

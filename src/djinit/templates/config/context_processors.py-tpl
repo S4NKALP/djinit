@@ -1,0 +1,14 @@
+"""Default SEO context processor."""
+
+from django.conf import settings
+
+
+def seo_context(request):
+    """Inject default SEO metadata into every template context."""
+    return {
+        "seo_site_name": getattr(settings, "SITE_NAME", ""),
+        "seo_description": getattr(settings, "SITE_DESCRIPTION", ""),
+        "seo_author": getattr(settings, "SITE_AUTHOR", ""),
+        "seo_og_image": getattr(settings, "DEFAULT_OG_IMAGE", ""),
+        "seo_canonical_url": request.build_absolute_uri(request.path),
+    }

@@ -2,6 +2,8 @@
 """generated with djinit"""
 
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
 from django.urls import path, re_path
 from django.conf import settings
 from django.views.static import serve
@@ -15,9 +17,31 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
 )
 # @ENDIF
+from .sitemaps import StaticViewSitemap
+
+sitemaps = {
+    "static": StaticViewSitemap,
+}
+
+
+def robots_txt(request):
+    """Serve default robots.txt pointing crawlers to sitemap.xml."""
+    sitemap_url = f"{request.scheme}://{request.get_host()}/sitemap.xml"
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /api/",
+        f"Sitemap: {sitemap_url}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # SEO: sitemap.xml & robots.txt
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
+    path("robots.txt", robots_txt, name="robots_txt"),
 # @IF include_api
     # JWT tokens
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

@@ -43,6 +43,7 @@ BUILT_IN_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 ]
 
 INSTALLED_APPS = BUILT_IN_APPS + THIRD_PARTY_APPS + USER_DEFINED_APPS
@@ -66,13 +67,14 @@ ROOT_URLCONF = "[[ project_name ]].urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "[[ project_name ]].context_processors.seo_context",
             ],
         },
     },
@@ -222,3 +224,12 @@ DJANGO_VITE = {
     }
 }
 # @ENDIF
+
+# Default SEO Configuration (zero-config defaults; override via .env)
+SITE_NAME = env("SITE_NAME", default="[[ project_name ]]")
+SITE_DESCRIPTION = env(
+    "SITE_DESCRIPTION",
+    default="[[ project_name ]] - Built with Django and djinit.",
+)
+SITE_AUTHOR = env("SITE_AUTHOR", default="")
+DEFAULT_OG_IMAGE = env("DEFAULT_OG_IMAGE", default="")
