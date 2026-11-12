@@ -62,13 +62,14 @@ urlpatterns = [
 # @ENDIF
 ]
 
-urlpatterns += [
-    re_path(
-        r"^media/(?P<path>.*)$",
-        serve,
-        {"document_root": settings.MEDIA_ROOT},
-    ),
-]
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            serve,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]
 # @ENDIF
 # @IF url_type == 'api_root'
 from django.urls import include, path

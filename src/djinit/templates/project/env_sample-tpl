@@ -2,6 +2,7 @@
 DJANGO_SETTINGS_MODULE=[[ project_name ]].settings.development
 SECRET_KEY=your-secret-key
 ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
+CSRF_TRUSTED_ORIGINS=https://api.your-domain.com,https://www.your-domain.com
 
 # @IF use_database_url
 # Database URL (recommended for production)
