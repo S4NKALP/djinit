@@ -71,6 +71,8 @@ class DjangoHelper:
                 ("urls.py", "config/urls.py-tpl", urls_context),
                 ("wsgi.py", "config/wsgi.py-tpl", {"project_name": project_name}),
                 ("asgi.py", "config/asgi.py-tpl", {"project_name": project_name}),
+                ("sitemaps.py", "config/sitemaps.py-tpl", {}),
+                ("context_processors.py", "config/context_processors.py-tpl", {}),
             ]
             CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 

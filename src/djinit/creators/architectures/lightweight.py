@@ -37,9 +37,15 @@ class LightweightHandler(ArchitectureHandler):
         os.makedirs(templates_dir, exist_ok=True)
 
         home_html = """<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome to Django</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_site_name|default:"Welcome to Django" }}</title>
+    <meta name="description" content="{{ seo_description }}">
+    <link rel="canonical" href="{{ seo_canonical_url }}">
+    <meta property="og:title" content="{{ seo_site_name }}">
+    <meta property="og:description" content="{{ seo_description }}">
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
         h1 { color: #092e20; }

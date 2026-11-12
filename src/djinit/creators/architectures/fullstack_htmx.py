@@ -39,13 +39,40 @@ class FullStackHTMXHandler(ArchitectureHandler):
         for sub in ["layouts", "components", "includes"]:
             os.makedirs(os.path.join(templates_dir, sub), exist_ok=True)
 
-        # Base Layout with HTMX + Tailwind + optional Alpine.js
+        # Base Layout with HTMX + Tailwind + optional Alpine.js + Default SEO
+        seo_meta_html = """<!-- Primary SEO Meta Tags -->
+<meta name="description" content="{% block meta_description %}{{ seo_description }}{% endblock %}">
+{% if seo_author %}<meta name="author" content="{{ seo_author }}">{% endif %}
+<meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+<link rel="canonical" href="{% block canonical_url %}{{ seo_canonical_url }}{% endblock %}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:url" content="{{ seo_canonical_url }}">
+<meta property="og:site_name" content="{{ seo_site_name }}">
+<meta property="og:title" content="{% block og_title %}{{ seo_site_name }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ seo_description }}{% endblock %}">
+{% if seo_og_image %}<meta property="og:image" content="{{ seo_og_image }}">{% endif %}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}{{ seo_site_name }}{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}{{ seo_description }}{% endblock %}">
+{% if seo_og_image %}<meta name="twitter:image" content="{{ seo_og_image }}">{% endif %}
+"""
+        CommonUtils.create_file_with_content(
+            os.path.join(templates_dir, "includes", "seo_meta.html"),
+            seo_meta_html,
+            "Created templates/includes/seo_meta.html",
+        )
+
         base_html = """<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Django HTMX Application{% endblock %}</title>
+    <title>{% block title %}{{ seo_site_name|default:"Django HTMX Application" }}{% endblock %}</title>
+    {% block seo_meta %}{% include "includes/seo_meta.html" %}{% endblock %}
     <!-- Tailwind CSS / DaisyUI -->
     <link rel="stylesheet" href="/static/css/tailwind.min.css">
     <!-- HTMX -->

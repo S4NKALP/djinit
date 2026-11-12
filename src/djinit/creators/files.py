@@ -140,6 +140,8 @@ class FileCreator(BaseService):
             ("urls.py", "config/urls.py-tpl", urls_context),
             ("wsgi.py", "config/wsgi.py-tpl", {"project_name": prefix}),
             ("asgi.py", "config/asgi.py-tpl", {"project_name": prefix}),
+            ("sitemaps.py", "config/sitemaps.py-tpl", {}),
+            ("context_processors.py", "config/context_processors.py-tpl", {}),
         ]
 
         for filename, template, context in files:
