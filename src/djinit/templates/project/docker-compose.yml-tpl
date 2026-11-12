@@ -1,19 +1,47 @@
 services:
   web:
     build: .
-    command: gunicorn [[ module_name ]].wsgi:application --bind 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn [[ module_name ]].wsgi:application --bind 0.0.0.0:8000 --workers 3"
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
+      SECRET_KEY: ${SECRET_KEY:-dev-insecure-secret-key-change-in-prod}
+# @IF database_type == 'postgresql'
+      DATABASE_URL: ${DATABASE_URL:-postgres://user:password@db:5432/[[ db_name ]]}
+      DB_NAME: [[ db_name ]]
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_HOST: db
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+# @ENDIF
+# @IF database_type == 'mysql'
+      DATABASE_URL: ${DATABASE_URL:-mysql://user:password@db:3306/[[ db_name ]]}
+      DB_NAME: [[ db_name ]]
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_HOST: db
+      DB_PORT: "3306"
+    depends_on:
+      db:
+        condition: service_healthy
+# @ENDIF
     volumes:
       - .:/app
-# @IF database_type == 'postgresql'
-    depends_on:
-      - db
+      - static_volume:/app/staticfiles
 
+# @IF database_type == 'postgresql'
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: [[ db_name ]]
       POSTGRES_USER: user
@@ -22,16 +50,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
-volumes:
-  postgres_data:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d [[ db_name ]]"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 # @ENDIF
 # @IF database_type == 'mysql'
-    depends_on:
-      - db
-
   db:
     image: mysql:8.0
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: [[ db_name ]]
       MYSQL_USER: user
@@ -41,7 +69,18 @@ volumes:
       - mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+# @ENDIF
 
 volumes:
+  static_volume:
+# @IF database_type == 'postgresql'
+  postgres_data:
+# @ENDIF
+# @IF database_type == 'mysql'
   mysql_data:
 # @ENDIF
