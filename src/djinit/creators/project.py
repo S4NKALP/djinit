@@ -28,8 +28,13 @@ class ProjectCreator(BaseService):
     def create_project(self) -> None:
         os.makedirs(self.project_root, exist_ok=True)
 
-        unified = self.metadata.get("unified_structure", False)
-        DjangoHelper.startproject(self.module_name, self.project_root, unified=unified, metadata=self.metadata)
+        # These layouts create their own settings and entry points after manage.py.
+        custom_layout = (
+            self.metadata.get("architecture") in ARCHITECTURE_HANDLERS
+            or self.metadata.get("unified_structure", False)
+            or self.metadata.get("single_structure", False)
+        )
+        DjangoHelper.startproject(self.module_name, self.project_root, unified=custom_layout, metadata=self.metadata)
         UIFormatter.print_success(f"Django project '{self.project_name}' created successfully!")
 
     def _get_apps_base_dir(self) -> str:

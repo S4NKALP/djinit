@@ -18,6 +18,7 @@ import ast
 import operator
 import re
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 __all__ = ["InFileLogicParser", "SafeExpressionError"]
@@ -371,6 +372,11 @@ class _SafeExpressionEvaluator(ast.NodeVisitor):
         raise SafeExpressionError("Unsupported loop target")
 
 
+@lru_cache(maxsize=256)
+def _parse_expression(source: str) -> ast.Expression:
+    return ast.parse(source, mode="eval")
+
+
 def safe_eval(expression: str, context: Optional[Mapping[str, Any]] = None) -> Any:
     """Evaluate a template expression without ``eval()``.
 
@@ -386,7 +392,7 @@ def safe_eval(expression: str, context: Optional[Mapping[str, Any]] = None) -> A
         raise SafeExpressionError("Empty expression")
 
     try:
-        tree = ast.parse(source, mode="eval")
+        tree = _parse_expression(source)
     except SyntaxError as exc:
         raise SafeExpressionError(f"Invalid expression syntax: {source!r}") from exc
 

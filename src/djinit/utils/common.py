@@ -7,7 +7,6 @@ import json
 import os
 import secrets
 import subprocess
-import sys
 from contextlib import contextmanager, suppress
 from pathlib import Path
 
@@ -21,9 +20,11 @@ class CommonUtils(BaseUtils):
     @staticmethod
     def format_file(filename: str) -> None:
         """Format Python file using Ruff formatter."""
-        with suppress(Exception):
+        with suppress(ImportError, OSError, subprocess.TimeoutExpired):
+            from ruff import find_ruff_bin
+
             subprocess.run(
-                [sys.executable, "-m", "ruff", "format", filename],
+                [find_ruff_bin(), "format", filename],
                 check=False,
                 capture_output=True,
                 timeout=5,
