@@ -66,6 +66,9 @@ For pip, install `requirements.txt` in a virtual environment and run the same
 docker compose up --build
 ```
 
+Compose uses the database selected during setup. For PostgreSQL or MySQL,
+`DJANGO_CONTAINER_DATABASE_URL` overrides the connection URL used inside Compose.
+
 ## Built-in Endpoints
 
 | Endpoint | Purpose |

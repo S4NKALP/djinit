@@ -30,6 +30,10 @@ DATABASES = {
     }
 }
 
+# Compose supplies a container-network URL for projects that use a database service.
+if env("DJANGO_CONTAINER_DATABASE_URL", default=""):
+    DATABASES["default"] = env.db("DJANGO_CONTAINER_DATABASE_URL")
+
 # Email settings for development
 MAILERS = {
     "default": {

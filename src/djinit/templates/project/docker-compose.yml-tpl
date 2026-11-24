@@ -13,6 +13,7 @@ services:
       DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
       SECRET_KEY: ${SECRET_KEY:-dev-insecure-secret-key-change-in-prod}
 # @IF database_type == 'postgresql'
+      DJANGO_CONTAINER_DATABASE_URL: ${DJANGO_CONTAINER_DATABASE_URL:-postgres://user:password@db:5432/[[ db_name ]]}
       DATABASE_URL: ${DATABASE_URL:-postgres://user:password@db:5432/[[ db_name ]]}
       DB_NAME: [[ db_name ]]
       DB_USER: user
@@ -24,6 +25,7 @@ services:
         condition: service_healthy
 # @ENDIF
 # @IF database_type == 'mysql'
+      DJANGO_CONTAINER_DATABASE_URL: ${DJANGO_CONTAINER_DATABASE_URL:-mysql://user:password@db:3306/[[ db_name ]]}
       DATABASE_URL: ${DATABASE_URL:-mysql://user:password@db:3306/[[ db_name ]]}
       DB_NAME: [[ db_name ]]
       DB_USER: user
