@@ -53,43 +53,57 @@ def settings_path(root: Path, module: str) -> Path | None:
 def env_call_key(node: ast.AST) -> str | None:
     if not isinstance(node, ast.Call) or not node.args:
         return None
-    if not isinstance(node.args[0], ast.Constant) or not isinstance(node.args[0].value, str):
+    argument = node.args[0]
+    if not isinstance(argument, ast.Constant) or not isinstance(argument.value, str):
         return None
-    if isinstance(node.func, ast.Name) and node.func.id == "env":
-        return node.args[0].value
-    if (
-        isinstance(node.func, ast.Attribute)
-        and isinstance(node.func.value, ast.Name)
-        and node.func.value.id == "env"
-        and node.func.attr == "db"
-    ):
-        return node.args[0].value
+
+    function = node.func
+    if isinstance(function, ast.Attribute) and function.attr == "db":
+        function = function.value
+    return argument.value if isinstance(function, ast.Name) and function.id == "env" else None
+
+
+def dict_value(node: ast.AST | None, key: str) -> ast.AST | None:
+    if isinstance(node, ast.Dict):
+        for label, value in zip(node.keys, node.values):
+            if isinstance(label, ast.Constant) and label.value == key:
+                return value
     return None
 
 
 def database_engine(statements: list[ast.stmt], environment: dict[str, str]) -> str | None:
     """Recognize literal Django backends and the generated django-environ assignments."""
     engine = None
-    for stmt in statements:
-        if isinstance(stmt, ast.If):
-            key = env_call_key(stmt.test)
+    for statement in statements:
+        if isinstance(statement, ast.If):
+            key = env_call_key(statement.test)
             if key and environment.get(key):
-                engine = database_engine(stmt.body, environment) or engine
-        if not isinstance(stmt, ast.Assign):
+                engine = database_engine(statement.body, environment) or engine
             continue
-        targets = [target.value if isinstance(target, ast.Subscript) else target for target in stmt.targets]
-        if not any(isinstance(target, ast.Name) and target.id == "DATABASES" for target in targets):
+        if not isinstance(statement, ast.Assign) or len(statement.targets) != 1:
             continue
+
+        target = statement.targets[0]
+        if isinstance(target, ast.Name) and target.id == "DATABASES":
+            config = dict_value(statement.value, "default")
+        elif (
+            isinstance(target, ast.Subscript)
+            and isinstance(target.value, ast.Name)
+            and target.value.id == "DATABASES"
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "default"
+        ):
+            config = statement.value
+        else:
+            continue
+
         engine = None
-        for node in ast.walk(stmt.value):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                prefix = "django.db.backends."
-                if node.value.startswith(prefix):
-                    engine = node.value.removeprefix(prefix)
-            key = env_call_key(node)
-            if key and environment.get(key):
-                scheme = environment[key].partition(":")[0]
-                engine = DATABASE_ENGINES.get(scheme)
+        backend = dict_value(config, "ENGINE")
+        if isinstance(backend, ast.Constant) and isinstance(backend.value, str):
+            engine = backend.value.removeprefix("django.db.backends.")
+        elif config is not None and (key := env_call_key(config)):
+            scheme = environment.get(key, "").partition(":")[0]
+            engine = DATABASE_ENGINES.get(scheme)
     return engine
 
 
@@ -110,10 +124,7 @@ class ProjectDoctor:
         if filename is None:
             self.results.append(Diagnostic("Warning", "Manifest", "No djinit manifest found. Using Django files."))
             return None
-        try:
-            manifest = ManifestManager.load_manifest(str(self.root))
-        except AttributeError:
-            manifest = None
+        manifest = ManifestManager.load_manifest(str(self.root))
         if (
             manifest is None
             or manifest.database.engine not in ("sqlite3", "postgresql", "mysql")
@@ -149,8 +160,6 @@ class ProjectDoctor:
 
         configured = str(manifest.project.module_name or "") if manifest else ""
         package = module.split(".settings", 1)[0]
-        if configured and (self.root / ".djinit.toml").is_file() and configured != package:
-            self.results.append(Diagnostic("Error", "Layout", "The manifest and manage.py point to different modules."))
         path = settings_path(self.root, module)
         if path is None or read_python(path) is None:
             self.results.append(
@@ -171,7 +180,10 @@ class ProjectDoctor:
             if missing:
                 self.results.append(Diagnostic("Error", "Layout", f"Missing project files: {', '.join(missing)}."))
                 return module
-        self.results.append(Diagnostic("OK", "Layout", "manage.py and the expected project files are present."))
+        if configured and (self.root / ".djinit.toml").is_file() and configured != package:
+            self.results.append(Diagnostic("Error", "Layout", "The manifest and manage.py point to different modules."))
+        else:
+            self.results.append(Diagnostic("OK", "Layout", "manage.py and the expected project files are present."))
         return module
 
     def _check_environment(self, manifest: ProjectManifest | None, default_module: str | None) -> None:
@@ -301,7 +313,7 @@ class ProjectDoctor:
             self.results.append(
                 Diagnostic("Warning", "Database", "Could not infer the Compose database from settings.")
             )
-        elif expected and engine != expected:
+        elif engine != expected:
             labels = {"sqlite3": "SQLite", "postgresql": "PostgreSQL", "mysql": "MySQL"}
             message = f"Compose expects {labels.get(expected, 'the selected database')} but Django settings use {labels.get(engine, 'a different backend')}."
             self.results.append(Diagnostic("Error", "Database", message))

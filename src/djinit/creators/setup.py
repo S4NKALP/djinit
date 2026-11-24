@@ -8,6 +8,17 @@ from djinit.creators.files import FileCreator
 from djinit.creators.project import ProjectCreator
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
+from djinit.utils.exceptions import DjinitError
+
+DEFAULT_APPS = {
+    "modular_monolith": ("accounts", "core"),
+    "service_layer": ("products", "core"),
+    "fullstack_htmx": ("dashboard",),
+    "ddd": ("orders", "core"),
+    "clean_architecture": ("users", "core"),
+    "multi_tenant": ("projects",),
+    "predefined": ("users", "core"),
+}
 
 
 class SetupCreator:
@@ -22,75 +33,40 @@ class SetupCreator:
         self.primary_app = primary_app
         self.app_names = app_names
         self.metadata = metadata
-        if project_dir == ".":
-            self.project_root = os.getcwd()
-        else:
-            self.project_root = os.path.join(os.getcwd(), project_dir)
+        self.project_root = os.path.abspath(project_dir)
 
-        self.project_creator = ProjectCreator(project_dir, project_name, app_names, metadata)
-        self.file_creator = FileCreator(self.project_root, project_name, app_names, metadata)
+        self._normalize_metadata()
+        self.project_creator = ProjectCreator(project_dir, project_name, self.app_names, metadata)
+        self.file_creator = FileCreator(self.project_root, project_name, self.app_names, metadata)
 
     def _normalize_metadata(self) -> None:
         """Normalize metadata and app names based on structure type."""
         arch = self.metadata.get("architecture")
-        if arch in ARCHITECTURE_HANDLERS:
-            if arch == "lightweight":
-                self.metadata.update(nested_apps=False, nested_dir=None)
-                database_type = self.metadata.setdefault("database_type", "sqlite3")
-                self.metadata.setdefault("use_database_url", database_type != "sqlite3")
+        if arch == "lightweight":
+            self.metadata.update(nested_apps=False, nested_dir=None)
+            database_type = self.metadata.setdefault("database_type", "sqlite3")
+            self.metadata.setdefault("use_database_url", database_type != "sqlite3")
+            return
+        if arch not in ARCHITECTURE_HANDLERS:
+            if self.metadata.get("predefined_structure"):
+                arch = "predefined"
+            elif self.metadata.get("unified_structure"):
+                arch = "unified"
+            elif self.metadata.get("single_structure"):
+                arch = "single"
             else:
-                self.metadata.setdefault("project_module_name", "config")
-                self.metadata.setdefault("nested_apps", True)
-                self.metadata.setdefault("nested_dir", "apps")
-                if not self.app_names:
-                    defaults = {
-                        "modular_monolith": ["accounts", "core"],
-                        "service_layer": ["products", "core"],
-                        "fullstack_htmx": ["dashboard"],
-                        "ddd": ["orders", "core"],
-                        "clean_architecture": ["users", "core"],
-                        "multi_tenant": ["projects"],
-                    }
-                    self.app_names = defaults.get(arch, ["core"])
-            self.project_creator.app_names = self.app_names
-            self.file_creator.app_names = self.app_names
-            # Update module name on creators
-            if self.metadata.get("project_module_name"):
-                self.project_creator.module_name = self.metadata["project_module_name"]
-                self.file_creator.module_name = self.metadata["project_module_name"]
-                self.file_creator.project_configs = os.path.join(
-                    self.project_root, self.metadata["project_module_name"]
-                )
-
-        elif self.metadata.get("predefined_structure"):
-            self.metadata.setdefault("project_module_name", "config")
-            self.metadata.setdefault("nested_apps", True)
-            self.metadata.setdefault("nested_dir", "apps")
-            if not self.app_names:
-                self.app_names = ["users", "core"]
-                self.project_creator.app_names = self.app_names
-                self.file_creator.app_names = self.app_names
-
-        elif self.metadata.get("unified_structure"):
-            self.metadata.setdefault("project_module_name", "core")
-            self.metadata.setdefault("nested_apps", True)
-            self.metadata.setdefault("nested_dir", "apps")
-            if not self.app_names:
-                self.app_names = []
-                self.project_creator.app_names = self.app_names
-                self.file_creator.app_names = self.app_names
-
-        elif self.metadata.get("single_structure"):
+                return
+        if arch == "single":
             self.metadata.setdefault("nested_apps", False)
-            if not self.app_names:
-                self.app_names = []
-                self.project_creator.app_names = self.app_names
-                self.file_creator.app_names = self.app_names
+            return
+        self.metadata.setdefault("project_module_name", "core" if arch == "unified" else "config")
+        self.metadata.setdefault("nested_apps", True)
+        self.metadata.setdefault("nested_dir", "apps")
+        if not self.app_names:
+            self.app_names = list(DEFAULT_APPS.get(arch, ()))
 
     def create(self) -> bool:
         """Run the full setup process."""
-        self._normalize_metadata()
-
         auth = auth_context(self.metadata)
         auth_labels = auth_app_labels(auth["auth_providers"], auth["auth_api"])
         conflicts = auth_labels.intersection(self.app_names)
@@ -187,22 +163,20 @@ class SetupCreator:
             ]
         )
 
-        total_steps = len(steps)
-        success = True
-
-        progress, task = UIFormatter.create_live_progress(description="Setup Progress", total_steps=total_steps)
+        progress, task = UIFormatter.create_live_progress(description="Setup Progress", total_steps=len(steps))
 
         try:
             with progress:
-                for step_number, (_, step_func) in enumerate(steps, 1):
+                for description, step_func in steps:
+                    progress.update(task, description=description)
                     step_func()
-                    progress.update(task, advance=1, description=f"Step {step_number}/{total_steps}")
+                    progress.advance(task)
 
-        except Exception as e:
-            success = False
-            UIFormatter.handle_exception(e)
+        except (DjinitError, OSError, UnicodeError) as error:
+            UIFormatter.print_error(str(error), details=getattr(error, "details", None))
+            return False
 
-        return success
+        return True
 
     def _create_utility_files(self) -> None:
         utility_steps = [

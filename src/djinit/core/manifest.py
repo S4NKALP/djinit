@@ -56,6 +56,8 @@ class ProjectSection:
     module_name: str | None = None
 
     def __post_init__(self):
+        if not isinstance(self.structure, str):
+            raise ValueError("Project structure must be a string")
         canonical = STRUCTURE_ALIASES.get(self.structure, self.structure)
         if canonical not in VALID_STRUCTURES:
             raise ValueError(f"Unknown structure: '{self.structure}'. Valid choices: {sorted(VALID_STRUCTURES)}")
@@ -172,6 +174,8 @@ class ProjectManifest:
         feat_data = data.get("features", {})
         db_data = data.get("database", {})
         dep_data = data.get("deployment", {})
+        if not all(isinstance(section, dict) for section in (proj_data, feat_data, db_data, dep_data)):
+            raise ValueError("Manifest sections must be tables")
 
         return cls(
             project=ProjectSection(
@@ -215,6 +219,8 @@ class ProjectManifest:
         structure = json_dict.get("structure", {})
         apps_cfg = json_dict.get("apps", {})
         settings_cfg = json_dict.get("settings", {})
+        if not all(isinstance(section, dict) for section in (structure, apps_cfg, settings_cfg)):
+            raise ValueError("Legacy manifest sections must be objects")
 
         if structure.get("predefined"):
             struct_name = "predefined"
@@ -269,20 +275,12 @@ class ManifestManager:
         if start_dir is None:
             start_dir = os.getcwd()
 
-        curr: Path | None = Path(start_dir).resolve()
-        while curr:
-            toml_candidate = curr / ".djinit.toml"
-            if toml_candidate.is_file():
-                return str(toml_candidate), "toml"
-
-            json_candidate = curr / ".djinit"
-            if json_candidate.is_file():
-                return str(json_candidate), "json"
-
-            parent = curr.parent
-            if parent == curr:
-                break
-            curr = parent
+        start = Path(start_dir).resolve()
+        for directory in (start, *start.parents):
+            for name, filetype in ((".djinit.toml", "toml"), (".djinit", "json")):
+                candidate = directory / name
+                if candidate.is_file():
+                    return str(candidate), filetype
 
         return None, None
 
@@ -293,18 +291,15 @@ class ManifestManager:
             return None
 
         try:
-            if filetype == "toml":
-                with open(filepath, "rb") as f:
-                    data = tomllib.load(f)
-                return ProjectManifest.from_dict(data)
-            elif filetype == "json":
-                with open(filepath, encoding="utf-8") as f:
-                    data = json.load(f)
-                return ProjectManifest.from_legacy_djinit_json(data)
-        except (tomllib.TOMLDecodeError, json.JSONDecodeError, OSError, KeyError, TypeError, ValueError):
+            with open(filepath, "rb") as file:
+                data = tomllib.load(file) if filetype == "toml" else json.load(file)
+            if not isinstance(data, dict):
+                return None
+            return (
+                ProjectManifest.from_dict(data) if filetype == "toml" else ProjectManifest.from_legacy_djinit_json(data)
+            )
+        except (OSError, ValueError):
             return None
-
-        return None
 
     @classmethod
     def save_manifest(cls, target_dir: str, manifest: ProjectManifest) -> None:

@@ -191,10 +191,10 @@ class CustomTemplateManager:
 
                     try:
                         content = src_file.read_text(encoding="utf-8")
-                        dest_file.write_text(cls._parameterize_content(content, project_name), encoding="utf-8")
-                    except (UnicodeDecodeError, OSError):
-                        # Binary file: copy directly
+                    except UnicodeDecodeError:
                         shutil.copy2(src_file, dest_file)
+                        continue
+                    dest_file.write_text(cls._parameterize_content(content, project_name), encoding="utf-8")
 
             # If .env existed in source but .env.sample does not exist in target, create sanitized .env.sample
             source_env = source / ".env"
@@ -317,14 +317,15 @@ class CustomTemplateManager:
 
                 try:
                     text = src_file.read_text(encoding="utf-8")
-                    rendered = (
-                        text.replace("[[ project_name ]]", clean_proj)
-                        .replace("[[ secret_key ]]", new_secret_key)
-                        .replace("[[ module_name ]]", clean_proj)
-                    )
-                    dest_file.write_text(rendered, encoding="utf-8")
-                except (UnicodeDecodeError, OSError):
+                except UnicodeDecodeError:
                     shutil.copy2(src_file, dest_file)
+                    continue
+                rendered = (
+                    text.replace("[[ project_name ]]", clean_proj)
+                    .replace("[[ secret_key ]]", new_secret_key)
+                    .replace("[[ module_name ]]", clean_proj)
+                )
+                dest_file.write_text(rendered, encoding="utf-8")
 
         # Generate fresh .env if .env.sample exists
         sample_env = dest / ".env.sample"

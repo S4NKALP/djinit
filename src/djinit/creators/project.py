@@ -15,19 +15,14 @@ from djinit.utils.exceptions import ConfigError
 
 class ProjectCreator(BaseService):
     def __init__(self, project_dir: str, project_name: str, app_names: list, metadata: dict):
-        super().__init__(project_root=os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir))
+        super().__init__(project_root=os.path.abspath(project_dir))
         self.project_dir = project_dir
         self.project_name = project_name
         self.app_names = app_names
         self.metadata = metadata
-        # self.project_root is set by BaseService via super().__init__ but we need to ensure it matches logic
-        # logic was: self.project_root = os.getcwd() if project_dir == "." else os.path.join(os.getcwd(), project_dir)
-        # which I passed to super. So I can remove the line setting self.project_root here.
         self.module_name = metadata.get("project_module_name") or self.project_name
 
     def create_project(self) -> None:
-        os.makedirs(self.project_root, exist_ok=True)
-
         # These layouts create their own settings and entry points after manage.py.
         custom_layout = (
             self.metadata.get("architecture") in ARCHITECTURE_HANDLERS

@@ -18,6 +18,7 @@ from djinit.creators.app import AppCreator
 from djinit.creators.setup import SetupCreator
 from djinit.ui.console import UIColors, UIFormatter, console
 from djinit.ui.input import get_user_input
+from djinit.utils.exceptions import DjinitError
 from djinit.utils.secretkey import display_secret_keys, generate_multiple_keys
 from djinit.utils.validators import validate_app_name, validate_project_name
 
@@ -238,13 +239,12 @@ def create_app(app_names: Annotated[list[str], typer.Argument(help="Name(s) of t
     UIFormatter.print_header("Django App Creation")
     UIFormatter.print_info("")
 
-    # Process app names (handle commma separation if passed as single arg)
     processed_names = []
     for name in app_names:
         parts = [p.strip() for p in name.split(",") if p.strip()]
         processed_names.extend(parts)
 
-    processed_names = list(dict.fromkeys(processed_names))  # Dedup
+    processed_names = list(dict.fromkeys(processed_names))
 
     if not processed_names:
         UIFormatter.print_error("App name cannot be empty")
@@ -256,17 +256,15 @@ def create_app(app_names: Annotated[list[str], typer.Argument(help="Name(s) of t
             UIFormatter.print_error(f"Invalid app name '{name}': {error_msg}")
             raise typer.Exit(1)
 
-    any_failure = False
     for name in processed_names:
-        creator = AppCreator(name)
-        success = creator.create_app()
-        if not success:
+        try:
+            created = AppCreator(name).create_app()
+        except (DjinitError, OSError, UnicodeError) as error:
+            UIFormatter.print_error(str(error), details=getattr(error, "details", None))
+            raise typer.Exit(1) from None
+        if not created:
             UIFormatter.print_error(f"Failed to create Django app '{name}'")
-            any_failure = True
-            break  # Stop on failure? Or continue? Original code broke loop on failure.
-
-    if any_failure:
-        raise typer.Exit(1)
+            raise typer.Exit(1)
 
     instructions = Text()
     instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
@@ -544,24 +542,25 @@ def export_template(
             description=template_desc,
             overwrite=should_overwrite,
         )
-        UIFormatter.print_info("")
-        UIFormatter.print_success(f"Template '{template_name}' successfully exported!")
-        console.print(f"[dim]Saved to: {exported_path}[/dim]\n")
-        instructions = Text()
-        instructions.append("🚀 How to use your new template:\n", style=UIColors.ACCENT)
-        instructions.append(f"  djinit setup --template {template_name}\n", style=UIColors.CODE)
-        instructions.append(
-            f"  djinit template apply {template_name} --name my_new_project\n",
-            style=UIColors.CODE,
-        )
-        console.print(Panel(instructions, title="Template Ready", border_style="green"))
     except FileExistsError as e:
         UIFormatter.print_error(str(e))
         UIFormatter.print_info("Use --force to overwrite an existing template.")
         raise typer.Exit(1) from None
-    except Exception as e:
+    except (DjinitError, OSError, ValueError) as e:
         UIFormatter.print_error(f"Failed to export template: {e}")
         raise typer.Exit(1) from None
+
+    UIFormatter.print_info("")
+    UIFormatter.print_success(f"Template '{template_name}' successfully exported!")
+    console.print(f"[dim]Saved to: {exported_path}[/dim]\n")
+    instructions = Text()
+    instructions.append("🚀 How to use your new template:\n", style=UIColors.ACCENT)
+    instructions.append(f"  djinit setup --template {template_name}\n", style=UIColors.CODE)
+    instructions.append(
+        f"  djinit template apply {template_name} --name my_new_project\n",
+        style=UIColors.CODE,
+    )
+    console.print(Panel(instructions, title="Template Ready", border_style="green"))
 
 
 @template_app.command("delete")

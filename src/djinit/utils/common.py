@@ -68,8 +68,8 @@ class CommonUtils(BaseUtils):
     ) -> None:
         try:
             content = template_engine.render_template(template_path, context)
-        except Exception as e:
-            raise TemplateError(f"Failed to render template: {template_path}", details=str(e)) from e
+        except (OSError, UnicodeError) as error:
+            raise TemplateError(f"Failed to read template: {template_path}", details=str(error)) from error
 
         CommonUtils.create_file_with_content(file_path, content, success_message, should_format=should_format)
 

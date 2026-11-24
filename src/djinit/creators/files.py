@@ -19,7 +19,6 @@ from djinit.core.manifest import (
     ProjectSection,
 )
 from djinit.core.types import auth_context
-from djinit.templater import template_engine
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
 from djinit.utils.secretkey import generate_secret_key
@@ -47,7 +46,8 @@ class FileCreator(BaseService):
     ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
-        content = template_engine.render_template(
+        CommonUtils.create_file_from_template(
+            os.path.join(target_dir, filepath),
             template_path,
             {
                 "use_celery": self.metadata.get("use_celery", False),
@@ -55,9 +55,8 @@ class FileCreator(BaseService):
                 **auth_context(self.metadata),
                 **context,
             },
-        )
-        CommonUtils.create_file_with_content(
-            os.path.join(target_dir, filepath), content, message, should_format=should_format
+            message,
+            should_format=should_format,
         )
 
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:

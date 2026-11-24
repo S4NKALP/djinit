@@ -9,7 +9,6 @@ import os
 from djinit.core.config import DJANGO_VERSION
 from djinit.core.types import auth_context
 from djinit.utils.common import CommonUtils
-from djinit.utils.exceptions import DjinitError
 from djinit.utils.secretkey import generate_secret_key
 
 
@@ -18,73 +17,66 @@ class DjangoHelper:
 
     @staticmethod
     def startproject(project_name: str, directory: str, unified: bool = False, metadata: dict = None) -> None:
-        try:
-            os.makedirs(directory, exist_ok=True)
+        os.makedirs(directory, exist_ok=True)
 
-            manage_py_path = os.path.join(directory, "manage.py")
-            CommonUtils.create_file_from_template(
-                manage_py_path, "project/manage.py-tpl", {"project_name": project_name}, "Created manage.py"
-            )
-            os.chmod(manage_py_path, 0o755)
+        manage_py_path = os.path.join(directory, "manage.py")
+        CommonUtils.create_file_from_template(
+            manage_py_path, "project/manage.py-tpl", {"project_name": project_name}, "Created manage.py"
+        )
+        os.chmod(manage_py_path, 0o755)
 
-            if unified:
-                return
+        if unified:
+            return
 
-            project_config_dir = os.path.join(directory, project_name)
-            CommonUtils.create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
+        project_config_dir = os.path.join(directory, project_name)
+        CommonUtils.create_directory_with_init(project_config_dir, f"Created {project_name}/__init__.py")
 
-            settings_dir = os.path.join(project_config_dir, "settings")
-            CommonUtils.create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
+        settings_dir = os.path.join(project_config_dir, "settings")
+        CommonUtils.create_directory_with_init(settings_dir, f"Created {project_name}/settings/__init__.py")
 
-            # Generate secret key for development
-            secret_key = generate_secret_key()
-            metadata = metadata or {}
+        # Generate secret key for development
+        secret_key = generate_secret_key()
+        metadata = metadata or {}
 
-            base_context = {
-                "project_name": project_name,
-                "app_names": [],
-                "use_database_url": metadata.get("use_database_url", True),
-                "database_type": metadata.get("database_type", "postgresql"),
-                "use_tailwind": metadata.get("use_tailwind", False),
-                "use_htmx": metadata.get("use_htmx", False),
-                "use_vite": metadata.get("use_vite", False),
-                "use_celery": metadata.get("use_celery", False),
-                "use_redis_cache": metadata.get("use_redis_cache", False),
-                **auth_context(metadata),
-            }
+        base_context = {
+            "project_name": project_name,
+            "app_names": [],
+            "use_database_url": metadata.get("use_database_url", True),
+            "database_type": metadata.get("database_type", "postgresql"),
+            "use_tailwind": metadata.get("use_tailwind", False),
+            "use_htmx": metadata.get("use_htmx", False),
+            "use_vite": metadata.get("use_vite", False),
+            "use_celery": metadata.get("use_celery", False),
+            "use_redis_cache": metadata.get("use_redis_cache", False),
+            **auth_context(metadata),
+        }
 
-            dev_context = {"secret_key": secret_key, "use_vite": metadata.get("use_vite", False)}
+        dev_context = {"secret_key": secret_key, "use_vite": metadata.get("use_vite", False)}
 
-            # Production context also needs database info
-            prod_context = base_context.copy()
+        settings_files = [
+            ("base.py", "config/settings/base.py-tpl", base_context),
+            ("development.py", "config/settings/development.py-tpl", dev_context),
+            ("production.py", "config/settings/production.py-tpl", base_context),
+        ]
+        CommonUtils.create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
 
-            settings_files = [
-                ("base.py", "config/settings/base.py-tpl", base_context),
-                ("development.py", "config/settings/development.py-tpl", dev_context),
-                ("production.py", "config/settings/production.py-tpl", prod_context),
-            ]
-            CommonUtils.create_files_from_templates(settings_dir, settings_files, f"{project_name}/settings/")
-
-            urls_context = {
-                "url_type": "project",
-                "project_name": project_name,
-                "django_version": DjangoHelper.DJANGO_VERSION,
-                "use_tailwind": metadata.get("use_tailwind", False),
-                "include_api": False,
-                "include_apps": False,
-                **auth_context(metadata),
-            }
-            project_files = [
-                ("urls.py", "config/urls.py-tpl", urls_context),
-                ("wsgi.py", "config/wsgi.py-tpl", {"project_name": project_name}),
-                ("asgi.py", "config/asgi.py-tpl", {"project_name": project_name}),
-                ("sitemaps.py", "config/sitemaps.py-tpl", {}),
-                ("context_processors.py", "config/context_processors.py-tpl", {}),
-            ]
-            CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
-
-        except Exception as e:
-            raise DjinitError(f"Error creating Django project: {e}", details=str(e)) from e
+        urls_context = {
+            "url_type": "project",
+            "project_name": project_name,
+            "django_version": DjangoHelper.DJANGO_VERSION,
+            "use_tailwind": metadata.get("use_tailwind", False),
+            "include_api": False,
+            "include_apps": False,
+            **auth_context(metadata),
+        }
+        project_files = [
+            ("urls.py", "config/urls.py-tpl", urls_context),
+            ("wsgi.py", "config/wsgi.py-tpl", {"project_name": project_name}),
+            ("asgi.py", "config/asgi.py-tpl", {"project_name": project_name}),
+            ("sitemaps.py", "config/sitemaps.py-tpl", {}),
+            ("context_processors.py", "config/context_processors.py-tpl", {}),
+        ]
+        CommonUtils.create_files_from_templates(project_config_dir, project_files, f"{project_name}/")
 
     @staticmethod
     def startapp(app_name: str, directory: str, app_module: str = None) -> bool:
@@ -96,47 +88,38 @@ class DjangoHelper:
             app_module: Full module path (e.g., 'apps.users' for nested apps)
 
         Returns:
-            bool: True if successful, False otherwise
+            True after the app files are created.
         """
-        try:
-            app_dir = os.path.join(directory, app_name)
-            os.makedirs(app_dir, exist_ok=True)
+        app_dir = os.path.join(directory, app_name)
+        os.makedirs(app_dir, exist_ok=True)
 
-            # Prepare context
-            app_config_name = app_name.title().replace("_", "")
-            context = {
-                "app_name": app_name,
-                "app_config_name": app_config_name,
-                "django_version": DjangoHelper.DJANGO_VERSION,
-            }
+        # Prepare context
+        app_config_name = app_name.title().replace("_", "")
+        context = {
+            "app_name": app_name,
+            "app_config_name": app_config_name,
+            "django_version": DjangoHelper.DJANGO_VERSION,
+            "app_module": app_module or app_name,
+        }
 
-            # Use provided app_module or default to app_name (path calculation handled by caller)
-            if not app_module:
-                app_module = app_name
+        # Create __init__.py
+        CommonUtils.create_init_file(app_dir, f"Created {app_name}/__init__.py")
 
-            context["app_module"] = app_module
+        # Create all standard Django app files (empty templates with basic structure)
+        app_files = [
+            ("apps.py", "components/apps.py-tpl", context),
+            ("models.py", "components/models.py-tpl", context),
+            ("views.py", "components/views.py-tpl", context),
+            ("admin.py", "components/admin.py-tpl", context),
+            ("serializers.py", "components/serializers.py-tpl", context),
+            ("urls.py", "components/urls.py-tpl", context),
+            ("tests.py", "components/tests.py-tpl", context),
+        ]
 
-            # Create __init__.py
-            CommonUtils.create_init_file(app_dir, f"Created {app_name}/__init__.py")
+        CommonUtils.create_files_from_templates(app_dir, app_files, f"{app_name}/")
 
-            # Create all standard Django app files (empty templates with basic structure)
-            app_files = [
-                ("apps.py", "components/apps.py-tpl", context),
-                ("models.py", "components/models.py-tpl", context),
-                ("views.py", "components/views.py-tpl", context),
-                ("admin.py", "components/admin.py-tpl", context),
-                ("serializers.py", "components/serializers.py-tpl", context),
-                ("urls.py", "components/urls.py-tpl", context),
-                ("tests.py", "components/tests.py-tpl", context),
-            ]
+        # Create migrations directory
+        migrations_dir = os.path.join(app_dir, "migrations")
+        CommonUtils.create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
 
-            CommonUtils.create_files_from_templates(app_dir, app_files, f"{app_name}/")
-
-            # Create migrations directory
-            migrations_dir = os.path.join(app_dir, "migrations")
-            CommonUtils.create_directory_with_init(migrations_dir, f"Created {app_name}/migrations/__init__.py")
-
-            return True
-
-        except Exception as e:
-            raise DjinitError(f"Error creating Django app: {e}", details=str(e)) from e
+        return True
