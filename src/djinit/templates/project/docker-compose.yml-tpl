@@ -60,7 +60,7 @@ services:
 # @ENDIF
 # @IF database_type == 'mysql'
   db:
-    image: mysql:8.0
+    image: mysql:8.4
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: [[ db_name ]]
@@ -72,7 +72,7 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "user", "-ppassword"]
       interval: 5s
       timeout: 5s
       retries: 5

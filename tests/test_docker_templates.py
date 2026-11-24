@@ -79,5 +79,5 @@ def test_dockerfile_and_compose_valid_for_architectures(tmp_path, monkeypatch):
     df_uni = (tmp_path / uni_dir / "Dockerfile").read_text(encoding="utf-8")
     assert 'CMD ["gunicorn", "core.wsgi:application"' in df_uni
     compose_uni = yaml.safe_load((tmp_path / uni_dir / "docker-compose.yml").read_text(encoding="utf-8"))
-    assert compose_uni["services"]["db"]["image"] == "mysql:8.0"
+    assert compose_uni["services"]["db"]["image"] == "mysql:8.4"
     assert "core.wsgi:application" in compose_uni["services"]["web"]["command"]
