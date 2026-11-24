@@ -5,6 +5,9 @@ Handles creation and modification of project files.
 
 import json
 import os
+from pathlib import Path
+
+import tomllib
 
 from djinit.core.base import BaseService
 from djinit.core.manifest import (
@@ -221,18 +224,14 @@ class FileCreator(BaseService):
         self._render_and_create_file(".gitignore", "project/gitignore-tpl", context, "Created .gitignore file")
 
     def create_requirements(self) -> None:
-        context = {
-            "use_database_url": self.metadata.get("use_database_url", True),
-            "database_type": self.metadata.get("database_type", "postgresql"),
-            "use_tailwind": self.metadata.get("use_tailwind", False),
-            "use_htmx": self.metadata.get("use_htmx", False),
-            "use_vite": self.metadata.get("use_vite", False),
-        }
-        self._render_and_create_file(
-            "requirements.txt",
-            "project/requirements-tpl",
-            context,
-            "Created requirements.txt with Django dependencies",
+        root = Path(self.project_root)
+        with (root / "pyproject.toml").open("rb") as project:
+            dependencies = tomllib.load(project)["project"]["dependencies"]
+        requirements = ["# Runtime dependencies from pyproject.toml", *dependencies]
+        CommonUtils.create_file_with_content(
+            str(root / "requirements.txt"),
+            "\n".join(requirements) + "\n",
+            "Created requirements.txt for pip",
         )
 
     def _registered_app_modules(self) -> list:
@@ -295,7 +294,7 @@ class FileCreator(BaseService):
             "pyproject.toml",
             "project/pyproject.toml-tpl",
             context,
-            "Created pyproject.toml file for uv",
+            "Created pyproject.toml with Python dependencies",
         )
 
     def create_project_urls(self) -> None:

@@ -182,6 +182,7 @@ class SetupCreator:
     def _create_utility_files(self) -> None:
         utility_steps = [
             self.file_creator.create_gitignore,
+            lambda: self.file_creator.create_pyproject(self.metadata),
             self.file_creator.create_requirements,
             self.file_creator.create_readme,
             self.file_creator.create_env_file,
@@ -190,7 +191,6 @@ class SetupCreator:
             self.file_creator.create_docker_compose,
             self.file_creator.create_passenger_wsgi,
             self.file_creator.create_dockerignore,
-            lambda: self.file_creator.create_pyproject(self.metadata),
         ]
 
         for step_func in utility_steps:

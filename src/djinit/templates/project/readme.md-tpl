@@ -32,24 +32,14 @@ Registered in `[[ module_name ]]/settings/base.py`:
 # @ENDIF
 ## Quick Start
 
-Copy `.env.sample` to `.env` to select development settings, which use a local SQLite database.
+Use Python 3.13 or newer. Copy `.env.sample` to `.env` to select development
+settings, which use a local SQLite database by default.
 
 ```bash
 cp .env.sample .env
 ```
 
-### 1. Using `just` (Recommended)
-
-1. Run initial setup (installs dependencies, runs migrations, creates superuser):
-   ```bash
-   just setup
-   ```
-2. Start the development server:
-   ```bash
-   just dev
-   ```
-
-### 2. Using `uv` or `pip`
+### Using `uv`
 
 ```bash
 uv sync
@@ -57,10 +47,36 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-For pip, install `requirements.txt` in a virtual environment and run the same
-`python manage.py` commands there.
+The `just` recipes use `uv`. Run `just setup` and `just dev` if you prefer those shortcuts.
 
-### 3. Using Docker
+### Using `pip`
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+In PowerShell, activate the environment with `.\.venv\Scripts\Activate.ps1`.
+For development tools such as Ruff and pytest, install the `dev` group with
+`python -m pip install --group dev` (pip 25.1 or newer).
+
+Both install paths include the Python packages for the presets you selected.
+Service setup and OAuth credentials are shared across both paths.
+# @IF database_type == 'mysql'
+Host installs of `mysqlclient` may also require MySQL client development libraries and a C compiler.
+# @ENDIF
+# @IF use_tailwind
+For Tailwind, use `uv run python manage.py tailwind build` or
+`python manage.py tailwind build` inside the pip environment.
+# @ENDIF
+# @IF use_vite
+Vite's JavaScript packages and assets are managed with Node.js and npm.
+# @ENDIF
+
+### Using Docker
 
 ```bash
 docker compose up --build

@@ -437,7 +437,21 @@ Every generated project ships with production deployment assets:
 
 ## Development Workflow
 
-Generated projects come pre-configured with a `Justfile` for common development tasks:
+Generated projects support both `uv` and `pip`. The generator writes
+`requirements.txt` from the runtime dependencies in `pyproject.toml`, so
+both install paths include the Python packages for the selected presets.
+Docker builds also install from `requirements.txt`.
+
+| Task | uv | pip in an activated virtual environment |
+|---|---|---|
+| Install project dependencies | `uv sync` | `python -m pip install -r requirements.txt` |
+| Apply migrations | `uv run python manage.py migrate` | `python manage.py migrate` |
+| Start Django | `uv run python manage.py runserver` | `python manage.py runserver` |
+| Run tests | `uv run python manage.py test` | `python manage.py test` |
+
+The generated README covers virtual environment setup and the prerequisites
+for your selected integrations, such as OAuth credentials, Redis, or Node.js.
+The generated `justfile` uses `uv` for its Python commands.
 
 ```bash
 just dev              # Start Django development server
@@ -448,8 +462,6 @@ just lint             # Lint with ruff
 just format           # Format with ruff
 just vite             # Start Vite asset server (if selected)
 ```
-
-*(If `just` is not installed, standard `python manage.py` commands work out of the box).*
 
 ---
 

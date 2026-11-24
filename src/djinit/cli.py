@@ -659,9 +659,9 @@ def setup(
         instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
         instructions.append(f"1. cd {quote(project_dir_val)}\n")
         instructions.append("2. Copy .env.sample to .env to select development settings\n")
-        instructions.append("3. Install dependencies: uv sync\n")
-        instructions.append("4. Run migrations: uv run python manage.py migrate\n")
-        instructions.append("5. Start server: uv run python manage.py runserver\n")
+        instructions.append("3. Install dependencies: uv sync or python -m pip install -r requirements.txt in a venv\n")
+        instructions.append("4. Run migrations: uv run python manage.py migrate (pip: python manage.py migrate)\n")
+        instructions.append("5. Start server: uv run python manage.py runserver (pip: python manage.py runserver)\n")
 
         console.print(Panel(instructions, title="Get Started", border_style="green"))
     else:
