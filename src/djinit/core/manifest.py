@@ -70,6 +70,8 @@ class FeaturesSection:
     tailwind: bool = False
     alpine: bool = False
     vite: bool = False
+    auth_providers: list[str] = field(default_factory=list)
+    auth_api: bool = False
 
 
 @dataclass
@@ -106,6 +108,8 @@ class ProjectManifest:
                 "tailwind": self.features.tailwind,
                 "alpine": self.features.alpine,
                 "vite": self.features.vite,
+                "auth_providers": self.features.auth_providers,
+                "auth_api": self.features.auth_api,
             },
             "database": {
                 "engine": self.database.engine,
@@ -139,6 +143,8 @@ class ProjectManifest:
                 f"tailwind = {str(self.features.tailwind).lower()}",
                 f"alpine = {str(self.features.alpine).lower()}",
                 f"vite = {str(self.features.vite).lower()}",
+                f"auth_providers = {json.dumps(self.features.auth_providers)}",
+                f"auth_api = {str(self.features.auth_api).lower()}",
                 "",
                 "[database]",
                 f"engine = {json.dumps(self.database.engine)}",
@@ -173,6 +179,8 @@ class ProjectManifest:
                 tailwind=feat_data.get("tailwind", False),
                 alpine=feat_data.get("alpine", False),
                 vite=feat_data.get("vite", False),
+                auth_providers=feat_data.get("auth_providers", []),
+                auth_api=feat_data.get("auth_api", False),
             ),
             database=DatabaseSection(
                 engine=db_data.get("engine", "sqlite3"),
@@ -224,6 +232,8 @@ class ProjectManifest:
                 htmx=settings_cfg.get("use_htmx", False),
                 tailwind=settings_cfg.get("use_tailwind", False),
                 vite=settings_cfg.get("use_vite", False),
+                auth_providers=settings_cfg.get("auth_providers", []),
+                auth_api=settings_cfg.get("auth_api", False),
             ),
             database=DatabaseSection(
                 engine=settings_cfg.get("database_type", "sqlite3"),

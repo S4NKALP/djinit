@@ -2,8 +2,28 @@
 Core data structures and types for djinit.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Tuple
+
+
+class AuthProvider(StrEnum):
+    GOOGLE = "google"
+    GITHUB = "github"
+
+
+def auth_context(metadata: dict) -> dict:
+    providers = metadata.get("auth_providers", [])
+    return {"auth_providers": providers, "auth_api": bool(providers and metadata.get("auth_api"))}
+
+
+def auth_app_labels(providers: list[str], auth_api: bool) -> set[str]:
+    if not providers:
+        return set()
+    labels = {"allauth", "account", "socialaccount", *providers}
+    if auth_api:
+        labels.add("headless")
+    return labels
 
 
 @dataclass
@@ -27,6 +47,8 @@ class ProjectMetadata:
     use_drf: bool = True
     use_jwt: bool = True
     deployment_target: str = "docker"
+    auth_providers: list[str] = field(default_factory=list)
+    auth_api: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -49,6 +71,8 @@ class ProjectMetadata:
             "use_drf": self.use_drf,
             "use_jwt": self.use_jwt,
             "deployment_target": self.deployment_target,
+            "auth_providers": self.auth_providers,
+            "auth_api": bool(self.auth_providers and self.auth_api),
         }
 
 

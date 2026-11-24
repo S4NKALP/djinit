@@ -48,6 +48,46 @@ BUILT_IN_APPS = [
 
 INSTALLED_APPS = BUILT_IN_APPS + THIRD_PARTY_APPS + USER_DEFINED_APPS
 INSTALLED_APPS.insert(0, "jazzmin")
+# @IF auth_providers
+INSTALLED_APPS += [
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+# @LOOP provider in auth_providers
+    "allauth.socialaccount.providers.[[ provider ]]",
+# @ENDLOOP
+# @IF auth_api
+    "allauth.headless",
+# @ENDIF
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+LOGIN_URL = "account_login"
+LOGIN_REDIRECT_URL = "account_email"
+LOGOUT_REDIRECT_URL = "account_login"
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+
+SOCIALACCOUNT_PROVIDERS = {}
+for provider in (
+# @LOOP provider in auth_providers
+    "[[ provider ]]",
+# @ENDLOOP
+):
+    client_id = env(f"{provider.upper()}_CLIENT_ID", default="")
+    client_secret = env(f"{provider.upper()}_CLIENT_SECRET", default="")
+    if client_id and client_secret:
+        SOCIALACCOUNT_PROVIDERS[provider] = {
+            "APPS": [{"client_id": client_id, "secret": client_secret}],
+        }
+# @IF "google" in auth_providers
+SOCIALACCOUNT_PROVIDERS.setdefault("google", {})["OAUTH_PKCE_ENABLED"] = True
+# @ENDIF
+# @ENDIF
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -57,6 +97,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+# @IF auth_providers
+    "allauth.account.middleware.AccountMiddleware",
+# @ENDIF
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware", # @IF use_htmx
@@ -171,6 +214,9 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+# @IF auth_api
+    "x-session-token",
+# @ENDIF
 ]
 
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours

@@ -1,6 +1,7 @@
 import os
 from typing import Callable, List, Tuple
 
+from djinit.core.types import auth_app_labels, auth_context
 from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.creators.files import FileCreator
 from djinit.creators.project import ProjectCreator
@@ -88,6 +89,16 @@ class SetupCreator:
     def create(self) -> bool:
         """Run the full setup process."""
         self._normalize_metadata()
+
+        auth = auth_context(self.metadata)
+        auth_labels = auth_app_labels(auth["auth_providers"], auth["auth_api"])
+        conflicts = auth_labels.intersection(self.app_names)
+        module_name = self.project_creator.module_name
+        if module_name in auth_labels and (module_name == "allauth" or self.metadata.get("single_structure")):
+            conflicts.add(module_name)
+        if conflicts:
+            UIFormatter.print_error(f"Names already used by the authentication preset: {', '.join(sorted(conflicts))}")
+            return False
 
         steps: List[Tuple[str, Callable[[], None]]] = []
 
@@ -195,6 +206,9 @@ class SetupCreator:
 
         for step_func in utility_steps:
             step_func()
+
+        if auth_context(self.metadata)["auth_api"]:
+            self.file_creator.create_auth_api()
 
         if self.metadata.get("use_vite", False):
             self.file_creator.create_vite_config()

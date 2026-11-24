@@ -3,6 +3,14 @@ DJANGO_SETTINGS_MODULE=[[ project_name ]].settings.development
 SECRET_KEY=your-secret-key
 ALLOWED_HOSTS=api.your-domain.com,www.your-domain.com
 CSRF_TRUSTED_ORIGINS=https://api.your-domain.com,https://www.your-domain.com
+# @IF auth_providers
+
+# Social sign-in credentials
+# @LOOP prefix in auth_env_prefixes
+[[ prefix ]]_CLIENT_ID=
+[[ prefix ]]_CLIENT_SECRET=
+# @ENDLOOP
+# @ENDIF
 
 # @IF use_database_url
 # Database URL (recommended for production)

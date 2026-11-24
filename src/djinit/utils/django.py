@@ -7,6 +7,7 @@ This module provides functions to create Django projects and apps without requir
 import os
 
 from djinit.core.config import DJANGO_VERSION
+from djinit.core.types import auth_context
 from djinit.utils.common import CommonUtils
 from djinit.utils.exceptions import DjinitError
 from djinit.utils.secretkey import generate_secret_key
@@ -47,6 +48,7 @@ class DjangoHelper:
                 "use_tailwind": metadata.get("use_tailwind", False),
                 "use_htmx": metadata.get("use_htmx", False),
                 "use_vite": metadata.get("use_vite", False),
+                **auth_context(metadata),
             }
 
             dev_context = {"secret_key": secret_key, "use_vite": metadata.get("use_vite", False)}
@@ -66,6 +68,9 @@ class DjangoHelper:
                 "project_name": project_name,
                 "django_version": DjangoHelper.DJANGO_VERSION,
                 "use_tailwind": metadata.get("use_tailwind", False),
+                "include_api": False,
+                "include_apps": False,
+                **auth_context(metadata),
             }
             project_files = [
                 ("urls.py", "config/urls.py-tpl", urls_context),

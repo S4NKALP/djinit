@@ -92,6 +92,19 @@ app you want under `apps/`.
 djinit setup --name storefront --dir ./storefront --app catalog --app orders
 ```
 
+### Optional social authentication
+
+The setup wizard lets you select Google, GitHub, or both. It also offers a
+separate choice for the authentication API and a Django REST Framework serializer.
+The same options are available for scripted setup.
+
+```bash
+djinit setup --name storefront --auth-provider google --auth-provider github --auth-api
+```
+
+The generated project README lists the OAuth callback URLs and the environment
+variables for your selected providers.
+
 ### `djinit app` (Architecture-Aware)
 
 Generate one or multiple Django apps that automatically match your active project's architecture:

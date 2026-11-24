@@ -18,6 +18,7 @@ from djinit.core.manifest import (
     ProjectManifest,
     ProjectSection,
 )
+from djinit.core.types import auth_context
 from djinit.templater import template_engine
 from djinit.utils.common import CommonUtils
 from djinit.utils.django import DjangoHelper
@@ -46,7 +47,7 @@ class FileCreator(BaseService):
     ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
-        content = template_engine.render_template(template_path, context)
+        content = template_engine.render_template(template_path, {**auth_context(self.metadata), **context})
         CommonUtils.create_file_with_content(
             os.path.join(target_dir, filepath), content, message, should_format=should_format
         )
@@ -95,7 +96,7 @@ class FileCreator(BaseService):
         # Prepare context for base.py with full AppConfig paths
         base_settings_context = base_context.copy()
         if "app_names" in base_settings_context:
-            nested = bool(self.metadata.get("nested_apps"))
+            nested = bool(self.metadata.get("nested_apps")) and not self.metadata.get("unified_structure")
             nested_dir = self.metadata.get("nested_dir")
             base_settings_context["app_names"] = [
                 CommonUtils.get_full_app_config_path(name, nested, nested_dir)
@@ -269,12 +270,25 @@ class FileCreator(BaseService):
             "project_name": self.module_name,  # Use module_name here for settings path
             "use_database_url": self.metadata.get("use_database_url", True),
             "database_type": self.metadata.get("database_type", "postgresql"),
+            "auth_env_prefixes": [provider.upper() for provider in self.metadata.get("auth_providers", [])],
         }
         self._render_and_create_file(
             ".env.sample",
             "project/env_sample-tpl",
             context,
             "Created .env.sample with environment variable examples",
+        )
+
+    def create_auth_api(self) -> None:
+        api_dir = os.path.join(self.project_configs, "auth_api")
+        CommonUtils.create_directory_with_init(api_dir, "Created auth_api package")
+        CommonUtils.create_files_from_templates(
+            api_dir,
+            [
+                ("serializers.py", "config/auth_api/serializers.py-tpl"),
+                ("views.py", "config/auth_api/views.py-tpl"),
+            ],
+            "auth_api/",
         )
 
     def create_pyproject(self, metadata: dict) -> None:
@@ -408,7 +422,7 @@ __all__ = [
         )
 
         project_urls_path = os.path.join(self.project_configs, "urls.py")
-        CommonUtils.create_file_from_template(
+        self._render_and_create_file(
             project_urls_path,
             "config/urls.py-tpl",
             {
@@ -518,6 +532,7 @@ __all__ = [
         """Create single folder structure with minimal files (no example code)."""
         project_dir = os.path.join(self.project_root, self.module_name)
         CommonUtils.create_directory_with_init(project_dir, f"Created {self.module_name}/__init__.py")
+        self._create_apps_py(project_dir, self.module_name)
 
         settings_dir = os.path.join(project_dir, "settings")
         CommonUtils.create_directory_with_init(settings_dir, f"Created {self.module_name}/settings/__init__.py")
@@ -683,6 +698,7 @@ __all__ = [
                 tailwind=self.metadata.get("use_tailwind", False),
                 alpine=self.metadata.get("use_alpine", False),
                 vite=self.metadata.get("use_vite", False),
+                **auth_context(self.metadata),
             ),
             database=DatabaseSection(
                 engine=self.metadata.get("database_type", "sqlite3"),
@@ -714,6 +730,7 @@ __all__ = [
                 "use_tailwind": self.metadata.get("use_tailwind", False),
                 "use_htmx": self.metadata.get("use_htmx", False),
                 "use_vite": self.metadata.get("use_vite", False),
+                **auth_context(self.metadata),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),

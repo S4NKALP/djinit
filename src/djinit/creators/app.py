@@ -8,6 +8,7 @@ from typing import Optional
 
 from djinit.core.base import BaseService
 from djinit.core.manifest import ManifestManager
+from djinit.core.types import auth_app_labels
 from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
@@ -29,6 +30,12 @@ class AppCreator(BaseService):
             UIFormatter.print_error(
                 "Not in a Django project directory. Please run this command from your Django project root."
             )
+            return False
+
+        if self.manifest and self.app_name in auth_app_labels(
+            self.manifest.features.auth_providers, self.manifest.features.auth_api
+        ):
+            UIFormatter.print_error(f"'{self.app_name}' is already used by the authentication preset.")
             return False
 
         # Check structure type

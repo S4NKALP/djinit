@@ -13,6 +13,11 @@ dependencies = [
     "djangorestframework-simplejwt",
     "django-cors-headers",
     "whitenoise",
+# @IF auth_api
+    "django-allauth[headless,socialaccount]>=65.22.1,<66",
+# @ELSEIF auth_providers
+    "django-allauth[socialaccount]>=65.22.1,<66",
+# @ENDIF
 # @IF database_type == 'mysql'
     "mysqlclient",
 # @ENDIF

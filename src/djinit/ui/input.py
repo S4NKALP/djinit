@@ -9,7 +9,7 @@ from typing import Tuple, TypedDict
 
 import questionary
 
-from djinit.core.types import ProjectMetadata
+from djinit.core.types import AuthProvider, ProjectMetadata
 from djinit.ui.console import UIColors, UIFormatter, console
 from djinit.utils.common import CommonUtils
 from djinit.utils.validators import validate_app_name, validate_project_name
@@ -30,11 +30,28 @@ class StructureOptions(TypedDict):
     use_gitlab: bool
     architecture: str | None
     use_alpine: bool
+    auth_providers: list[str]
+    auth_api: bool
 
 
 class InputCollector:
     def __init__(self):
         pass
+
+    def get_authentication_choice(self) -> tuple[list[str], bool]:
+        providers = questionary.checkbox(
+            "Social sign-in providers (Space to select, Enter to continue):",
+            choices=[
+                questionary.Choice("Google", value=AuthProvider.GOOGLE.value),
+                questionary.Choice("GitHub", value=AuthProvider.GITHUB.value),
+            ],
+        ).ask()
+        if providers is None:
+            raise KeyboardInterrupt
+        api = bool(providers) and UIFormatter.confirm(
+            "Include the authentication API and a current-user serializer?", default=False
+        )
+        return providers, api
 
     def get_validated_input(self, prompt: str, validator: callable, input_type: str, allow_empty: bool = False) -> str:
         def q_validator(text):
@@ -290,6 +307,8 @@ class InputCollector:
             project_module_name=project_module_name,
             architecture=arch,
             use_alpine=options.get("use_alpine", False),
+            auth_providers=options.get("auth_providers", []),
+            auth_api=options.get("auth_api", False),
         )
 
         return project_name, "", app_names, metadata.to_dict()
@@ -363,6 +382,7 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
 
         # Step 3: Frontend Tools
         use_tailwind, use_htmx, use_alpine, use_vite = collector.get_frontend_stack_choice(architecture)
+        auth_providers, auth_api = collector.get_authentication_choice()
 
         # Step 4: Django Apps (Standard only)
         nested = False
@@ -392,6 +412,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_vite=use_vite,
                 use_alpine=use_alpine,
                 architecture="standard",
+                auth_providers=auth_providers,
+                auth_api=auth_api,
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -410,6 +432,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_gitlab=use_gitlab,
                 architecture=architecture,
                 use_alpine=use_alpine,
+                auth_providers=auth_providers,
+                auth_api=auth_api,
             )
             project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(options)
             return project_dir, project_name, primary_app, app_names, metadata_dict

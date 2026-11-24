@@ -12,7 +12,7 @@ from rich.text import Text
 
 from djinit.core.manifest import ManifestManager
 from djinit.core.template_manager import NAME_REGEX, CustomTemplateManager
-from djinit.core.types import ProjectMetadata
+from djinit.core.types import AuthProvider, ProjectMetadata
 from djinit.creators.app import AppCreator
 from djinit.creators.setup import SetupCreator
 from djinit.ui.console import UIColors, UIFormatter, console
@@ -609,19 +609,29 @@ def setup(
         Optional[list[str]],
         typer.Option("--app", help="Initial app for the standard starter. Requires --name and can be repeated."),
     ] = None,
+    auth_providers: Annotated[
+        Optional[list[AuthProvider]],
+        typer.Option("--auth-provider", help="Enable social sign-in for this provider. Repeat to enable both."),
+    ] = None,
+    auth_api: Annotated[
+        bool,
+        typer.Option("--auth-api", help="Include the allauth API and current-user serializer."),
+    ] = False,
 ):
     """
     Interactively set up a new Django project, or bootstrap from a custom template.
     """
     if template:
-        if apps:
-            raise typer.BadParameter("Apps are defined by the saved template.", param_hint="--app")
+        if apps or auth_providers or auth_api:
+            raise typer.BadParameter("Apps and optional features are defined by the saved template.")
         _apply_template_flow(template, project_name, project_dir)
         return
 
     UIFormatter.print_header("Django Project Setup")
 
     if project_name is not None:
+        if auth_api and not auth_providers:
+            raise typer.BadParameter("Select at least one --auth-provider.", param_hint="--auth-api")
         project_name_val = project_name.strip()
         valid, message = validate_project_name(project_name_val)
         if not valid:
@@ -641,9 +651,11 @@ def setup(
             project_module_name="config",
             nested_apps=True,
             nested_dir="apps",
+            auth_providers=list(dict.fromkeys(provider.value for provider in auth_providers or [])),
+            auth_api=auth_api,
         ).to_dict()
     else:
-        if project_dir is not None or apps:
+        if project_dir is not None or apps or auth_providers or auth_api:
             raise typer.BadParameter("Pass --name to configure setup from the command line.")
         project_dir_val, project_name_val, primary_app, app_names, metadata = get_user_input()
 

@@ -10,8 +10,11 @@ from django.views.static import serve
 # @IF show_home
 from django.views.generic import TemplateView
 # @ENDIF
-# @IF include_api or include_apps
+# @IF include_api or include_apps or auth_providers
 from django.urls import include
+# @ENDIF
+# @IF auth_api
+from .auth_api.views import CurrentUserView
 # @ENDIF
 # @IF include_api
 from rest_framework_simplejwt.views import (
@@ -41,6 +44,13 @@ def robots_txt(request):
 
 
 urlpatterns = [
+# @IF auth_providers
+    path("accounts/", include("allauth.urls")),
+# @ENDIF
+# @IF auth_api
+    path("_allauth/", include("allauth.headless.urls")),
+    path("api/auth/me/", CurrentUserView.as_view(), name="auth-current-user"),
+# @ENDIF
 # @IF show_home
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
 # @ENDIF

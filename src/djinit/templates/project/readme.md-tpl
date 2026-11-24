@@ -96,6 +96,35 @@ Compose uses the database selected during setup. For PostgreSQL or MySQL,
 | `/sitemap.xml` | XML sitemap (`StaticViewSitemap` in `[[ module_name ]]/sitemaps.py`) |
 | `/robots.txt` | Crawler directives pointing to `/sitemap.xml` |
 
+# @IF auth_providers
+## Social Sign-In
+
+Create an OAuth client for each selected provider and set its client ID and secret in
+`.env`. Use the same origin in your browser and in the provider's callback settings.
+
+| Provider | Environment variables | Local callback URL |
+|---|---|---|
+# @IF "google" in auth_providers
+| Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `http://127.0.0.1:8000/accounts/google/login/callback/` |
+# @ENDIF
+# @IF "github" in auth_providers
+| GitHub | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `http://127.0.0.1:8000/accounts/github/login/callback/` |
+# @ENDIF
+
+Run migrations and open `/accounts/login/`. For production, register the
+HTTPS callback URLs for your domain and configure SMTP for email verification
+and password resets.
+
+# @IF auth_api
+The [allauth headless API](https://docs.allauth.org/en/latest/headless/openapi-specification/)
+is mounted at `/_allauth/`. Browser clients use Django session cookies and
+CSRF protection. App clients send the `X-Session-Token` issued by allauth.
+
+`GET /api/auth/me/` returns the signed-in user's ID, username, email, and
+name through `[[ module_name ]]/auth_api/serializers.py`.
+
+# @ENDIF
+# @ENDIF
 ## Available `just` Commands
 
 Run `just` to list all tasks:
