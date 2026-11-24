@@ -1,6 +1,6 @@
 import pytest
 
-from djinit.core.parser import InFileLogicParser, SafeExpressionError, safe_eval
+from djinit.core.parser import SafeExpressionError, safe_eval
 from djinit.core.template_manager import CustomTemplateManager
 from djinit.templater import template_engine
 
