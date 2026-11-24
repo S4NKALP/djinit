@@ -10,6 +10,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from djinit.core.doctor import ProjectDoctor, find_project_root
 from djinit.core.manifest import ManifestManager
 from djinit.core.template_manager import NAME_REGEX, CustomTemplateManager
 from djinit.core.types import AuthProvider, ProjectMetadata
@@ -97,6 +98,11 @@ def help_command(
             "djinit app <app_name> [app2...]",
         )
         table.add_row(
+            "doctor",
+            "Check a project's layout, environment, database, and Docker Compose configuration",
+            "djinit doctor [directory]",
+        )
+        table.add_row(
             "secret",
             "Generate cryptographically secure Django SECRET_KEY tokens",
             "djinit secret [--count <n>] [--length <len>]",
@@ -165,6 +171,30 @@ def help_command(
         console.print(
             "Run [bold cyan]djinit help[/bold cyan] or [bold cyan]djinit --help[/bold cyan] to see available commands.\n"
         )
+        raise typer.Exit(1)
+
+
+@app.command("doctor")
+def doctor(
+    directory: Annotated[
+        Path,
+        typer.Argument(exists=True, file_okay=False, help="Project directory or a directory inside the project."),
+    ] = Path("."),
+):
+    """Check a Django project without changing its files or starting services."""
+    root = find_project_root(directory)
+    if root is None:
+        UIFormatter.print_error("No Django project found. Run from a project directory or pass its path.")
+        raise typer.Exit(1)
+
+    results = ProjectDoctor(root).run()
+    console.print(Text(f"Project doctor · {root}", style="bold"))
+    table = Table("Status", "Check", "Result")
+    styles = {"OK": "green", "Warning": "yellow", "Error": "red"}
+    for result in results:
+        table.add_row(Text(result.status, style=styles[result.status]), result.check, Text(result.message))
+    console.print(table)
+    if any(result.status == "Error" for result in results):
         raise typer.Exit(1)
 
 

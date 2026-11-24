@@ -28,6 +28,7 @@ djinit setup
 - [CLI Commands](#cli-commands)
   - [`djinit setup` / `dj setup`](#djinit-setup--dj-setup)
   - [`djinit app`](#djinit-app-architecture-aware)
+  - [`djinit doctor`](#djinit-doctor)
   - [`djinit secret`](#djinit-secret)
 - [Architecture Presets](#architecture-presets)
   - [Overview Table](#architecture-overview)
@@ -115,6 +116,20 @@ Django's default cache.
 ```bash
 djinit setup --name storefront --app catalog --celery --redis-cache
 ```
+
+### `djinit doctor`
+
+Check the project manifest, settings layout, local environment, and the database
+selected by Docker Compose. Run it from the project, a subdirectory, or pass a path.
+
+```bash
+djinit doctor
+djinit doctor ./storefront
+```
+
+Doctor does not import project code, print secret values, or start containers.
+Compose validation uses the installed Docker Compose CLI and does not need a
+running Docker daemon. Errors exit with status 1. Warnings exit with status 0.
 
 ### `djinit app` (Architecture-Aware)
 
