@@ -84,6 +84,14 @@ The interactive wizard walks you through:
 5. **App initialization**: Add your core domain apps automatically.
 6. **CI/CD configuration**: GitHub Actions, GitLab CI, both, or none.
 
+For a scriptable setup with settings under `config/` and SQLite, pass a project name.
+Use `--dir` for a new or empty destination and repeat `--app` for each initial
+app you want under `apps/`.
+
+```bash
+djinit setup --name storefront --dir ./storefront --app catalog --app orders
+```
+
 ### `djinit app` (Architecture-Aware)
 
 Generate one or multiple Django apps that automatically match your active project's architecture:

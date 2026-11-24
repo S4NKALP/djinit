@@ -1,6 +1,7 @@
 import logging
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+from shlex import quote
 from typing import Annotated, Optional
 
 import questionary
@@ -11,6 +12,7 @@ from rich.text import Text
 
 from djinit.core.manifest import ManifestManager
 from djinit.core.template_manager import NAME_REGEX, CustomTemplateManager
+from djinit.core.types import ProjectMetadata
 from djinit.creators.app import AppCreator
 from djinit.creators.setup import SetupCreator
 from djinit.ui.console import UIColors, UIFormatter, console
@@ -275,10 +277,7 @@ def _apply_template_flow(
     if not project_dir:
         project_dir = f"./{project_name}"
 
-    dest_path = Path(project_dir).resolve()
-    if dest_path.exists() and any(dest_path.iterdir()):
-        UIFormatter.print_error(f"Directory '{dest_path}' already exists and is not empty.")
-        raise typer.Exit(1)
+    dest_path = _empty_destination(project_dir)
 
     UIFormatter.print_header(f"Creating project '{project_name}' from template '{template_name}'")
     success = CustomTemplateManager.apply_template(template_name, dest_path, project_name)
@@ -292,6 +291,13 @@ def _apply_template_flow(
         console.print(Panel(instructions, title="Get Started", border_style="green"))
     else:
         raise typer.Exit(1)
+
+
+def _empty_destination(project_dir: str) -> Path:
+    dest = Path(project_dir).expanduser().resolve()
+    if dest.exists() and (not dest.is_dir() or any(dest.iterdir())):
+        raise typer.BadParameter("Choose a new or empty directory.", param_hint="--dir")
+    return dest
 
 
 @template_app.callback(invoke_without_command=True)
@@ -593,23 +599,53 @@ def setup(
     ] = None,
     project_name: Annotated[
         Optional[str],
-        typer.Option("--name", "-n", help="Project name (when using --template)."),
+        typer.Option("--name", "-n", help="Project name. Skip the wizard and use the standard SQLite starter."),
     ] = None,
     project_dir: Annotated[
         Optional[str],
-        typer.Option("--dir", "-d", help="Target project directory (when using --template)."),
+        typer.Option("--dir", "-d", help="Destination directory. Requires --name or --template."),
+    ] = None,
+    apps: Annotated[
+        Optional[list[str]],
+        typer.Option("--app", help="Initial app for the standard starter. Requires --name and can be repeated."),
     ] = None,
 ):
     """
     Interactively set up a new Django project, or bootstrap from a custom template.
     """
     if template:
+        if apps:
+            raise typer.BadParameter("Apps are defined by the saved template.", param_hint="--app")
         _apply_template_flow(template, project_name, project_dir)
         return
 
     UIFormatter.print_header("Django Project Setup")
 
-    project_dir_val, project_name_val, primary_app, app_names, metadata = get_user_input()
+    if project_name is not None:
+        project_name_val = project_name.strip()
+        valid, message = validate_project_name(project_name_val)
+        if not valid:
+            raise typer.BadParameter(message, param_hint="--name")
+        app_names = list(dict.fromkeys(name.strip() for name in apps or []))
+        for name in app_names:
+            valid, message = validate_app_name(name)
+            if not valid:
+                raise typer.BadParameter(message, param_hint="--app")
+
+        project_dir_val = str(_empty_destination(project_dir or project_name_val))
+        primary_app = next(iter(app_names), "")
+        metadata = ProjectMetadata(
+            package_name=project_name_val,
+            architecture="standard",
+            database_type="sqlite3",
+            project_module_name="config",
+            nested_apps=True,
+            nested_dir="apps",
+        ).to_dict()
+    else:
+        if project_dir is not None or apps:
+            raise typer.BadParameter("Pass --name to configure setup from the command line.")
+        project_dir_val, project_name_val, primary_app, app_names, metadata = get_user_input()
 
     orchestrator = SetupCreator(project_dir_val, project_name_val, primary_app, app_names, metadata)
     success = orchestrator.create()
@@ -621,10 +657,11 @@ def setup(
 
         instructions = Text()
         instructions.append("🚀 Next Steps:\n", style=UIColors.ACCENT)
-        instructions.append(f"1. cd {project_dir_val}\n")
-        instructions.append("2. Install dependencies: pip install -r requirements.txt\n")
-        instructions.append("3. Run migrations: just migrate (or python manage.py migrate)\n")
-        instructions.append("4. Start server: just run (or python manage.py runserver)\n")
+        instructions.append(f"1. cd {quote(project_dir_val)}\n")
+        instructions.append("2. Copy .env.sample to .env to select development settings\n")
+        instructions.append("3. Install dependencies: uv sync\n")
+        instructions.append("4. Run migrations: uv run python manage.py migrate\n")
+        instructions.append("5. Start server: uv run python manage.py runserver\n")
 
         console.print(Panel(instructions, title="Get Started", border_style="green"))
     else:

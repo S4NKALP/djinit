@@ -10,6 +10,19 @@ from typing import Any, Callable, Tuple
 from djinit.core.config import DJANGO_RESERVED, PYTHON_BUILTINS
 
 NAME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
+STARTER_APP_LABELS = {
+    "auth",
+    "contenttypes",
+    "corsheaders",
+    "jazzmin",
+    "messages",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "sessions",
+    "sitemaps",
+    "staticfiles",
+    "token_blacklist",
+}
 
 
 def _validate_name(name: str, name_type: str = "name") -> Tuple[bool, str]:
@@ -48,4 +61,7 @@ def validate_project_name(name: str) -> Tuple[bool, str]:
 
 
 def validate_app_name(name: str) -> Tuple[bool, str]:
-    return _validate_name(name, "app name")
+    valid, message = _validate_name(name, "app name")
+    if valid and name.strip() in STARTER_APP_LABELS:
+        return False, f"'{name.strip()}' conflicts with an app label in the Django starter"
+    return valid, message

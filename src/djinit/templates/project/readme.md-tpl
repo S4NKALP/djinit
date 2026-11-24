@@ -32,17 +32,19 @@ Registered in `[[ module_name ]]/settings/base.py`:
 # @ENDIF
 ## Quick Start
 
+Copy `.env.sample` to `.env` to select development settings, which use a local SQLite database.
+
+```bash
+cp .env.sample .env
+```
+
 ### 1. Using `just` (Recommended)
 
-1. Copy `.env.sample` to `.env` and review your environment variables:
-   ```bash
-   cp .env.sample .env
-   ```
-2. Run initial setup (installs dependencies, runs migrations, creates superuser):
+1. Run initial setup (installs dependencies, runs migrations, creates superuser):
    ```bash
    just setup
    ```
-3. Start the development server:
+2. Start the development server:
    ```bash
    just dev
    ```
@@ -50,26 +52,17 @@ Registered in `[[ module_name ]]/settings/base.py`:
 ### 2. Using `uv` or `pip`
 
 ```bash
-# Install dependencies (uv)
 uv sync
-# Or using pip
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.sample .env
-
-# Apply migrations & create superuser
-python manage.py migrate
-python manage.py createsuperuser
-
-# Start development server
-python manage.py runserver
+uv run python manage.py migrate
+uv run python manage.py runserver
 ```
+
+For pip, install `requirements.txt` in a virtual environment and run the same
+`python manage.py` commands there.
 
 ### 3. Using Docker
 
 ```bash
-cp .env.sample .env
 docker compose up --build
 ```
 

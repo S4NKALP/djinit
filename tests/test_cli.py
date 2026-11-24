@@ -47,6 +47,39 @@ def test_cli_app_invalid_name(tmp_path, monkeypatch):
     assert "Invalid app name" in result.output
 
 
+def test_cli_setup_without_prompts(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "project with spaces"
+    result = runner.invoke(
+        app,
+        ["setup", "--name", "storefront", "--dir", str(target), "--app", "catalog", "--app", "orders"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "uv run python manage.py runserver" in result.output
+    assert (target / "manage.py").is_file()
+    settings = (target / "config" / "settings" / "base.py").read_text()
+    assert "apps.catalog.apps.CatalogConfig" in settings
+    assert "apps.orders.apps.OrdersConfig" in settings
+    assert 'engine = "sqlite3"' in (target / ".djinit.toml").read_text()
+
+
+def test_cli_setup_rejects_existing_files_and_reserved_app_labels(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    occupied = tmp_path / "occupied"
+    occupied.mkdir()
+    existing = occupied / "manage.py"
+    existing.write_text("existing project")
+    result = runner.invoke(app, ["setup", "--name", "storefront", "--dir", str(occupied)])
+    assert result.exit_code == 2
+    assert "new or empty directory" in result.output
+    assert existing.read_text() == "existing project"
+
+    result = runner.invoke(app, ["setup", "--name", "storefront", "--app", "auth"])
+    assert result.exit_code == 2
+    assert "conflicts with an app label" in result.output
+    assert not (tmp_path / "storefront").exists()
+
+
 def test_input_collector_frontend_stack_by_architecture():
     collector = InputCollector()
 
