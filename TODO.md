@@ -28,6 +28,11 @@
   - [x] `SluggedModel` (indexed unique slug fields)
   - [x] `BaseModel` (combined `UUIDModel` and `TimeStampedModel`)
 
+### Features & Integrations
+- [x] **Authentication Presets**: Opt-in Google and GitHub OAuth sign-in via `django-allauth`, with a separately selectable headless API and read-only DRF current-user serializer
+- [x] **Celery, Beat & Redis**: Opt-in worker and scheduler, Redis broker and result backend, Docker Compose services, and `just worker` and `just beat` commands
+- [x] **Caching Layers**: Separately selectable Redis backend for Django's default cache
+
 ### Developer Experience & Tooling
 - [x] **Export to Template & Custom Starters**:
   - [x] Export existing projects with sensitive data sanitization (`.env`, `db.sqlite3`, virtual environments, cache)
@@ -39,9 +44,12 @@
   - [x] Architecture-dependent frontend stack prompts
   - [x] SQLite3 database URL bypass
   - [x] Rich summary confirmation
+- [x] **Scripted Setup**: Generate a standard SQLite project with `djinit setup --name` and optional initial apps and integrations
+- [x] **Project Doctor**: Read-only `djinit doctor [directory]` checks the manifest, project layout, environment, and Docker Compose database configuration
 - [x] **Deployment Presets**:
   - [x] `Dockerfile` with multi-stage non-root container support
   - [x] `docker-compose.yml` orchestrating web service and PostgreSQL / MySQL / SQLite volumes
+  - [x] Compose connects Django to the selected database and uses MySQL 8.4 for Django 6.1 compatibility
   - [x] `passenger_wsgi.py` for cPanel and Apache Phusion Passenger shared hosting
   - [x] `Procfile` and `runtime.txt` for PaaS hosting (Heroku, Render, Railway)
 - [x] **CI/CD & Code Quality**:
@@ -55,9 +63,6 @@
 ## Upcoming Plans
 
 ### Features & Integrations
-- [ ] **Celery & Redis**: Background worker and periodic task configuration preset
 - [ ] **Django Channels / WebSockets**: Real-time event and chat capabilities
 - [ ] **Cloud Storage**: AWS S3 / Cloudflare R2 / MinIO media storage presets via `django-storages`
-- [ ] **Authentication Presets**: Optional `django-allauth` integration for social authentication (OAuth2 / Google / GitHub)
 - [ ] **Observability**: OpenTelemetry, Sentry, or Prometheus metrics integration
-- [ ] **Caching Layers**: Redis cache backend configuration out of the box
