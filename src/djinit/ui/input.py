@@ -32,6 +32,8 @@ class StructureOptions(TypedDict):
     use_alpine: bool
     auth_providers: list[str]
     auth_api: bool
+    use_celery: bool
+    use_redis_cache: bool
 
 
 class InputCollector:
@@ -309,6 +311,8 @@ class InputCollector:
             use_alpine=options.get("use_alpine", False),
             auth_providers=options.get("auth_providers", []),
             auth_api=options.get("auth_api", False),
+            use_celery=options.get("use_celery", False),
+            use_redis_cache=options.get("use_redis_cache", False),
         )
 
         return project_name, "", app_names, metadata.to_dict()
@@ -383,6 +387,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
         # Step 3: Frontend Tools
         use_tailwind, use_htmx, use_alpine, use_vite = collector.get_frontend_stack_choice(architecture)
         auth_providers, auth_api = collector.get_authentication_choice()
+        use_celery = UIFormatter.confirm("Include Celery, Beat, and Redis for background jobs?", default=False)
+        use_redis_cache = UIFormatter.confirm("Use Redis for Django caching?", default=False)
 
         # Step 4: Django Apps (Standard only)
         nested = False
@@ -414,6 +420,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 architecture="standard",
                 auth_providers=auth_providers,
                 auth_api=auth_api,
+                use_celery=use_celery,
+                use_redis_cache=use_redis_cache,
             )
             return project_dir, project_name, app_names[0], app_names, metadata.to_dict()
         else:
@@ -434,6 +442,8 @@ def get_user_input() -> Tuple[str, str, str, list, dict]:
                 use_alpine=use_alpine,
                 auth_providers=auth_providers,
                 auth_api=auth_api,
+                use_celery=use_celery,
+                use_redis_cache=use_redis_cache,
             )
             project_name, primary_app, app_names, metadata_dict = collector._get_structure_metadata(options)
             return project_dir, project_name, primary_app, app_names, metadata_dict

@@ -47,7 +47,15 @@ class FileCreator(BaseService):
     ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
-        content = template_engine.render_template(template_path, {**auth_context(self.metadata), **context})
+        content = template_engine.render_template(
+            template_path,
+            {
+                "use_celery": self.metadata.get("use_celery", False),
+                "use_redis_cache": self.metadata.get("use_redis_cache", False),
+                **auth_context(self.metadata),
+                **context,
+            },
+        )
         CommonUtils.create_file_with_content(
             os.path.join(target_dir, filepath), content, message, should_format=should_format
         )
@@ -289,6 +297,17 @@ class FileCreator(BaseService):
                 ("views.py", "config/auth_api/views.py-tpl"),
             ],
             "auth_api/",
+        )
+
+    def create_celery(self) -> None:
+        context = {"module_name": self.module_name}
+        CommonUtils.create_files_from_templates(
+            self.project_configs,
+            [
+                ("celery.py", "config/celery.py-tpl", context),
+                ("__init__.py", "config/celery_init.py-tpl", {}),
+            ],
+            f"{self.module_name}/",
         )
 
     def create_pyproject(self, metadata: dict) -> None:
@@ -699,6 +718,9 @@ __all__ = [
                 alpine=self.metadata.get("use_alpine", False),
                 vite=self.metadata.get("use_vite", False),
                 **auth_context(self.metadata),
+                celery=self.metadata.get("use_celery", False),
+                celery_beat=self.metadata.get("use_celery", False),
+                redis_cache=self.metadata.get("use_redis_cache", False),
             ),
             database=DatabaseSection(
                 engine=self.metadata.get("database_type", "sqlite3"),
@@ -731,6 +753,9 @@ __all__ = [
                 "use_htmx": self.metadata.get("use_htmx", False),
                 "use_vite": self.metadata.get("use_vite", False),
                 **auth_context(self.metadata),
+                "use_celery": self.metadata.get("use_celery", False),
+                "use_celery_beat": self.metadata.get("use_celery", False),
+                "use_redis_cache": self.metadata.get("use_redis_cache", False),
             },
             "cicd": {
                 "github": self.metadata.get("use_github_actions", False),

@@ -12,9 +12,11 @@ web: gunicorn [[ module_name ]].wsgi:application --bind 0.0.0.0:$PORT --workers 
 # Release task (runs migrations before deployment)
 release: python manage.py migrate --noinput && python manage.py collectstatic --noinput
 
-# Uncomment below to run scheduled tasks (if using Celery)
+# @IF use_celery
+# Uncomment to run a worker and a scheduler
 # worker: celery -A [[ module_name ]] worker --loglevel=info
 # beat: celery -A [[ module_name ]] beat --loglevel=info
+# @ENDIF
 
 # Development server (for local testing with Foreman/Overmind)
 # web: python manage.py runserver 0.0.0.0:$PORT

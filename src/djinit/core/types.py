@@ -49,6 +49,8 @@ class ProjectMetadata:
     deployment_target: str = "docker"
     auth_providers: list[str] = field(default_factory=list)
     auth_api: bool = False
+    use_celery: bool = False
+    use_redis_cache: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -73,6 +75,8 @@ class ProjectMetadata:
             "deployment_target": self.deployment_target,
             "auth_providers": self.auth_providers,
             "auth_api": bool(self.auth_providers and self.auth_api),
+            "use_celery": self.use_celery,
+            "use_redis_cache": self.use_redis_cache,
         }
 
 

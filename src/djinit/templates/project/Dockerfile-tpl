@@ -44,6 +44,9 @@ RUN SECRET_KEY=build-only-secret-key DJANGO_SETTINGS_MODULE=[[ module_name ]].se
 
 # Run as non-root user
 RUN useradd --create-home --shell /bin/bash appuser \
+# @IF use_celery
+    && install -d -o appuser -g appuser /var/lib/celery/schedule \
+# @ENDIF
     && chown -R appuser:appuser /app
 USER appuser
 

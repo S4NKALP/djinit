@@ -7,6 +7,7 @@ import os
 from typing import Optional
 
 from djinit.core.base import BaseService
+from djinit.core.config import CELERY_DEPENDENCY_MODULES
 from djinit.core.manifest import ManifestManager
 from djinit.core.types import auth_app_labels
 from djinit.creators.architectures import ARCHITECTURE_HANDLERS
@@ -40,6 +41,12 @@ class AppCreator(BaseService):
 
         # Check structure type
         structure_type = self._get_structure_type()
+        if self.manifest and (self.manifest.features.celery or self.manifest.features.redis_cache):
+            module_name = self._calculate_app_module_path(structure_type).partition(".")[0]
+            dependencies = CELERY_DEPENDENCY_MODULES if self.manifest.features.celery else {"redis"}
+            if module_name in dependencies:
+                UIFormatter.print_error(f"'{module_name}' is a top-level module used by Celery or Redis.")
+                return False
 
         if structure_type in ["unified", "single"]:
             UIFormatter.print_warning(

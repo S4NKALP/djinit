@@ -13,6 +13,12 @@ dependencies = [
     "djangorestframework-simplejwt",
     "django-cors-headers",
     "whitenoise",
+# @IF use_celery
+    "celery[redis]>=5.6,<6",
+# @ENDIF
+# @IF use_redis_cache
+    "redis",
+# @ENDIF
 # @IF auth_api
     "django-allauth[headless,socialaccount]>=65.22.1,<66",
 # @ELSEIF auth_providers

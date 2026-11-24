@@ -1,6 +1,7 @@
 import os
 from typing import Callable, List, Tuple
 
+from djinit.core.config import CELERY_DEPENDENCY_MODULES
 from djinit.core.types import auth_app_labels, auth_context
 from djinit.creators.architectures import ARCHITECTURE_HANDLERS
 from djinit.creators.files import FileCreator
@@ -99,6 +100,19 @@ class SetupCreator:
         if conflicts:
             UIFormatter.print_error(f"Names already used by the authentication preset: {', '.join(sorted(conflicts))}")
             return False
+
+        use_celery = self.metadata.get("use_celery", False)
+        if use_celery or self.metadata.get("use_redis_cache", False):
+            top_level_names = {module_name}
+            if self.metadata.get("nested_apps"):
+                top_level_names.add(self.metadata.get("nested_dir"))
+            else:
+                top_level_names.update(self.app_names)
+            dependencies = CELERY_DEPENDENCY_MODULES if use_celery else {"redis"}
+            conflicts = dependencies.intersection(top_level_names)
+            if conflicts:
+                UIFormatter.print_error(f"Top-level names reserved by Redis or Celery: {', '.join(sorted(conflicts))}")
+                return False
 
         steps: List[Tuple[str, Callable[[], None]]] = []
 
@@ -209,6 +223,9 @@ class SetupCreator:
 
         if auth_context(self.metadata)["auth_api"]:
             self.file_creator.create_auth_api()
+
+        if self.metadata.get("use_celery", False):
+            self.file_creator.create_celery()
 
         if self.metadata.get("use_vite", False):
             self.file_creator.create_vite_config()

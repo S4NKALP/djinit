@@ -93,3 +93,6 @@ secrets.json
 
 # Cloud
 .cloud
+# @IF use_celery
+celerybeat-schedule*
+# @ENDIF

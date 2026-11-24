@@ -21,6 +21,15 @@ from djinit.ui.console import UIFormatter
 from djinit.utils.common import CommonUtils
 from djinit.utils.secretkey import generate_secret_key
 
+REDIS_ENV_DATABASES = {
+    "CACHE_REDIS_URL": 0,
+    "CACHE_COMPOSE_REDIS_URL": 0,
+    "CELERY_BROKER_URL": 1,
+    "CELERY_COMPOSE_BROKER_URL": 1,
+    "CELERY_RESULT_BACKEND": 2,
+    "CELERY_COMPOSE_RESULT_BACKEND": 2,
+}
+
 IGNORE_DIRS = frozenset(
     {
         ".git",
@@ -107,6 +116,9 @@ class CustomTemplateManager:
                 lines.append(f"{key_name}=your-{key_name.lower().replace('_', '-')}")
             elif "DATABASE_URL" in key_upper or "DB_URL" in key_upper:
                 lines.append(f"{key_name}=sqlite:///db.sqlite3")
+            elif key_upper in REDIS_ENV_DATABASES:
+                host = "redis" if "_COMPOSE_" in key_upper else "127.0.0.1"
+                lines.append(f"{key_name}=redis://{host}:6379/{REDIS_ENV_DATABASES[key_upper]}")
             elif any(k in key_upper for k in ("REDIS_URL", "CACHE_URL", "BROKER_URL")):
                 lines.append(f"{key_name}=redis://127.0.0.1:6379/1")
             elif "://" in val and "@" in val:
@@ -165,7 +177,11 @@ class CustomTemplateManager:
                 dest_dir.mkdir(parents=True, exist_ok=True)
 
                 for file in files:
-                    if file in IGNORE_FILES or file.endswith((".pyc", ".pyo", ".sqlite3")):
+                    if (
+                        file in IGNORE_FILES
+                        or file.startswith("celerybeat-schedule")
+                        or file.endswith((".pyc", ".pyo", ".sqlite3"))
+                    ):
                         continue
 
                     src_file = Path(root) / file

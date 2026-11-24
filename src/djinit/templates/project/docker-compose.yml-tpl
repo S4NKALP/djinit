@@ -9,7 +9,11 @@ services:
     env_file:
       - path: .env
         required: false
+# @IF use_celery
+    environment: &django_environment
+# @ELSE
     environment:
+# @ENDIF
       DJANGO_SETTINGS_MODULE: [[ module_name ]].settings.development
       SECRET_KEY: ${SECRET_KEY:-dev-insecure-secret-key-change-in-prod}
 # @IF database_type == 'postgresql'
@@ -20,9 +24,6 @@ services:
       DB_PASSWORD: password
       DB_HOST: db
       DB_PORT: "5432"
-    depends_on:
-      db:
-        condition: service_healthy
 # @ENDIF
 # @IF database_type == 'mysql'
       DJANGO_CONTAINER_DATABASE_URL: ${DJANGO_CONTAINER_DATABASE_URL:-mysql://user:password@db:3306/[[ db_name ]]}
@@ -32,14 +33,73 @@ services:
       DB_PASSWORD: password
       DB_HOST: db
       DB_PORT: "3306"
+# @ENDIF
+# @IF use_redis_cache
+      CACHE_REDIS_URL: ${CACHE_COMPOSE_REDIS_URL:-redis://redis:6379/0}
+# @ENDIF
+# @IF use_celery
+      CELERY_BROKER_URL: ${CELERY_COMPOSE_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_COMPOSE_RESULT_BACKEND:-redis://redis:6379/2}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 2).close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+# @ENDIF
+# @IF database_type in ('postgresql', 'mysql') or use_celery or use_redis_cache
     depends_on:
+# @IF database_type in ('postgresql', 'mysql')
       db:
         condition: service_healthy
+# @ENDIF
+# @IF use_celery or use_redis_cache
+      redis:
+        condition: service_healthy
+# @ENDIF
 # @ENDIF
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
 
+# @IF use_celery
+  worker: &celery_service
+    build: .
+    command: ["celery", "-A", "[[ module_name ]]", "worker", "--loglevel=info", "--concurrency=2"]
+    env_file:
+      - path: .env
+        required: false
+    environment: *django_environment
+    volumes:
+      - .:/app
+    depends_on:
+      web:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    <<: *celery_service
+    command: ["celery", "-A", "[[ module_name ]]", "beat", "--loglevel=info", "--schedule=/var/lib/celery/schedule/celerybeat-schedule"]
+    volumes:
+      - .:/app
+      - celerybeat_data:/var/lib/celery
+
+# @ENDIF
+# @IF use_celery or use_redis_cache
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+# @ENDIF
 # @IF database_type == 'postgresql'
   db:
     image: postgres:16-alpine
@@ -80,6 +140,12 @@ services:
 
 volumes:
   static_volume:
+# @IF use_celery or use_redis_cache
+  redis_data:
+# @ENDIF
+# @IF use_celery
+  celerybeat_data:
+# @ENDIF
 # @IF database_type == 'postgresql'
   postgres_data:
 # @ENDIF

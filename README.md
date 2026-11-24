@@ -105,6 +105,17 @@ djinit setup --name storefront --auth-provider google --auth-provider github --a
 The generated project README lists the OAuth callback URLs and the environment
 variables for your selected providers.
 
+### Optional background jobs
+
+Select **Celery, Beat, and Redis** in the wizard or pass `--celery` for scripted
+setup. Docker Compose runs a worker and a Beat scheduler alongside Django.
+Select **Redis caching** separately or pass `--redis-cache` to use Redis as
+Django's default cache.
+
+```bash
+djinit setup --name storefront --app catalog --celery --redis-cache
+```
+
 ### `djinit app` (Architecture-Aware)
 
 Generate one or multiple Django apps that automatically match your active project's architecture:

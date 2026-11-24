@@ -617,12 +617,16 @@ def setup(
         bool,
         typer.Option("--auth-api", help="Include the allauth API and current-user serializer."),
     ] = False,
+    celery: Annotated[
+        bool, typer.Option("--celery", help="Include a Celery worker, Beat scheduler, and Redis.")
+    ] = False,
+    redis_cache: Annotated[bool, typer.Option("--redis-cache", help="Use Redis as the Django cache backend.")] = False,
 ):
     """
     Interactively set up a new Django project, or bootstrap from a custom template.
     """
     if template:
-        if apps or auth_providers or auth_api:
+        if apps or auth_providers or auth_api or celery or redis_cache:
             raise typer.BadParameter("Apps and optional features are defined by the saved template.")
         _apply_template_flow(template, project_name, project_dir)
         return
@@ -653,9 +657,11 @@ def setup(
             nested_dir="apps",
             auth_providers=list(dict.fromkeys(provider.value for provider in auth_providers or [])),
             auth_api=auth_api,
+            use_celery=celery,
+            use_redis_cache=redis_cache,
         ).to_dict()
     else:
-        if project_dir is not None or apps or auth_providers or auth_api:
+        if project_dir is not None or apps or auth_providers or auth_api or celery or redis_cache:
             raise typer.BadParameter("Pass --name to configure setup from the command line.")
         project_dir_val, project_name_val, primary_app, app_names, metadata = get_user_input()
 

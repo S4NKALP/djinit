@@ -48,6 +48,8 @@ class DjangoHelper:
                 "use_tailwind": metadata.get("use_tailwind", False),
                 "use_htmx": metadata.get("use_htmx", False),
                 "use_vite": metadata.get("use_vite", False),
+                "use_celery": metadata.get("use_celery", False),
+                "use_redis_cache": metadata.get("use_redis_cache", False),
                 **auth_context(metadata),
             }
 

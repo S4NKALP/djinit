@@ -10,6 +10,16 @@ default:
 dev:
     uv run python manage.py runserver
 
+# @IF use_celery
+# Run a local Celery worker after starting Redis
+worker:
+    uv run celery -A [[ module_name ]] worker --loglevel=info --concurrency=2
+
+# Run the local scheduler alongside the worker
+beat:
+    uv run celery -A [[ module_name ]] beat --loglevel=info
+
+# @ENDIF
 # Run development server with custom host and port
 dev-server HOST="0.0.0.0" PORT="8000":
     uv run python manage.py runserver {{ HOST }}:{{ PORT }}

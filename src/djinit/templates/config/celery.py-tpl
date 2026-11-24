@@ -1,0 +1,12 @@
+import os
+from pathlib import Path
+
+import environ
+from celery import Celery
+
+environ.Env.read_env(Path(__file__).resolve().parent.parent / ".env")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "[[ module_name ]].settings.production")
+
+app = Celery("[[ module_name ]]")
+app.config_from_object("django.conf:settings", namespace="CELERY")
+app.autodiscover_tasks()

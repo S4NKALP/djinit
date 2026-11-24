@@ -170,6 +170,24 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# @IF use_celery
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/1")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/2")
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_SOFT_TIME_LIMIT = 540
+CELERY_TASK_TIME_LIMIT = 600
+CELERY_BEAT_SCHEDULE = {}
+
+# @ENDIF
+# @IF use_redis_cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("CACHE_REDIS_URL", default="redis://127.0.0.1:6379/0"),
+    },
+}
+
+# @ENDIF
 # REST Framework Settings
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [

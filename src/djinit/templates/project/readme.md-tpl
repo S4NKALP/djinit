@@ -85,6 +85,70 @@ docker compose up --build
 Compose uses the database selected during setup. For PostgreSQL or MySQL,
 `DJANGO_CONTAINER_DATABASE_URL` overrides the connection URL used inside Compose.
 
+# @IF use_celery
+## Background Jobs
+
+Docker Compose starts Django, Redis, a Celery worker, and a Beat scheduler.
+For host development, start Redis, then run the worker and Beat in separate
+terminals after completing local setup.
+
+```bash
+docker compose up -d redis
+uv run celery -A [[ module_name ]] worker --loglevel=info --concurrency=2
+uv run celery -A [[ module_name ]] beat --loglevel=info
+```
+
+The `just worker` and `just beat` recipes run these commands. Define tasks inside an
+installed Django app in `tasks.py`, then call `task.delay(...)` to enqueue them.
+With pip, activate the virtual environment in each terminal and run the same
+`celery` commands without the `uv run` prefix.
+For tasks that depend on a database write, use `task.delay_on_commit(...)`.
+
+```python
+from celery import shared_task
+
+
+@shared_task
+def add(a: int, b: int) -> int:
+    return a + b
+```
+
+Add periodic tasks to `CELERY_BEAT_SCHEDULE` in `[[ module_name ]]/settings/base.py`.
+For example, if the task lives in `apps/catalog/tasks.py`:
+
+```python
+CELERY_BEAT_SCHEDULE = {
+    "add-every-minute": {
+        "task": "apps.catalog.tasks.add",
+        "schedule": 60.0,
+        "args": (2, 3),
+    },
+}
+```
+
+Run one Beat instance per schedule. Compose stores Beat's scheduler state in
+the `celerybeat_data` volume.
+
+Set `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` for a host-run worker.
+Use `CELERY_COMPOSE_BROKER_URL` and `CELERY_COMPOSE_RESULT_BACKEND` to override
+the URLs for both containers. If Redis's host port is occupied, set
+`REDIS_PORT` and update the port in both host URLs.
+
+# @ENDIF
+# @IF use_redis_cache
+## Redis Cache
+
+Django's default cache uses Redis database `0`. Application code can use
+`from django.core.cache import cache` with the standard Django cache API.
+Set `CACHE_REDIS_URL` for host development or `CACHE_COMPOSE_REDIS_URL` for
+containers. To run Django on the host, start Redis with `docker compose up -d redis`.
+
+# @IF use_celery
+The cache, Celery broker, and Celery results use Redis databases `0`, `1`,
+and `2`, respectively.
+
+# @ENDIF
+# @ENDIF
 ## Built-in Endpoints
 
 | Endpoint | Purpose |

@@ -72,6 +72,9 @@ class FeaturesSection:
     vite: bool = False
     auth_providers: list[str] = field(default_factory=list)
     auth_api: bool = False
+    celery: bool = False
+    celery_beat: bool = False
+    redis_cache: bool = False
 
 
 @dataclass
@@ -110,6 +113,9 @@ class ProjectManifest:
                 "vite": self.features.vite,
                 "auth_providers": self.features.auth_providers,
                 "auth_api": self.features.auth_api,
+                "celery": self.features.celery,
+                "celery_beat": self.features.celery_beat,
+                "redis_cache": self.features.redis_cache,
             },
             "database": {
                 "engine": self.database.engine,
@@ -145,6 +151,9 @@ class ProjectManifest:
                 f"vite = {str(self.features.vite).lower()}",
                 f"auth_providers = {json.dumps(self.features.auth_providers)}",
                 f"auth_api = {str(self.features.auth_api).lower()}",
+                f"celery = {str(self.features.celery).lower()}",
+                f"celery_beat = {str(self.features.celery_beat).lower()}",
+                f"redis_cache = {str(self.features.redis_cache).lower()}",
                 "",
                 "[database]",
                 f"engine = {json.dumps(self.database.engine)}",
@@ -181,6 +190,9 @@ class ProjectManifest:
                 vite=feat_data.get("vite", False),
                 auth_providers=feat_data.get("auth_providers", []),
                 auth_api=feat_data.get("auth_api", False),
+                celery=feat_data.get("celery", False),
+                celery_beat=feat_data.get("celery_beat", False),
+                redis_cache=feat_data.get("redis_cache", False),
             ),
             database=DatabaseSection(
                 engine=db_data.get("engine", "sqlite3"),
@@ -234,6 +246,9 @@ class ProjectManifest:
                 vite=settings_cfg.get("use_vite", False),
                 auth_providers=settings_cfg.get("auth_providers", []),
                 auth_api=settings_cfg.get("auth_api", False),
+                celery=settings_cfg.get("use_celery", False),
+                celery_beat=settings_cfg.get("use_celery_beat", False),
+                redis_cache=settings_cfg.get("use_redis_cache", False),
             ),
             database=DatabaseSection(
                 engine=settings_cfg.get("database_type", "sqlite3"),
