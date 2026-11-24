@@ -43,9 +43,10 @@ class FileCreator(BaseService):
     ) -> None:
         """Helper to render template and create file."""
         target_dir = base_dir or self.project_root
-        with CommonUtils.change_cwd(target_dir):
-            content = template_engine.render_template(template_path, context)
-            CommonUtils.create_file_with_content(filepath, content, message, should_format=should_format)
+        content = template_engine.render_template(template_path, context)
+        CommonUtils.create_file_with_content(
+            os.path.join(target_dir, filepath), content, message, should_format=should_format
+        )
 
     def _create_files_from_specs(self, base_dir: str, folder_specs: dict, base_context: dict = None) -> None:
         """Helper to create multiple folders and files from a specification dict."""
@@ -132,6 +133,7 @@ class FileCreator(BaseService):
             "api_module": api_module,
             "include_api": True,
             "use_tailwind": self.metadata.get("use_tailwind", False),
+            "show_home": self.metadata.get("architecture") == "lightweight",
         }
         if comment_out_api:
             urls_context["comment_out_api_url"] = True
@@ -273,7 +275,7 @@ class FileCreator(BaseService):
             ".env.sample",
             "project/env_sample-tpl",
             context,
-            "Created .env.sample file with generated secret key",
+            "Created .env.sample with environment variable examples",
         )
 
     def create_pyproject(self, metadata: dict) -> None:

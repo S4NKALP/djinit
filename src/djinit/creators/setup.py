@@ -33,9 +33,9 @@ class SetupCreator:
         arch = self.metadata.get("architecture")
         if arch in ARCHITECTURE_HANDLERS:
             if arch == "lightweight":
-                self.metadata.setdefault("nested_apps", False)
-                if not self.app_names:
-                    self.app_names = []
+                self.metadata.update(nested_apps=False, nested_dir=None)
+                database_type = self.metadata.setdefault("database_type", "sqlite3")
+                self.metadata.setdefault("use_database_url", database_type != "sqlite3")
             else:
                 self.metadata.setdefault("project_module_name", "config")
                 self.metadata.setdefault("nested_apps", True)
@@ -130,11 +130,12 @@ class SetupCreator:
             elif arch != "lightweight":
                 steps.append(("Adding apps to settings", self.project_creator.add_apps_to_settings))
 
-            if arch != "lightweight":
+            if self.app_names:
 
                 def register_initial_urls():
                     for app in self.app_names:
-                        self.file_creator.add_app_url_route(app, f"apps.{app}")
+                        module_path = app if arch == "lightweight" else f"apps.{app}"
+                        self.file_creator.add_app_url_route(app, module_path)
 
                 steps.append(("Configuring app URLs", register_initial_urls))
 

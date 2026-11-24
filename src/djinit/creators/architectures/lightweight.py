@@ -21,12 +21,9 @@ class LightweightHandler(ArchitectureHandler):
 
         base_ctx = {
             "project_name": module_name,
-            "app_names": [],
-            "use_database_url": False,
-            "database_type": "sqlite3",
-            "use_tailwind": False,
-            "use_htmx": False,
-            "use_vite": False,
+            "app_names": file_creator.app_names,
+            "use_database_url": file_creator.metadata["use_database_url"],
+            "database_type": file_creator.metadata["database_type"],
         }
         file_creator._create_settings_package(settings_dir, base_ctx, module_name)
         file_creator._create_lifecycle_files(project_dir, module_name, api_module=None)

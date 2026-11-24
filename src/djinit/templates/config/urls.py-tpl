@@ -7,6 +7,9 @@ from django.http import HttpResponse
 from django.urls import path, re_path
 from django.conf import settings
 from django.views.static import serve
+# @IF show_home
+from django.views.generic import TemplateView
+# @ENDIF
 # @IF include_api or include_apps
 from django.urls import include
 # @ENDIF
@@ -38,6 +41,9 @@ def robots_txt(request):
 
 
 urlpatterns = [
+# @IF show_home
+    path("", TemplateView.as_view(template_name="home.html"), name="home"),
+# @ENDIF
     path("admin/", admin.site.urls),
     # SEO: sitemap.xml & robots.txt
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),

@@ -154,6 +154,7 @@ def test_lightweight_setup_and_app(tmp_path, monkeypatch):
 
     assert (Path(proj_dir) / "lite_proj" / "settings" / "base.py").exists()
     assert (Path(proj_dir) / "templates" / "home.html").exists()
+    assert 'name="home"' in (Path(proj_dir) / "lite_proj" / "urls.py").read_text()
 
     monkeypatch.chdir(proj_dir)
     app_creator = AppCreator("notes")
